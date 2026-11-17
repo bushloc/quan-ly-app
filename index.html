@@ -1988,8 +1988,10 @@ function cloudUi(){
   if(on&&!API.info.electron)$("#warn").style.display="none";
   const b=$("#cloudDot");if(b){b.className="cdot"+(on?cloudErr?" bad":" ok":"");b.title=st.textContent}
 }
+// nhận cả link dashboard (…/project/<mã>) hay link có đuôi /rest/v1 → https://<mã>.supabase.co
+const sbUrl=v=>{v=String(v||"").trim();let m=/supabase\.com\/dashboard\/project\/([a-z0-9]+)/i.exec(v);if(m)return "https://"+m[1].toLowerCase()+".supabase.co";m=/^(?:https?:\/\/)?([a-z0-9-]+)\.supabase\.co\b/i.exec(v);if(m)return "https://"+m[1].toLowerCase()+".supabase.co";if(/^[a-z0-9]{15,}$/i.test(v))return "https://"+v.toLowerCase()+".supabase.co";return v};
 async function cloudConnect(){
-  const url=$("#cUrl").value.trim().replace(/\/+$/,""),key=$("#cKey").value.trim(),email=$("#cMail").value.trim(),pass=$("#cPass").value;
+  const url=sbUrl($("#cUrl").value),key=$("#cKey").value.trim(),email=$("#cMail").value.trim(),pass=$("#cPass").value;
   if(!/^https:\/\/[\w-]+\.supabase\.co$/.test(url))return say("Project URL phải có dạng https://xxxx.supabase.co");
   if(!key||!email||!pass)return say("Điền đủ khoá, email và mật khẩu.");
   if(!window.supabase)return say("Không tải được thư viện cloud.");

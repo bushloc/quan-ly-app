@@ -393,6 +393,17 @@ main>div:not(.hidden){animation:pagein .5s cubic-bezier(.2,.8,.2,1)}
 .tag{border-radius:999px}
 @media (prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}}
 
+/* Chi cố định + trả thẻ */
+.sp-top{margin-bottom:0}
+.fxrow{display:flex;align-items:center;gap:8px;margin:6px 0}.fxrow .fxName{flex:1;min-width:0;margin:0}.fxrow .fxAmt{width:112px;flex:none;margin:0;text-align:right}
+.fxrow.todo .fxAmt{border-color:var(--warn)}.fxD{color:var(--muted);flex:none}
+.ccrow{display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:8px 10px;margin:6px 0;border-radius:10px;background:var(--soft);border-left:4px solid var(--line)}
+.ccrow.paid{border-left-color:var(--ok)}.ccrow.soon{border-left-color:var(--warn)}.ccrow.late{border-left-color:var(--bad)}
+.ccchk{display:flex;align-items:center;gap:10px;flex:1 1 170px;margin:0;cursor:pointer;color:var(--text);font-size:14px}.ccchk input{width:22px;height:22px;flex:none;margin:0;accent-color:var(--ok)}
+.ccrow .ccAmt{width:112px;margin:0;text-align:right}.ccrow .ccDate{width:150px;margin:0}
+.ccdue{font-size:12px;color:var(--muted)}.ccrow.soon .ccdue{color:var(--warn);font-weight:600}.ccrow.late .ccdue{color:var(--bad);font-weight:600}.ccrow.paid .ccdue{color:var(--ok)}
+.ccset{display:grid;grid-template-columns:2fr 1fr 1fr 2fr auto;gap:8px;align-items:end;margin-bottom:10px}.ccset label{margin:0}
+@media(max-width:760px){.ccset{grid-template-columns:1fr 1fr;padding-bottom:10px;border-bottom:1px solid var(--line)}.ccset label:first-child,.ccset label:nth-child(4){grid-column:1/-1}.ccrow .ccAmt,.ccrow .ccDate{flex:1}}
 .lbs{display:none}
 /* ===== iPhone / màn hình hẹp: thanh tab dưới, 1 cột, nút to ===== */
 @media(max-width:760px){
@@ -507,6 +518,10 @@ main>div:not(.hidden){animation:pagein .5s cubic-bezier(.2,.8,.2,1)}
   <h2 class="pg">Chi tiêu</h2>
   <div class="row mhead"><button class="btn" id="spPrev">‹</button><b id="spMonth"></b><button class="btn" id="spNext">›</button></div>
   <div class="card sum" id="spSum"></div>
+  <div class="grid2 sp-top">
+    <div class="card" id="fxCard"></div>
+    <div class="card" id="ccCard"></div>
+  </div>
   <div class="card">
     <h3>Ghi khoản mới</h3>
     <form id="spForm" class="f2" autocomplete="off">
@@ -541,6 +556,12 @@ main>div:not(.hidden){animation:pagein .5s cubic-bezier(.2,.8,.2,1)}
 <div id="mod-set" class="hidden">
   <h2 class="pg">Cài đặt & Sao lưu</h2>
 
+  <div class="card" id="cardSet">
+    <h3 style="margin-top:0">💳 Thẻ tín dụng</h3>
+    <p class="muted" style="margin-top:0">Lưu ngày due hằng tháng để nhắc trong tab Chi tiêu. Không lưu số thẻ, chỉ 4 số cuối (tuỳ chọn).</p>
+    <div id="ccList"></div>
+    <button type="button" class="btn" id="ccAdd">+ Thêm thẻ</button>
+  </div>
   <div class="card" id="cloudSet">
     <h3 style="margin-top:0">☁️ Đồng bộ cloud</h3>
     <p class="muted" id="cloudSt" style="margin-top:0"></p>
@@ -1499,10 +1520,11 @@ function monthStats(mk,calc){
   const sold=DB.items.filter(i=>i.status==="ban"&&monthOf(i.saleDate)===mk);
   const ebay=sold.reduce((a,i)=>a+profit(i),0);
   const ex=DB.expenses.filter(e=>monthOf(e.date)===mk);
-  const chi=ex.filter(e=>e.type==="chi").reduce((a,e)=>a+n(e.amount),0),thu=ex.filter(e=>e.type==="thu").reduce((a,e)=>a+n(e.amount),0);
+  const chi=ex.filter(isChi).reduce((a,e)=>a+n(e.amount),0),thu=ex.filter(e=>e.type==="thu").reduce((a,e)=>a+n(e.amount),0);
+  const fixed=ex.filter(e=>e.type==="co").reduce((a,e)=>a+n(e.amount),0);
   const sh=DB.shifts.filter(s=>monthOf(s.date)===mk);
   const pay=sh.reduce((a,s)=>a+(calc[s.id]?calc[s.id].pay:0),0),hrs=sh.reduce((a,s)=>a+(calc[s.id]?calc[s.id].h:0),0);
-  return {sold:sold.length,ebay,chi,thu,pay,hrs,net:ebay+pay+thu-chi};
+  return {sold:sold.length,ebay,chi,thu,fixed,pay,hrs,net:ebay+pay+thu-chi};
 }
 // % so với tháng trước; với chi tiêu thì tăng là xấu
 function delta(cur,prev,badUp){
@@ -1539,7 +1561,7 @@ function barChart(mks,stats,cur){
   return `<svg class="chart" viewBox="0 0 ${W} ${H}" role="img" aria-label="Thu nhập và chi tiêu 6 tháng">${g}<line class="grid" x1="0" x2="${W}" y1="${base}" y2="${base}"/></svg><div class="lgd"><span><i style="background:var(--ok)"></i>Thu nhập (lãi eBay + tiền công + thu khác)</span><span><i style="background:var(--warn)"></i>Chi tiêu</span></div>`;
 }
 function donut(mk){
-  const by={};for(const e of DB.expenses)if(e.type==="chi"&&monthOf(e.date)===mk)by[e.cat]=(by[e.cat]||0)+n(e.amount);
+  const by={};for(const e of DB.expenses)if(isChi(e)&&monthOf(e.date)===mk){const c=e.type==="co"?FIXED_CAT:e.cat;by[c]=(by[c]||0)+n(e.amount)}
   let arr=Object.entries(by).filter(x=>x[1]>0).sort((a,b)=>b[1]-a[1]);const tot=arr.reduce((a,x)=>a+x[1],0);
   if(!tot)return `<p class="muted" style="margin:0">${mLabel(mk)} chưa có khoản chi nào.</p>`;
   if(arr.length>6){const rest=arr.slice(5).reduce((a,x)=>a+x[1],0);arr=arr.slice(0,5).concat([["Khác (gộp)",rest]])}
@@ -1558,7 +1580,7 @@ function renderHome(){
   $("#homeCards").innerHTML=
     card("Lãi bán eBay",s.ebay,`${s.sold} cái đã bán`,s.ebay>=0?"pos":"neg",delta(s.ebay,p.ebay),spark(ser("ebay"),"var(--accent)"),0)+
     card("Tiền công ước tính",s.pay,`${s.hrs.toFixed(1)} giờ (trước thuế)`,"",delta(s.pay,p.pay),spark(ser("pay"),"var(--ok)"),1)+
-    card("Chi tiêu",s.chi,s.thu?`Thu khác ${money(s.thu)}`:"","",delta(s.chi,p.chi,true),spark(ser("chi"),"var(--warn)"),2)+
+    card("Chi tiêu",s.chi,[s.fixed?`📌 Cố định ${money(s.fixed)}`:"",s.thu?`Thu khác ${money(s.thu)}`:"",cardDueNote()].filter(Boolean).join(" · "),"",delta(s.chi,p.chi,true),spark(ser("chi"),"var(--warn)"),2)+
     card("Tổng thu nhập − chi",s.net,"Lãi eBay + tiền công + thu khác − chi",s.net>=0?"pos":"neg",delta(s.net,p.net),spark(ser("net"),"var(--ok)"),3);
   countUp($("#homeCards"));
   // tuần này (luôn là tuần hiện tại, không theo tháng đang chọn)
@@ -1611,6 +1633,74 @@ function checkHtml(ref,calc){
 /* ===== Chi tiêu & Budget ===== */
 let spM=mKey(new Date());
 function expOf(mk){return DB.expenses.filter(e=>monthOf(e.date)===mk)}
+/* Chi cố định: mỗi tháng 1 danh sách riêng (type "co", tính vào tổng chi, không nằm trong Danh mục);
+   "Lặp lại từ tháng trước" chép tên + số tiền sang tháng mới để sửa.
+   Trả thẻ tín dụng: type "the", chỉ để theo dõi, KHÔNG cộng vào chi (các món mua bằng thẻ đã ghi rồi, cộng nữa là trùng). */
+const FIXED_CAT="📌 Cố định";
+const isChi=e=>e.type==="chi"||e.type==="co";
+const fixedOf=mk=>DB.expenses.filter(e=>e.type==="co"&&monthOf(e.date)===mk).sort((a,b)=>(a.ord||0)-(b.ord||0));
+function renderFixed(){
+  const fx=fixedOf(spM),prev=fixedOf(mShift(spM,-1)),names=new Set(fx.map(e=>e.note));
+  const missing=prev.filter(e=>!names.has(e.note));
+  const tot=fx.reduce((a,e)=>a+n(e.amount),0),filled=fx.filter(e=>String(e.amount)!=="").length;
+  $("#fxCard").innerHTML=`<div class="row" style="justify-content:space-between;margin-bottom:6px"><h3 style="margin:0">📌 Chi cố định</h3><b>${money(tot)}</b></div>`+
+    (fx.length?`<div class="muted" style="font-size:12.5px;margin-bottom:6px">Đã điền ${filled}/${fx.length}</div><div class="bar"><i style="width:${fx.length?filled/fx.length*100:0}%"></i></div>`:"")+
+    `<div class="fxlist">${fx.map(e=>`<div class="fxrow${String(e.amount)===""?" todo":""}" data-fx="${e.id}"><input class="fxName" value="${esc(e.note||"")}" placeholder="Tên (vd. Rent)" aria-label="Tên khoản"><span class="fxD">$</span><input class="fxAmt" type="number" step="0.01" min="0" inputmode="decimal" value="${esc(e.amount)}" placeholder="0.00" aria-label="Số tiền"><button type="button" class="mini" data-fxdel title="Xoá khoản này khỏi tháng">✕</button></div>`).join("")}</div>`+
+    (!fx.length&&!prev.length?`<p class="muted" style="margin:6px 0">Thêm các khoản trả hằng tháng: Rent/Mortgage, Bảo hiểm, Subscription…</p>`:"")+
+    `<div class="row" style="margin-top:8px">${missing.length?`<button type="button" class="btn primary" id="fxRepeat">🔁 Lặp lại từ ${mLabel(mShift(spM,-1))} (${missing.length})</button>`:""}<button type="button" class="btn" id="fxAdd">+ Thêm khoản</button></div>`;
+  $$("#fxCard [data-fx]").forEach(r=>{
+    const e=DB.expenses.find(x=>x.id===r.dataset.fx);
+    r.querySelector(".fxName").onchange=ev=>{e.note=ev.target.value.trim();save()};
+    r.querySelector(".fxAmt").onchange=ev=>{e.amount=ev.target.value===""?"":n(ev.target.value);save();renderSpend()};
+    r.querySelector("[data-fxdel]").onclick=async()=>{if(await ask(`Xoá “${e.note||"khoản này"}” khỏi ${mLabel(spM)}?\n(Các tháng khác không đổi.)`)){DB.expenses=DB.expenses.filter(x=>x!==e);save();renderSpend()}};
+  });
+  const add=(note,amount,ord)=>DB.expenses.push({id:uid(),date:spM+"-01",type:"co",cat:FIXED_CAT,note,amount,ord});
+  if($("#fxRepeat"))$("#fxRepeat").onclick=()=>{let o=fx.length;for(const e of missing)add(e.note,e.amount,++o);save();renderSpend()};
+  $("#fxAdd").onclick=()=>{add("","",fx.length+1);save();renderSpend();const r=$$("#fxCard .fxName");r[r.length-1].focus()};
+}
+const cards=()=>Array.isArray(S().cards)?S().cards:(S().cards=[]);
+const daysIn=mk=>{const [y,m]=mk.split("-").map(Number);return new Date(y,m,0).getDate()};
+const dueOf=(c,mk)=>mk+"-"+String(Math.min(Math.max(1,n(c.due)||1),daysIn(mk))).padStart(2,"0");
+const cardPay=(c,mk)=>DB.expenses.find(e=>e.type==="the"&&e.cardId===c.id&&e.month===mk);
+// trạng thái 1 thẻ trong 1 tháng: đã trả / quá hạn / sắp due (≤3 ngày) / chưa tới
+function cardState(c,mk){
+  const p=cardPay(c,mk);if(p&&p.paid)return ["paid","✓ Đã trả"];
+  const d=Math.round((parseD(dueOf(c,mk))-parseD(today()))/864e5);
+  return d<0?["late",`Quá due ${-d} ngày`]:d<=3?["soon",d===0?"Due hôm nay":`Còn ${d} ngày`]:["",`Còn ${d} ngày`];
+}
+function cardDueNote(){
+  const mk=mKey(new Date()),bad=cards().filter(c=>c.name&&["late","soon"].includes(cardState(c,mk)[0]));
+  return bad.length?`💳 ${bad.length} thẻ sắp/quá due`:"";
+}
+function renderCards(){
+  const cs=cards().filter(c=>c.name);
+  const paidAmt=cs.reduce((a,c)=>{const p=cardPay(c,spM);return a+(p&&p.paid?n(p.amount):0)},0),paidN=cs.filter(c=>(cardPay(c,spM)||{}).paid).length;
+  $("#ccCard").innerHTML=`<div class="row" style="justify-content:space-between;margin-bottom:6px"><h3 style="margin:0">💳 Trả thẻ tín dụng</h3>${cs.length?`<span class="muted">Đã trả ${paidN}/${cs.length} · ${money(paidAmt)}</span>`:""}</div>`+
+    (cs.length?cs.map(c=>{const p=cardPay(c,spM)||{},[st,lb]=cardState(c,spM),due=dueOf(c,spM);
+      return `<div class="ccrow ${st}" data-cc="${esc(c.id)}"><label class="ccchk"><input type="checkbox" ${p.paid?"checked":""}><span><b>${esc(c.name)}</b>${c.last4?` <span class="mono muted">••${esc(c.last4)}</span>`:""}<br><span class="ccdue">Due ${fdate(due+"T12:00:00")} · ${lb}</span></span></label>`+
+        `<span class="fxD">$</span><input class="ccAmt" type="number" step="0.01" min="0" inputmode="decimal" value="${esc(p.amount??"")}" placeholder="Số tiền trả" aria-label="Số tiền đã trả"><input class="ccDate" type="date" value="${esc(p.date||"")}" aria-label="Ngày trả"></div>`}).join("")
+      +`<p class="muted" style="font-size:12px;margin:8px 0 0">Chỉ để theo dõi, không cộng vào tổng chi (các món mua bằng thẻ đã ghi trong chi tiêu).</p>`
+      :`<p class="muted" style="margin:6px 0">Chưa có thẻ. Thêm ở <a href="#" id="ccGo">Cài đặt → 💳 Thẻ tín dụng</a>.</p>`);
+  if($("#ccGo"))$("#ccGo").onclick=e=>{e.preventDefault();showMod("set");$("#cardSet").scrollIntoView({block:"start"})};
+  $$("#ccCard [data-cc]").forEach(r=>{
+    const c=cs.find(x=>x.id===r.dataset.cc);
+    const rec=()=>{let p=cardPay(c,spM);if(!p){p={id:uid(),type:"the",cardId:c.id,month:spM,note:c.name,cat:"💳 Trả thẻ",paid:false,amount:"",date:""};DB.expenses.push(p)}return p};
+    r.querySelector("input[type=checkbox]").onchange=ev=>{const p=rec();p.paid=ev.target.checked;if(p.paid&&!p.date)p.date=today();p.note=c.name;save();renderSpend();
+      if(p.paid&&String(p.amount)==="")setTimeout(()=>{const a=$(`#ccCard [data-cc="${c.id}"] .ccAmt`);if(a)a.focus()},0)};
+    r.querySelector(".ccAmt").onchange=ev=>{const p=rec();p.amount=ev.target.value===""?"":n(ev.target.value);if(p.amount!==""){p.paid=true;if(!p.date)p.date=today()}save();renderSpend()};
+    r.querySelector(".ccDate").onchange=ev=>{const p=rec();p.date=ev.target.value;save()};
+  });
+}
+// Cài đặt → thẻ tín dụng
+function renderCardSet(){
+  $("#ccList").innerHTML=cards().map(c=>`<div class="ccset" data-ccs="${esc(c.id)}"><label>Tên thẻ<input data-k="name" value="${esc(c.name||"")}" placeholder="vd. Chase Freedom"></label><label>4 số cuối<input data-k="last4" value="${esc(c.last4||"")}" inputmode="numeric" maxlength="4" placeholder="tuỳ chọn"></label><label>Due ngày<input data-k="due" type="number" min="1" max="31" value="${esc(c.due||"")}" placeholder="1–31"></label><label>Ghi chú<input data-k="note" value="${esc(c.note||"")}" placeholder="vd. autopay"></label><button type="button" class="btn danger" data-ccdel title="Xoá thẻ">✕</button></div>`).join("")||`<p class="muted">Chưa có thẻ nào.</p>`;
+  $$("#ccList [data-ccs]").forEach(r=>{
+    const c=cards().find(x=>x.id===r.dataset.ccs);
+    r.querySelectorAll("input[data-k]").forEach(i=>i.onchange=()=>{let v=i.value.trim();if(i.dataset.k==="last4")v=v.replace(/\D/g,"").slice(-4);if(i.dataset.k==="due")v=v?Math.min(31,Math.max(1,Math.round(n(v)))):"";c[i.dataset.k]=v;i.value=v;save()});
+    r.querySelector("[data-ccdel]").onclick=async()=>{if(await ask(`Xoá thẻ “${c.name||"(chưa đặt tên)"}”?\nCác lần đã trả vẫn giữ trong dữ liệu.`)){S().cards=cards().filter(x=>x!==c);save();renderCardSet()}};
+  });
+}
+$("#ccAdd").onclick=()=>{cards().push({id:uid(),name:"",last4:"",due:"",note:""});save();renderCardSet();const r=$$("#ccList [data-k=name]");r[r.length-1].focus()};
 function budgetBars(mk){
   const spent={};for(const e of expOf(mk))if(e.type==="chi")spent[e.cat]=(spent[e.cat]||0)+n(e.amount);
   const rows=Object.keys(DB.budgets).filter(c=>n(DB.budgets[c])>0);
@@ -1630,7 +1720,9 @@ function fillCats(sel,val){
 }
 function renderSpend(){
   $("#spMonth").textContent=mLabel(spM);
-  const list=expOf(spM),chi=list.filter(e=>e.type==="chi").reduce((a,e)=>a+n(e.amount),0),thu=list.filter(e=>e.type==="thu").reduce((a,e)=>a+n(e.amount),0);
+  const all=expOf(spM),list=all.filter(e=>e.type==="chi"||e.type==="thu"); // cố định + trả thẻ hiện ở 2 ô riêng
+  const chi=all.filter(isChi).reduce((a,e)=>a+n(e.amount),0),thu=list.filter(e=>e.type==="thu").reduce((a,e)=>a+n(e.amount),0);
+  renderFixed();renderCards();
   const lim=Object.values(DB.budgets).reduce((a,v)=>a+n(v),0);
   const budSpent=Object.keys(DB.budgets).filter(c=>n(DB.budgets[c])>0).reduce((a,c)=>a+list.filter(e=>e.type==="chi"&&e.cat===c).reduce((x,e)=>x+n(e.amount),0),0);
   $("#spSum").innerHTML=`<div>Tổng chi<b>${money(chi)}</b></div><div>Tổng thu<b>${money(thu)}</b></div><div>Thu − chi<b class="${thu-chi>=0?"pos":"neg"}">${money(thu-chi)}</b></div>`+(lim>0?`<div>Ngân sách còn lại<b class="${lim-budSpent>=0?"pos":"neg"}">${money(lim-budSpent)}</b></div>`:"");
@@ -1790,7 +1882,7 @@ function renderSet(){
     ?`Dữ liệu lưu thành file trong thư mục <b class="mono">${esc(API.info.dir)}</b> (ảnh nằm trong thư mục con <span class="mono">photos</span>). App tự sao lưu mỗi ngày vào thư mục <span class="mono">backup</span>. Nếu để thư mục này trong OneDrive thì có thêm bản dự phòng trên mạng.`
     :`Dữ liệu lưu trong trình duyệt này. Hãy tải file sao lưu thường xuyên và cất vào C:\\Dev\\Online hoặc OneDrive.`;
   $("#elBtns").classList.toggle("hidden",!API.info.electron);
-  renderTrkSet();
+  renderCardSet();renderTrkSet();
   backupAge();
 }
 $("#stSaveWork").onclick=()=>{
@@ -1843,6 +1935,7 @@ const CK="ql-cloud",COLLS=["items","expenses","shifts"],DOCS=["clock","budgets",
 const DEF={settings:{...DB.settings},cats:[...DB.cats]};
 const cget=()=>{try{return JSON.parse(localStorage.getItem(CK))||{}}catch(e){return {}}};
 const cset=v=>{try{localStorage.setItem(CK,JSON.stringify(v))}catch(e){}};
+const NEED_LOGIN="Cần đăng nhập lại: gõ mật khẩu rồi bấm Kết nối";
 let sb=null,sbUser=null,syncBusy=false,syncAgain=false,syncT=null,cloudErr="",cloudAt=0;
 function sbClient(c){
   if(!c.url||!c.key||!window.supabase)return null;
@@ -1962,7 +2055,7 @@ async function cloudSync(){
   try{
     if(!sbClient(c))throw new Error("Thiếu địa chỉ/khoá");
     const {data:{session}}=await sb.auth.getSession();
-    if(!session)throw new Error("Cần đăng nhập lại");
+    if(!session)throw new Error(NEED_LOGIN);
     sbUser=session.user;
     if(!c.lastPull)ch+=await pullAll(c); // lần đầu trên thiết bị này: lấy cloud trước rồi mới gửi
     await pushAll(c);
@@ -1982,7 +2075,8 @@ async function cloudSync(){
 }
 function cloudUi(){
   const c=cget(),on=!!c.on,st=$("#cloudSt");if(!st)return;
-  $("#cloudForm").classList.toggle("hidden",on);$("#cOn").classList.toggle("hidden",!on);
+  const relog=on&&cloudErr===NEED_LOGIN; // phiên đăng nhập hết hạn: hiện lại ô nhập để đăng nhập lại (giữ nguyên dữ liệu đồng bộ)
+  $("#cloudForm").classList.toggle("hidden",on&&!relog);$("#cOn").classList.toggle("hidden",!on);
   st.textContent=!on?"Chưa kết nối. Dữ liệu chỉ nằm trên "+(API.info.electron?"máy tính này.":"thiết bị này.")
     :`Đã kết nối: ${c.email||""}`+(cloudErr?` · ⚠️ ${cloudErr}`:cloudAt?` · đồng bộ lúc ${String(new Date(cloudAt).getHours()).padStart(2,"0")}:${String(new Date(cloudAt).getMinutes()).padStart(2,"0")}`:" · đang đồng bộ…");
   st.classList.toggle("neg",!!cloudErr);
@@ -2003,13 +2097,15 @@ async function cloudConnect(){
     const {data,error}=await sb.auth.signInWithPassword({email,password:pass});
     if(error)throw error;
     sbUser=data.user;$("#cPass").value="";
+    const prev=cget();
+    if(prev.on&&prev.url===url&&prev.email===email){cset({...prev,key});cloudErr="";cloudUi();await cloudSync();return} // chỉ đăng nhập lại
     const {count,error:e2}=await sb.from("records").select("id",{count:"exact",head:true}).neq("coll","doc").eq("deleted",false);
     if(e2)throw e2;
     const local=DB.items.length+DB.expenses.length+DB.shifts.length;
     if(local){
       const msg=count?`Cloud đã có ${count} dòng. Gộp ${local} dòng trên ${API.info.electron?"máy tính":"thiết bị"} này vào cloud?\n(Cài đặt giữ theo máy này.)`
         :`Cloud đang trống. Đưa toàn bộ dữ liệu trên ${API.info.electron?"máy tính":"thiết bị"} này lên cloud?\n(${DB.items.length} món, ${DB.expenses.length} khoản chi, ${DB.shifts.length} ca làm)`;
-      if(!await ask(msg+(API.info.electron?"\n\nMáy sẽ tạo bản sao lưu trước.":""))){await sb.auth.signOut();sb=null;sbUser=null;return}
+      if(!await ask(msg+(API.info.electron?"\n\nMáy sẽ tạo bản sao lưu trước.":""))){await sb.auth.signOut({scope:"local"});sb=null;sbUser=null;return}
       if(API.info.electron)await API.backupNow();
     }
     cset({...c,on:true,shadow:{},lastPull:"",keep:local>0});
@@ -2019,7 +2115,7 @@ async function cloudConnect(){
 }
 async function cloudOff(){
   if(!await ask("Ngắt đồng bộ cloud trên "+(API.info.electron?"máy tính":"thiết bị")+" này?\nDữ liệu trên máy và trên cloud vẫn giữ nguyên."))return;
-  try{if(sb)await sb.auth.signOut()}catch(e){}
+  try{if(sb)await sb.auth.signOut({scope:"local"})}catch(e){} /* chỉ thoát máy này, không đăng xuất các máy khác */
   cset({});sb=null;sbUser=null;cloudErr="";cloudUi();
 }
 function useCloudPhotos(){if(!API.info.electron){API.photoUrl=cloudPhotoUrl;API.savePhoto=cloudSavePhoto}}

@@ -574,7 +574,7 @@ main>div:not(.hidden){animation:pagein .5s cubic-bezier(.2,.8,.2,1)}
     <h3 style="margin-top:0">Giao diện</h3>
     <label style="max-width:260px;margin-bottom:0">Chế độ màu<select id="stTheme"><option value="dark">Tối</option><option value="light">Sáng</option><option value="system">Theo Windows</option></select></label>
   </div>
-  <div class="card" id="trkSet">
+  <div class="card hidden" id="trkSet">
     <h3 style="margin-top:0">Tracking API (USPS · UPS · FedEx)</h3>
     <p class="muted" style="margin-top:0">Khoá chỉ lưu trên máy này. Không có khoá thì dùng 17track.</p>
     <div id="trkRows"></div>
@@ -1804,7 +1804,7 @@ darkMQ.addEventListener("change",applyTheme);
 $("#stTheme").onchange=e=>{S().theme=e.target.value;applyTheme();save()};
 // Cài đặt → Tracking API
 async function renderTrkSet(){
-  const box=$("#trkSet");if(!TRK){box.classList.add("hidden");return}
+  const box=$("#trkSet");if(!TRK){box.classList.add("hidden");return}box.classList.remove("hidden");
   trkKeys=await API.trk.status();
   const lbl={usps:["Consumer Key","Consumer Secret"],ups:["Client ID","Client Secret"],fedex:["API Key","Secret Key"]};
   $("#trkRows").innerHTML=["usps","ups","fedex"].map(c=>`<div class="trk-row" data-c="${c}">

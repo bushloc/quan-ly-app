@@ -1239,6 +1239,7 @@ function shipCard(o){
   const form=open?`<div class="oc-sf">
     <label class="q-trk">Tracking<input class="mono" data-q="tracking" value="${qv("tracking","")}" placeholder="Dán số tracking…" autocomplete="off"></label>
     <label>Order ID<input class="mono" data-q="orderId" value="${qv("orderId",f.orderId||"")}" autocomplete="off"></label>
+    <label>Người mua<input data-q="buyer" value="${qv("buyer",f.buyer||"")}" placeholder="Tên người mua eBay" autocomplete="off" autocapitalize="off"></label>
     <div class="oc-q2">
       <label>Phí eBay<input data-q="fees" type="number" step="0.01" min="0" inputmode="decimal" value="${qv("fees",o.fees?o.fees.toFixed(2):"")}"></label>
       <label>Ship bạn trả<input data-q="ship" type="number" step="0.01" min="0" inputmode="decimal" value="${qv("ship",f.shipTotal||"")}"></label>
@@ -1378,7 +1379,7 @@ $("#list").addEventListener("click",async e=>{
   // Cần ship: điền nhanh Order ID, phí, ship, tracking ngay trên thẻ
   if(t.closest("[data-savetrk]")){
     const a=document.activeElement;if(isField(a))a.blur();
-    saveQuick(ord,["orderId","fees","ship","tracking"]);await reload();return}
+    saveQuick(ord,["orderId","buyer","fees","ship","tracking"]);await reload();return}
   if(t.closest("[data-ret]")){openItem(t.closest("[data-ret]").dataset.ret);setStatus("tra");return}
   if(t.closest("[data-sell]")){openItem(ids[0]);setStatus("ban");F("price").focus();return}
   if(t.closest("[data-restock]")){restockFrom(items.find(i=>i.id===ids[0]));return}
@@ -1401,7 +1402,7 @@ function saveQuick(ord,keys){
   const its=key.split(",").map(id=>DB.items.find(i=>i.id===id)).filter(i=>i&&i.status==="ban"),now=Date.now();
   for(const k of keys){
     const v=g(k),fsplit=k==="fees"&&v!==""?splitC(v,its.length):null;
-    its.forEach((i,j)=>{if(k==="orderId")i.orderId=v;if(k==="tracking")i.tracking=v;if(fsplit)i.fees=fsplit[j];if(k==="ship"){i.shipTotal=v;i.shipN=its.length}i.updatedAt=now});
+    its.forEach((i,j)=>{if(k==="orderId")i.orderId=v;if(k==="buyer")i.buyer=v;if(k==="tracking")i.tracking=v;if(fsplit)i.fees=fsplit[j];if(k==="ship"){i.shipTotal=v;i.shipN=its.length}i.updatedAt=now});
     delete qDraft[key+"|"+k];
   }
   save();

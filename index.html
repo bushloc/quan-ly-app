@@ -193,6 +193,12 @@ dialog>form{display:flex;flex-direction:column;max-height:92vh}
 .day .p{font-size:13px;font-weight:600;color:var(--ok);margin-top:auto}
 .day .otg{align-self:flex-start;font-size:11px;font-weight:700;color:var(--bad);background:var(--badsoft);border-radius:99px;padding:1px 8px}
 .day .plus{margin:auto;font-size:13px;color:var(--muted)}
+.day .tr.lv{font-weight:700;margin:0;padding:2px 6px}
+.day .tr.hol{color:#b45309;background:rgba(245,158,11,.16)}.day .tr.pto{color:#0e7490;background:rgba(6,182,212,.15)}
+:root[data-theme="dark"] .day .tr.hol{color:#fbbf24}:root[data-theme="dark"] .day .tr.pto{color:#67e8f9}
+.day.lvday{border-color:rgba(245,158,11,.45)}
+.kindseg{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px}.kindseg label{display:flex;align-items:center;gap:6px;margin:0;padding:6px 10px;border:1px solid var(--line);border-radius:99px;cursor:pointer;color:var(--text)}
+.kindseg input{width:auto;margin:0}.kindseg label:has(input:checked){border-color:var(--accent);background:var(--soft);color:var(--accent);font-weight:600}
 .day .addb{border:0;background:none;color:var(--muted);font:inherit;font-size:16px;line-height:1;cursor:pointer;padding:0 4px;border-radius:6px}
 .day .addb:hover{background:var(--bg);color:var(--text)}
 .day.empty{background:transparent;border-style:dashed;border-color:var(--muted);box-shadow:none;opacity:.55}
@@ -544,7 +550,7 @@ main>div:not(.hidden){animation:pagein .5s cubic-bezier(.2,.8,.2,1)}
   <h2 class="pg">Giờ đi làm</h2>
   <div class="card clock" id="clockCard">
     <div id="clockInfo"></div>
-    <div class="row"><label class="cin" id="clockAtWrap">Giờ vào<input type="time" id="clockAt" value="07:00"></label><button class="btn clockbtn" id="clockBtn"></button><button class="btn" id="shAdd">+ Thêm ca thủ công</button></div>
+    <div class="row"><label class="cin" id="clockAtWrap">Giờ vào<input type="time" id="clockAt" value="07:00"></label><button class="btn clockbtn" id="clockBtn"></button><button class="btn" id="shAdd">+ Thêm ca thủ công</button><button class="btn" id="holAdd">+ 🎉 Holiday 8h</button><button class="btn" id="ptoAdd">+ 🌴 PTO</button></div>
   </div>
   <div class="row mhead"><button class="btn" id="wkPrev">‹ Tuần trước</button><b id="wkLabel"></b><button class="btn" id="wkNext">Tuần sau ›</button></div>
   <div class="wk3" id="wkSum"></div>
@@ -617,8 +623,9 @@ main>div:not(.hidden){animation:pagein .5s cubic-bezier(.2,.8,.2,1)}
       <label>Nghỉ trưa mặc định (phút)<input id="stLunch" type="number" step="5" min="0"></label>
       <label>Ngày bắt đầu một kỳ lương (2 tuần, check nhận T5 sau kỳ)<input id="stPay" type="date"></label>
     </div>
+    <label style="display:flex;gap:8px;align-items:center;margin-top:10px;color:var(--text)"><input id="stLeaveOt" type="checkbox" style="width:auto;margin:0">Holiday/PTO tính vào mốc giờ tăng ca (mặc định tắt: chỉ giờ làm thật mới tính tới mốc)</label>
     <div class="row" style="margin-top:12px"><button class="btn primary" id="stSaveWork">Lưu</button><span id="stWorkSaved" class="muted"></span></div>
-    <p class="muted" style="margin-bottom:0">Tiền công trong app là <b>ước tính trước thuế</b>, tăng ca tính theo từng tuần.</p>
+    <p class="muted" style="margin-bottom:0">Tiền công trong app là <b>ước tính trước thuế</b>, tăng ca tính theo từng tuần. Giờ Holiday/PTO luôn trả lương thường, không bao giờ thành tăng ca.</p>
   </div>
 </div>
 </main>
@@ -728,10 +735,12 @@ main>div:not(.hidden){animation:pagein .5s cubic-bezier(.2,.8,.2,1)}
   <form id="shForm" method="dialog" autocomplete="off">
     <div class="dh"><h2 id="shTitle">Ca làm</h2><button type="button" class="btn" data-close-dlg="shDlg">✕</button></div>
     <div class="db">
-      <label>Ngày bắt đầu ca<input name="date" type="date" required></label>
-      <label>Giờ vào<input name="start" type="time" required></label>
-      <label>Giờ ra (qua đêm thì app tự hiểu là hôm sau)<input name="end" type="time" required></label>
-      <label>Nghỉ trưa, không lương (phút)<input name="brk" type="number" min="0" step="1" value="30"></label>
+      <div class="kindseg" role="radiogroup" aria-label="Loại ngày"><label><input type="radio" name="kind" value="work" checked>Làm việc</label><label><input type="radio" name="kind" value="hol">🎉 Holiday</label><label><input type="radio" name="kind" value="pto">🌴 PTO</label></div>
+      <label>Ngày<input name="date" type="date" required></label>
+      <label class="kw">Giờ vào<input name="start" type="time"></label>
+      <label class="kw">Giờ ra (qua đêm thì app tự hiểu là hôm sau)<input name="end" type="time"></label>
+      <label class="kw">Nghỉ trưa, không lương (phút)<input name="brk" type="number" min="0" step="1" value="30"></label>
+      <label class="kl hidden">Số giờ (trả lương thường, không tính tăng ca)<input name="hrs" type="number" min="0" max="24" step="0.25" inputmode="decimal" value="8"></label>
       <label>Ghi chú<input name="note"></label>
     </div>
     <div class="df"><button type="button" class="btn danger" id="shDel">Xoá</button><div class="row"><button type="button" class="btn" data-close-dlg="shDlg">Huỷ</button><button class="btn primary">Lưu</button></div></div>
@@ -810,6 +819,15 @@ let DB={
 };
 let db=true, saveT=null;
 function save(){clearTimeout(saveT);saveT=setTimeout(()=>{API.save(DB).catch(()=>{});cloudSoon()},300)}
+/* Đang gõ thì không vẽ lại vùng đó: vẽ lại dựng lại ô nhập nên mất focus (phone tụt bàn phím) và mất số đang gõ.
+   Hoãn tới khi rời hẳn vùng đó (đồng bộ cloud, tải ảnh, lưu ô bên cạnh… đều đi qua đây) */
+const isField=a=>!!(a&&a.matches&&a.matches("input:not([type=checkbox]):not([type=radio]):not([type=file]):not([type=button]),textarea,select"));
+const typingIn=box=>{const a=document.activeElement;return isField(a)&&(!box||box.contains(a))};
+const held=new Map();
+function holdWhileTyping(key,box,fn){if(!typingIn(box))return false;held.set(key,[box,fn]);return true}
+document.addEventListener("focusout",()=>setTimeout(()=>{for(const [k,[box,fn]] of [...held])if(!typingIn(box)){held.delete(k);fn()}},0));
+// gửi form bằng Enter: rời ô trước để danh sách vẽ lại ngay
+document.addEventListener("submit",()=>{const a=document.activeElement;if(isField(a))a.blur()},true);
 function saveNow(){clearTimeout(saveT);try{API.saveSync(DB)}catch(e){}}
 window.addEventListener("beforeunload",saveNow);
 const S=()=>DB.settings;
@@ -978,11 +996,12 @@ function orderCard(o){
   const tot=`<details class="oc-t"><summary><span>Bán <b>${money(o.price+o.charge)}</b></span><span>Lãi <b class="${o.profit>=0?"pos":"neg"}">${money(o.profit)}</b></span></summary>
     <div><span>Giá bán</span><b>${money(o.price)}</b></div>${o.charge?`<div><span>Ship người mua trả</span><b>+${money(o.charge)}</b></div>`:""}<div><span>Phí eBay</span><b>−${money(o.fees)}</b></div><div><span>Ship bạn trả</span><b>−${money(o.ship)}</b></div><div><span>Vốn</span><b>−${money(o.cost)}</b></div></details>`;
   let foot="";
+  const qv=(k,v)=>esc(qDraft[o.its.map(i=>i.id).join(",")+"|"+k]??v);
   if(o.stage==="ship")foot=`<div class="oc-f oc-q">
-    <label>Order ID<input class="mono" data-q="orderId" value="${esc(f.orderId||"")}" autocomplete="off"></label>
-    <label>Phí eBay<input data-q="fees" type="number" step="0.01" min="0" value="${o.fees?o.fees.toFixed(2):""}" title="Đang là phí gợi ý, sửa theo số eBay"></label>
-    <label>Ship bạn trả<input data-q="ship" type="number" step="0.01" min="0" value="${esc(f.shipTotal||"")}"></label>
-    <label class="q-trk">Tracking<input class="mono" data-q="tracking" placeholder="Dán số tracking…" autocomplete="off"></label>
+    <label>Order ID<input class="mono" data-q="orderId" value="${qv("orderId",f.orderId||"")}" autocomplete="off"></label>
+    <label>Phí eBay<input data-q="fees" type="number" step="0.01" min="0" inputmode="decimal" value="${qv("fees",o.fees?o.fees.toFixed(2):"")}" title="Đang là phí gợi ý, sửa theo số eBay"></label>
+    <label>Ship bạn trả<input data-q="ship" type="number" step="0.01" min="0" inputmode="decimal" value="${qv("ship",f.shipTotal||"")}"></label>
+    <label class="q-trk">Tracking<input class="mono" data-q="tracking" value="${qv("tracking","")}" placeholder="Dán số tracking…" autocomplete="off"></label>
     <button type="button" class="btn primary" data-savetrk>Lưu</button></div>`;
   // tracking hiện ngay dưới tiêu đề thẻ (dễ thấy), kit dùng chung 1 tracking
   const trkRow=f.tracking&&o.stage!=="ship"?`<div class="oc-tr">${trkLine(f)}${trkChip(f)}</div>`:"";
@@ -1037,6 +1056,7 @@ function lotTable(ls){
   return `<div class="card tw" style="padding:0"><table class="ot"><thead><tr><th>Món</th><th>P/N</th><th class="num">Còn</th><th>Serial</th><th>Giá list</th><th class="num">Vốn</th></tr></thead><tbody>${ls.map(l=>`<tr data-open="${l.f.id}"><td><b>${esc(l.f.name)}</b></td><td class="mono">${esc(l.f.pn||"")}</td><td class="num">${unitsOf(l.its).length}</td><td class="mono" style="font-size:12px">${unitsOf(l.its).map(u=>(u.kit?"🔗 ":"")+esc(u.serials)).join(", ")}</td><td>${lotListBadge(unitsOf(l.its))}</td><td class="num">${money(l.cost)}</td></tr>`).join("")}</tbody></table></div>`;
 }
 function render(){
+  if(holdWhileTyping("ebay",$("#list"),render))return;
   fillMonths();
   const q=$("#q").value.trim().toLowerCase(),qs=ns(q),mon=$("#ebMonth").value;
   const sold=items.filter(i=>i.status!=="kho"),stock=items.filter(i=>i.status==="kho");
@@ -1095,11 +1115,8 @@ $("#list").addEventListener("click",async e=>{
     await quickSell(ids);return}
   // Cần ship: điền nhanh Order ID, phí, ship, tracking ngay trên thẻ
   if(t.closest("[data-savetrk]")){
-    const g=k=>{const x=ord.querySelector(`[data-q="${k}"]`);return x?x.value.trim():""};
-    const its=ids.map(id=>DB.items.find(i=>i.id===id)).filter(i=>i&&i.status==="ban"),now=Date.now();
-    const fsplit=g("fees")!==""?splitC(g("fees"),its.length):null;
-    its.forEach((i,j)=>{i.orderId=g("orderId");i.tracking=g("tracking");if(fsplit)i.fees=fsplit[j];i.shipTotal=g("ship");i.shipN=its.length;i.updatedAt=now});
-    save();await reload();return}
+    const a=document.activeElement;if(isField(a))a.blur();
+    saveQuick(ord,["orderId","fees","ship","tracking"]);await reload();return}
   if(t.closest("[data-ret]")){openItem(t.closest("[data-ret]").dataset.ret);setStatus("tra");return}
   if(t.closest("[data-sell]")){openItem(ids[0]);setStatus("ban");F("price").focus();return}
   if(t.closest("[data-restock]")){restockFrom(items.find(i=>i.id===ids[0]));return}
@@ -1110,9 +1127,26 @@ $("#list").addEventListener("click",async e=>{
 });
 $("#list").addEventListener("keydown",e=>{
   if(e.key!=="Enter")return;
-  if(e.target.matches("[data-q]"))e.target.closest("[data-ord]").querySelector("[data-savetrk]").click();
-  if(e.target.matches("[data-qprice]"))e.target.closest("[data-lot]").querySelector("[data-qsell]").click();
+  if(e.target.matches("[data-q]")){e.target.blur();e.target.closest("[data-ord]").querySelector("[data-savetrk]").click()}
+  if(e.target.matches("[data-qprice]")){e.target.blur();e.target.closest("[data-lot]").querySelector("[data-qsell]").click()}
 });
+/* Cần ship: số đang gõ giữ trong qDraft (vẽ lại không làm mất); Order ID, phí, ship tự lưu khi rời ô.
+   Tracking chỉ lưu khi bấm Lưu/Enter vì có tracking là đơn rời khỏi Cần ship */
+const qDraft={};
+function saveQuick(ord,keys){
+  const key=ord.dataset.ord,g=k=>{const x=ord.querySelector(`[data-q="${k}"]`);return x?x.value.trim():""};
+  const its=key.split(",").map(id=>DB.items.find(i=>i.id===id)).filter(i=>i&&i.status==="ban"),now=Date.now();
+  for(const k of keys){
+    const v=g(k),fsplit=k==="fees"&&v!==""?splitC(v,its.length):null;
+    its.forEach((i,j)=>{if(k==="orderId")i.orderId=v;if(k==="tracking")i.tracking=v;if(fsplit)i.fees=fsplit[j];if(k==="ship"){i.shipTotal=v;i.shipN=its.length}i.updatedAt=now});
+    delete qDraft[key+"|"+k];
+  }
+  save();
+}
+$("#list").addEventListener("input",e=>{const x=e.target;if(!x.matches("[data-q]"))return;qDraft[x.closest("[data-ord]").dataset.ord+"|"+x.dataset.q]=x.value});
+$("#list").addEventListener("change",e=>{const x=e.target;if(!x.matches("[data-q]")||x.dataset.q==="tracking")return;
+  saveQuick(x.closest("[data-ord]"),[x.dataset.q]);
+  setTimeout(reload,400)}); // chờ chút để cú bấm nút Lưu kịp tới; render tự hoãn nếu đang sang ô khác trong danh sách
 /* Sửa cả lô bằng chính form "Thêm hàng": serial mỗi dòng 1 cái (thêm dòng = thêm, xoá dòng = xoá), tick kit = ghép theo cặp */
 let lotEdit=null;
 const LOT_KEEP=["pn","cost","listPrice","shipMode","shipCharge","test","notes"];
@@ -1219,6 +1253,8 @@ function openItem(id){
   // kit: các ô tiền hiện tổng của cả kit, khi lưu app chia đều lại cho từng thanh
   const kit=kitOf(cur);
   if(kit.length>1)KIT_F.forEach(k=>{F(k).value=kit.some(i=>i[k]!==""&&i[k]!=null)?kit.reduce((a,i)=>a+n(i[k]),0).toFixed(2):""});
+  // phí đã lưu đúng bằng phí gợi ý thì vẫn coi là tự điền (đổi giá sẽ tính lại); khác thì là số đã sửa tay
+  {const p=n(F("price").value),sug=calcFee(p+chargeNow());F("fees").dataset.auto=F("fees").value!==""&&p&&Math.abs(n(F("fees").value)-sug)<0.005?F("fees").value:""}
   $("#kitNote").classList.toggle("hidden",kit.length<2);
   $("#kitNote").innerHTML=kit.length>1?`🔗 <b>Kit ${kit.length} thanh</b>: ${kit.map(i=>`<button type="button" class="kit-s mono${i.id===cur.id?" on":""}" data-kitopen="${i.id}" title="Sửa serial, test, ảnh của thanh này">${esc(i.serial||"?")}${i.test?` <span class="muted">(${esc(i.test)})</span>`:""}</button>`).join(" + ")}`:"";
   kitTags();renderKitTools();shipModeUI();
@@ -1231,7 +1267,7 @@ function openItem(id){
 }
 function setStatus(st){
   // bán: giá bán tự điền = giá list (sửa được khi bán theo offer)
-  if(st==="ban"&&!F("price").value&&F("listPrice").value){F("price").value=F("listPrice").value;F("fees").value=calcFee(n(F("price").value)+chargeNow())||""}
+  if(st==="ban"&&!F("price").value&&F("listPrice").value){F("price").value=F("listPrice").value;autoFee()}
   status=st;
   $("#stTag").className="tag s-"+st;$("#stTag").textContent=ST[st];
   $("#saleBox").classList.toggle("hidden",st==="kho");
@@ -1330,7 +1366,10 @@ function upd(){
   const sold=kn>1?kitOf(cur).map(i=>i.serial||""):[F("serial").value],b=ns(F("retSerial").value);
   $("#match").innerHTML=!b?"":sold.some(x=>ns(x)===b)?`<div class="result ok" style="padding:8px;margin:0">✅ Serial khớp</div>`:`<div class="result bad" style="padding:8px;margin:0">❌ Serial KHÔNG khớp (đã bán: ${sold.map(esc).join(" + ")})</div>`;
 }
-F("price").addEventListener("input",()=>{F("fees").value=calcFee(n(F("price").value)+chargeNow())||"";upd()}); // eBay tính phí trên cả tiền ship người mua trả
+// phí gợi ý theo giá (eBay tính phí trên cả tiền ship người mua trả); đã sửa tay theo số eBay thì không ghi đè nữa
+const feeAutoOk=()=>{const v=F("fees").value.trim();return v===""||F("fees").dataset.auto===v};
+function autoFee(){if(!feeAutoOk())return;const v=calcFee(n(F("price").value)+chargeNow());F("fees").value=v?v.toFixed(2):"";F("fees").dataset.auto=F("fees").value}
+F("price").addEventListener("input",()=>{autoFee();upd()});
 ["fees","shipTotal","cost","serial","retSerial"].forEach(k=>F(k).addEventListener("input",upd));
 $$("[data-close]").forEach(b=>b.onclick=()=>$("#dlg").close());
 
@@ -1607,7 +1646,8 @@ const payStart=()=>/^\d{4}-\d{2}-\d{2}$/.test(S().payStart||"")?S().payStart:"20
 const PAY_LAG=18; // ngày bắt đầu kỳ + 18 = thứ 5 sau khi kỳ 14 ngày kết thúc
 function payPeriod(k){const st=addDays(payStart(),14*k);return {st,en:addDays(st,13),pay:addDays(st,PAY_LAG)}}
 function periodSum(pp,calc){
-  return DB.shifts.filter(s=>s.date>=pp.st&&s.date<=pp.en).reduce((a,s)=>{const c=calc[s.id]||{h:0,reg:0,ot:0,pay:0};return{h:a.h+c.h,reg:a.reg+c.reg,ot:a.ot+c.ot,pay:a.pay+c.pay,n:a.n+1}},{h:0,reg:0,ot:0,pay:0,n:0});
+  const ss=DB.shifts.filter(s=>s.date>=pp.st&&s.date<=pp.en),r=ss.reduce((a,s)=>addC(a,calc[s.id]),Z0());
+  r.n=ss.filter(s=>!isLeave(s)).length;return r;
 }
 // kỳ có ngày nhận check rơi vào tuần chứa ref (hoặc null), và kỳ nhận check kế tiếp sau tuần đó
 function checkFor(ref){
@@ -1622,10 +1662,10 @@ function checkHtml(ref,calc){
   const {cur,next}=checkFor(ref),t=today();
   let h="";
   if(cur){const c=periodSum(cur,calc);
-    h+=`<div class="ck"><div><div class="ckd">${cur.pay<t?"Đã nhận":"Nhận"} <b>${dowl(cur.pay)} ${dmy(cur.pay)}</b> · cho kỳ <b>${dmy(cur.st)} – ${dmy(cur.en)}</b></div><div class="ckv">${money(c.pay)}</div></div><div class="ckd" style="text-align:right">${c.reg.toFixed(2)} giờ thường${c.ot>0?` + <b class="neg">${c.ot.toFixed(2)} giờ tăng ca</b>`:""}<br>${c.n} ca · trước thuế</div></div>`;
+    h+=`<div class="ck"><div><div class="ckd">${cur.pay<t?"Đã nhận":"Nhận"} <b>${dowl(cur.pay)} ${dmy(cur.pay)}</b> · cho kỳ <b>${dmy(cur.st)} – ${dmy(cur.en)}</b></div><div class="ckv">${money(c.pay)}</div></div><div class="ckd" style="text-align:right">${c.reg.toFixed(2)} giờ thường${c.ot>0?` + <b class="neg">${c.ot.toFixed(2)} giờ tăng ca</b>`:""}${leaveTxt(c)}<br>${c.n} ca · trước thuế</div></div>`;
   }else h+=`<div class="ckv none">Tuần này không có check</div>`;
   if(next){const c=periodSum(next,calc),done=next.en<t;
-    h+=`<div class="cknext">Check kế tiếp: <b>${dowl(next.pay)} ${dmy(next.pay)}</b> · kỳ ${dmy(next.st)} – ${dmy(next.en)} · ${done?"":"tạm tính "}<b class="pos">${money(c.pay)}</b> (${c.h.toFixed(2)} giờ)</div>`;
+    h+=`<div class="cknext">Check kế tiếp: <b>${dowl(next.pay)} ${dmy(next.pay)}</b> · kỳ ${dmy(next.st)} – ${dmy(next.en)} · ${done?"":"tạm tính "}<b class="pos">${money(c.pay)}</b> (${c.h.toFixed(2)} giờ làm${c.hol+c.pto?` + ${(c.hol+c.pto).toFixed(2)} giờ Holiday/PTO`:""})</div>`;
   }
   return h;
 }
@@ -1719,6 +1759,7 @@ function fillCats(sel,val){
   if(val)sel.value=val;
 }
 function renderSpend(){
+  if(holdWhileTyping("spend",$("#mod-spend"),renderSpend))return;
   $("#spMonth").textContent=mLabel(spM);
   const all=expOf(spM),list=all.filter(e=>e.type==="chi"||e.type==="thu"); // cố định + trả thẻ hiện ở 2 ô riêng
   const chi=all.filter(isChi).reduce((a,e)=>a+n(e.amount),0),thu=list.filter(e=>e.type==="thu").reduce((a,e)=>a+n(e.amount),0);
@@ -1781,7 +1822,12 @@ $("#bgForm").onsubmit=e=>{
 /* ===== Giờ đi làm ===== */
 const hhmm=d=>String(d.getHours()).padStart(2,"0")+":"+String(d.getMinutes()).padStart(2,"0");
 const weekStartOf=s=>{const d=parseD(s),diff=(d.getDay()-n(S().weekStart)+7)%7;return addDays(s,-diff)};
+/* Ngày Holiday / PTO: kind "hol"/"pto", số giờ trong hrs (mặc định 8). Trả lương thường, không bao giờ thành tăng ca;
+   mặc định cũng không cộng vào mốc tăng ca của giờ làm thật (Cài đặt → leaveOt để đổi) */
+const isLeave=sh=>sh.kind==="hol"||sh.kind==="pto";
+const LV={hol:"🎉 Holiday",pto:"🌴 PTO"};
 function shiftHours(sh){
+  if(isLeave(sh))return Math.max(0,n(sh.hrs));
   if(!sh.start||!sh.end)return 0;
   const [a,b]=sh.start.split(":").map(Number),[c,d]=sh.end.split(":").map(Number);
   let m=(c*60+d)-(a*60+b);if(m<0)m+=1440;m-=n(sh.brk);return Math.max(0,m)/60;
@@ -1790,11 +1836,18 @@ function calcShifts(){
   const res={},byWeek={},lim=n(S().otAfter),w=n(S().wage),mult=n(S().otMult)||1.5;
   for(const sh of DB.shifts)(byWeek[weekStartOf(sh.date)]??=[]).push(sh);
   for(const wk in byWeek){
-    const arr=byWeek[wk].slice().sort((a,b)=>(a.date+a.start).localeCompare(b.date+b.start));let cum=0;
-    for(const sh of arr){const h=shiftHours(sh),reg=Math.max(0,Math.min(h,lim-cum)),ot=h-reg;cum+=h;res[sh.id]={h,reg,ot,pay:reg*w+ot*w*mult}}
+    const arr=byWeek[wk].slice().sort((a,b)=>(a.date+(a.start||"")).localeCompare(b.date+(b.start||"")));let cum=0;
+    for(const sh of arr){
+      const h=shiftHours(sh);
+      // h: giờ làm thật (giờ nghỉ có lương để riêng ở hol/pto)
+      if(isLeave(sh)){if(S().leaveOt)cum+=h;res[sh.id]={h:0,reg:0,ot:0,hol:sh.kind==="hol"?h:0,pto:sh.kind==="pto"?h:0,pay:h*w};continue}
+      const reg=Math.max(0,Math.min(h,lim-cum)),ot=h-reg;cum+=h;res[sh.id]={h,reg,ot,hol:0,pto:0,pay:reg*w+ot*w*mult}}
   }
   return res;
 }
+const Z0=()=>({h:0,reg:0,ot:0,hol:0,pto:0,pay:0,n:0});
+const addC=(a,c)=>{c=c||{};for(const k of ["h","reg","ot","hol","pto","pay"])a[k]+=c[k]||0;a.n++;return a};
+const leaveTxt=c=>(c.hol?` + <b>${fh(c.hol)} giờ Holiday</b>`:"")+(c.pto?` + <b>${fh(c.pto)} giờ PTO</b>`:"");
 let wkCur=null;
 const fh=h=>h.toFixed(2);
 const lunch=()=>{const v=parseFloat(S().lunch);return isFinite(v)&&v>=0?v:30};
@@ -1802,23 +1855,27 @@ const lunch=()=>{const v=parseFloat(S().lunch);return isFinite(v)&&v>=0?v:30};
 const hrBarCls=(tot,lim)=>tot>lim?"over":tot>=lim-5?"warn":"go";
 const dm=s=>{const d=parseD(s);return d.getDate()+"/"+(d.getMonth()+1)};
 function renderWork(){
+  if(holdWhileTyping("work",$("#mod-work"),renderWork))return;
   if(!wkCur)wkCur=weekStartOf(today());
   const calc=calcShifts(),we=addDays(wkCur,6),t=today();
   $("#wkLabel").textContent=`${DOW[parseD(wkCur).getDay()]} ${dm(wkCur)} – ${DOW[parseD(we).getDay()]} ${dm(we)}/${parseD(we).getFullYear()}`;
-  const list=DB.shifts.filter(s=>s.date>=wkCur&&s.date<=we).sort((a,b)=>(a.date+a.start).localeCompare(b.date+b.start));
-  const sum=list.reduce((a,s)=>{const c=calc[s.id]||{h:0,reg:0,ot:0,pay:0};return{h:a.h+c.h,reg:a.reg+c.reg,ot:a.ot+c.ot,pay:a.pay+c.pay}},{h:0,reg:0,ot:0,pay:0});
-  const lim=n(S().otAfter)||40,pct=Math.min(100,sum.h/lim*100),left=lim-sum.h;
+  const list=DB.shifts.filter(s=>s.date>=wkCur&&s.date<=we).sort((a,b)=>(a.date+(a.start||"")).localeCompare(b.date+(b.start||"")));
+  const sum=list.reduce((a,s)=>addC(a,calc[s.id]),Z0()),nw=list.filter(s=>!isLeave(s)).length;
+  const lim=n(S().otAfter)||40,toOt=sum.h+(S().leaveOt?sum.hol+sum.pto:0),pct=Math.min(100,toOt/lim*100),left=lim-toOt;
   $("#wkSum").innerHTML=
-    `<div class="card"><div class="lb">Tổng giờ tuần</div><div class="v">${fh(sum.h)} <span class="sub">/ ${lim} giờ</span></div><div class="bar ${hrBarCls(sum.h,lim)}"><i style="width:${pct}%"></i></div><div class="sub">${left>0?`Còn ${fh(left)} giờ tới tăng ca`:"Đã vượt ngưỡng tăng ca"}</div></div>`+
-    `<div class="card pay"><div class="lb">Tiền công ước tính</div><div class="v">${money(sum.pay)}</div><div class="sub">Trước thuế · ${list.length} ca</div></div>`+
+    `<div class="card"><div class="lb">Tổng giờ tuần</div><div class="v">${fh(sum.h)} <span class="sub">/ ${lim} giờ</span></div><div class="bar ${hrBarCls(toOt,lim)}"><i style="width:${pct}%"></i></div><div class="sub">${left>0?`Còn ${fh(left)} giờ tới tăng ca`:"Đã vượt ngưỡng tăng ca"}${sum.hol||sum.pto?` · nghỉ có lương ${fh(sum.hol+sum.pto)} giờ${S().leaveOt?" (có tính vào mốc)":""}`:""}</div></div>`+
+    `<div class="card pay"><div class="lb">Tiền công ước tính</div><div class="v">${money(sum.pay)}</div><div class="sub">Regular ${fh(sum.reg)} · OT ${fh(sum.ot)}${sum.hol?` · Holiday ${fh(sum.hol)}`:""}${sum.pto?` · PTO ${fh(sum.pto)}`:""} giờ<br>Trước thuế · ${nw} ca</div></div>`+
     `<div class="card ${sum.ot>0?"ot1":"ot0"}"><div class="lb">Tăng ca</div><div class="v">${fh(sum.ot)} giờ</div><div class="sub">${sum.ot>0?`Tính ×${n(S().otMult)||1.5} lương`:"Chưa có tăng ca"}</div></div>`;
   let h="";
   for(let k=0;k<7;k++){
     const d=addDays(wkCur,k),ds=list.filter(s=>s.date===d),isT=d===t,fut=d>t;
-    const dh=ds.reduce((a,s)=>a+(calc[s.id]?calc[s.id].h:0),0),dp=ds.reduce((a,s)=>a+(calc[s.id]?calc[s.id].pay:0),0),dot=ds.reduce((a,s)=>a+(calc[s.id]?calc[s.id].ot:0),0);
+    const dc=ds.reduce((a,s)=>addC(a,calc[s.id]),Z0()),dh=dc.h+dc.hol+dc.pto,dp=dc.pay,dot=dc.ot;
     const head=`<div class="dh2"><span>${DOW[parseD(d).getDay()]} ${dm(d)}</span>${isT?`<span class="pill">Hôm nay</span>`:ds.length?`<button class="addb" data-add="${d}" title="Thêm ca">+</button>`:""}</div>`;
+    const trow=s=>isLeave(s)
+      ?`<div class="tr lv ${s.kind}" data-sh="${s.id}" title="${esc(s.note||"Sửa")}">${LV[s.kind]} ${fh(shiftHours(s)).replace(/\.00$/,"")}h${s.note?` · ${esc(s.note)}`:""}</div>`
+      :`<div class="tr" data-sh="${s.id}" title="${esc(s.note||"Sửa ca")}">${esc(s.start)}–${esc(s.end)}${n(s.brk)?` · nghỉ ${n(s.brk)}′`:""}</div>`;
     h+=ds.length
-      ?`<div class="day${isT?" today":""}" data-day="${d}">${head}<div class="h">${fh(dh)} <small>giờ</small></div>${ds.map(s=>`<div class="tr" data-sh="${s.id}" title="${esc(s.note||"Sửa ca")}">${esc(s.start)}–${esc(s.end)}${n(s.brk)?` · nghỉ ${n(s.brk)}′`:""}</div>`).join("")}${dot>0?`<span class="otg">+${fh(dot)}h tăng ca</span>`:""}<div class="p">${money(dp)}</div></div>`
+      ?`<div class="day${isT?" today":""}${ds.some(isLeave)?" lvday":""}" data-day="${d}">${head}<div class="h">${fh(dh)} <small>giờ</small></div>${ds.map(trow).join("")}${dot>0?`<span class="otg">+${fh(dot)}h tăng ca</span>`:""}<div class="p">${money(dp)}</div></div>`
       :`<div class="day empty${isT?" today":fut?" future":""}" data-day="${d}">${head}<div class="plus">${isT?"+ Thêm ca":fut?"+":"Nghỉ"}</div></div>`;
   }
   $("#wkDays").innerHTML=h;
@@ -1830,8 +1887,8 @@ function renderWork(){
     const first=el.querySelector("[data-sh]");first?openShift(first.dataset.sh):openShift(null,el.dataset.day);
   });
   const mk=monthOf(wkCur),ms=DB.shifts.filter(s=>monthOf(s.date)===mk);
-  const m=ms.reduce((a,s)=>{const c=calc[s.id]||{h:0,ot:0,pay:0};return{h:a.h+c.h,ot:a.ot+c.ot,pay:a.pay+c.pay}},{h:0,ot:0,pay:0});
-  $("#wkMonth").innerHTML=`${mLabel(mk)}: <b>${ms.length}</b> ca · <b>${fh(m.h)}</b> giờ · tăng ca <b>${fh(m.ot)}</b> giờ · tiền công <b class="pos">${money(m.pay)}</b>`;
+  const m=ms.reduce((a,s)=>addC(a,calc[s.id]),Z0());
+  $("#wkMonth").innerHTML=`${mLabel(mk)}: <b>${ms.filter(s=>!isLeave(s)).length}</b> ca · <b>${fh(m.h)}</b> giờ làm · tăng ca <b>${fh(m.ot)}</b> giờ${m.hol?` · Holiday <b>${fh(m.hol)}</b> giờ`:""}${m.pto?` · PTO <b>${fh(m.pto)}</b> giờ`:""} · tiền công <b class="pos">${money(m.pay)}</b>`;
   renderClock();
 }
 function renderClock(){
@@ -1860,24 +1917,38 @@ $("#clockBtn").onclick=()=>{
 $("#wkPrev").onclick=()=>{wkCur=addDays(wkCur,-7);renderWork()};
 $("#wkNext").onclick=()=>{wkCur=addDays(wkCur,7);renderWork()};
 let shCur=null;
-function openShift(id,date){
+function shKindUI(){
+  const f=$("#shForm"),k=f.kind.value,lv=k==="hol"||k==="pto";
+  $$("#shForm .kw").forEach(x=>x.classList.toggle("hidden",lv));$$("#shForm .kl").forEach(x=>x.classList.toggle("hidden",!lv));
+  f.start.required=f.end.required=!lv;f.hrs.required=lv;
+  f.note.placeholder=k==="hol"?"Tên ngày lễ (vd. Thanksgiving)":k==="pto"?"Lý do (tuỳ chọn)":"";
+  $("#shTitle").textContent=(shCur?"Sửa ":"Thêm ")+(lv?LV[k]:"ca làm");
+}
+$$("#shForm [name=kind]").forEach(r=>r.onchange=shKindUI);
+function openShift(id,date,kind){
   shCur=id?DB.shifts.find(s=>s.id===id):null;
-  const f=$("#shForm"),s=shCur||{date:date||today(),start:"",end:"",brk:lunch(),note:""};
-  f.date.value=s.date;f.start.value=s.start;f.end.value=s.end;f.brk.value=n(s.brk);f.note.value=s.note||"";
-  $("#shTitle").textContent=shCur?"Sửa ca làm":"Thêm ca làm";$("#shDel").style.display=shCur?"":"none";$("#shDlg").showModal();
+  const f=$("#shForm"),s=shCur||{date:date||today(),start:"",end:"",brk:lunch(),note:"",kind:kind||"work",hrs:8};
+  f.date.value=s.date;f.start.value=s.start||"";f.end.value=s.end||"";f.brk.value=n(s.brk);f.note.value=s.note||"";
+  f.kind.value=isLeave(s)?s.kind:"work";f.hrs.value=isLeave(s)?n(s.hrs):8;
+  shKindUI();$("#shDel").style.display=shCur?"":"none";$("#shDlg").showModal();
 }
 $("#shAdd").onclick=()=>openShift(null);
+$("#holAdd").onclick=()=>openShift(null,null,"hol");
+$("#ptoAdd").onclick=()=>openShift(null,null,"pto");
 $("#shForm").onsubmit=e=>{
-  e.preventDefault();const f=e.target;
-  const v={date:f.date.value,start:f.start.value,end:f.end.value,brk:n(f.brk.value),note:f.note.value.trim()};
-  if(shCur)Object.assign(shCur,v);else DB.shifts.push({id:uid(),...v});
+  e.preventDefault();const f=e.target,k=f.kind.value;
+  const v=k==="hol"||k==="pto"
+    ?{date:f.date.value,kind:k,hrs:Math.min(24,Math.max(0,n(f.hrs.value))),start:"",end:"",brk:0,note:f.note.value.trim()}
+    :{date:f.date.value,kind:"work",start:f.start.value,end:f.end.value,brk:n(f.brk.value),note:f.note.value.trim()};
+  if(shCur){Object.assign(shCur,v);if(v.kind==="work")delete shCur.hrs}else DB.shifts.push({id:uid(),...v});
   save();$("#shDlg").close();wkCur=weekStartOf(v.date);renderWork();
 };
 $("#shDel").onclick=async()=>{if(shCur&&await ask("Xoá ca này?")){DB.shifts=DB.shifts.filter(s=>s!==shCur);save();$("#shDlg").close();renderWork()}};
 
 /* ===== Cài đặt ===== */
 function renderSet(){
-  $("#stWage").value=S().wage;$("#stOtAfter").value=S().otAfter;$("#stOtMult").value=S().otMult;$("#stWeek").value=S().weekStart;$("#stLunch").value=lunch();$("#stPay").value=payStart();$("#stTheme").value=S().theme||"dark";
+  if(holdWhileTyping("set",$("#mod-set"),renderSet))return;
+  $("#stWage").value=S().wage;$("#stOtAfter").value=S().otAfter;$("#stOtMult").value=S().otMult;$("#stWeek").value=S().weekStart;$("#stLunch").value=lunch();$("#stLeaveOt").checked=!!S().leaveOt;$("#stPay").value=payStart();$("#stTheme").value=S().theme||"dark";
   $("#bkText").innerHTML=API.info.electron
     ?`Dữ liệu lưu thành file trong thư mục <b class="mono">${esc(API.info.dir)}</b> (ảnh nằm trong thư mục con <span class="mono">photos</span>). App tự sao lưu mỗi ngày vào thư mục <span class="mono">backup</span>. Nếu để thư mục này trong OneDrive thì có thêm bản dự phòng trên mạng.`
     :`Dữ liệu lưu trong trình duyệt này. Hãy tải file sao lưu thường xuyên và cất vào C:\\Dev\\Online hoặc OneDrive.`;
@@ -1886,7 +1957,7 @@ function renderSet(){
   backupAge();
 }
 $("#stSaveWork").onclick=()=>{
-  Object.assign(S(),{wage:n($("#stWage").value),otAfter:n($("#stOtAfter").value)||40,otMult:n($("#stOtMult").value)||1.5,weekStart:+$("#stWeek").value,lunch:Math.max(0,n($("#stLunch").value)),payStart:$("#stPay").value||payStart()});
+  Object.assign(S(),{wage:n($("#stWage").value),otAfter:n($("#stOtAfter").value)||40,otMult:n($("#stOtMult").value)||1.5,weekStart:+$("#stWeek").value,lunch:Math.max(0,n($("#stLunch").value)),leaveOt:$("#stLeaveOt").checked,payStart:$("#stPay").value||payStart()});
   save();$("#stWorkSaved").textContent="Đã lưu";setTimeout(()=>$("#stWorkSaved").textContent="",1500);
 };
 // Giao diện: tối / sáng / theo Windows (đổi ngay, không cần bấm Lưu)

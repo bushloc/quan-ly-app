@@ -561,6 +561,7 @@ h2.pg{font-size:24px;margin-bottom:12px}
 @media(max-width:760px){.ysum{gap:6px}.ysum>div{padding:8px 10px;min-width:0}.ysum b{font-size:16px}.ytab{font-size:12.5px;width:100%}.ytab th,.ytab td{padding:5px 4px}.ytab th{font-size:10.5px}.ytab th.gr{font-size:10px}}
 @media(max-width:400px){.ysum b{font-size:13.5px}.ytab{font-size:11.5px}.donut svg{width:96px;height:96px}.ytab th,.ytab td{padding:5px 3px}.ytab th:first-child,.ytab td:first-child{padding-left:6px}}
 @media(max-width:760px){nav.subnav.eb-tabs{display:flex;width:100%;overflow-x:auto;padding:3px;gap:1px}nav.subnav.eb-tabs button{flex:1 0 auto;min-width:0;padding:8px 5px;font-size:12.5px;letter-spacing:-.01em}nav.subnav.eb-tabs button .badge,nav.subnav.eb-tabs button b{margin-left:3px}}
+.ytab td small.gr,.ytab th small{display:block;font-size:10.5px;font-weight:500;line-height:1.2;color:var(--muted)}.ytab th small{display:inline;text-transform:none;letter-spacing:0}
 #homeYear{overflow-x:auto;max-width:100%}.ysum>div,.ysum b{min-width:0}.ysum b{overflow-wrap:anywhere}
 </style>
 </head>
@@ -1781,11 +1782,11 @@ function yearSummary(yr,mks,stats,cur){
   const T=stats.reduce((a,s)=>({i:a.i+inc(s),c:a.c+s.chi,g:a.g+s.pay}),{i:0,c:0,g:0}),nm=mks.filter((m,i)=>m<=now&&has(m,stats[i])).length||1;
   const mY=v=>(v<0?"-$":"$")+Math.round(Math.abs(v)).toLocaleString("en-US"),cell=v=>`<td class="num">${mY(v)}</td>`;
   return `<h3>Tổng kết năm ${yr}</h3><div class="ysum"><div><span>Tổng thu</span><b class="pos">${money(T.i)}</b></div><div><span>Tổng chi</span><b class="neg">${money(T.c)}</b></div><div><span>Còn lại</span><b class="${T.i-T.c>=0?"pos":"neg"}">${money(T.i-T.c)}</b></div></div>`+
-    `<table class="ytab"><thead><tr><th>Tháng</th><th class="num">Thu</th><th class="num">Chi</th><th class="num">Còn lại</th><th class="num gr">Lương<br>trước thuế</th></tr></thead><tbody>`+
+    `<table class="ytab"><thead><tr><th>Tháng <small>· lương trước thuế</small></th><th class="num">Thu</th><th class="num">Chi</th><th class="num">Còn lại</th></tr></thead><tbody>`+
     mks.map((m,i)=>{const s=stats[i],net=inc(s)-s.chi;return has(m,s)
-      ?`<tr class="${m===cur?"cur":""}"><td>T${+m.slice(5)}</td>${cell(inc(s))}${cell(s.chi)}<td class="num ${net>=0?"pos":"neg"}">${mY(net)}</td>${cell(s.pay).replace('class="num"','class="num gr"')}</tr>`
-      :`<tr class="fut"><td>T${+m.slice(5)}</td><td class="num">—</td><td class="num">—</td><td class="num">—</td><td class="num gr">—</td></tr>`}).join("")+
-    `</tbody><tfoot><tr><td>Cả năm</td>${cell(T.i)}${cell(T.c)}<td class="num ${T.i-T.c>=0?"pos":"neg"}">${mY(T.i-T.c)}</td><td class="num gr">${mY(T.g)}</td></tr><tr class="avg"><td>TB/tháng</td>${cell(T.i/nm)}${cell(T.c/nm)}${cell((T.i-T.c)/nm)}<td class="num gr">${mY(T.g/nm)}</td></tr></tfoot></table>`;
+      ?`<tr class="${m===cur?"cur":""}"><td>T${+m.slice(5)}${s.pay?`<small class="gr">lương ${mY(s.pay)}</small>`:""}</td>${cell(inc(s))}${cell(s.chi)}<td class="num ${net>=0?"pos":"neg"}">${mY(net)}</td></tr>`
+      :`<tr class="fut"><td>T${+m.slice(5)}</td><td class="num">—</td><td class="num">—</td><td class="num">—</td></tr>`}).join("")+
+    `</tbody><tfoot><tr><td>Cả năm<small class="gr">lương ${mY(T.g)}</small></td>${cell(T.i)}${cell(T.c)}<td class="num ${T.i-T.c>=0?"pos":"neg"}">${mY(T.i-T.c)}</td></tr><tr class="avg"><td>TB/tháng<small class="gr">lương ${mY(T.g/nm)}</small></td>${cell(T.i/nm)}${cell(T.c/nm)}${cell((T.i-T.c)/nm)}</tr></tfoot></table>`;
 }
 function renderHome(){
   const mk=homeM,t=today(),calc=calcShifts();

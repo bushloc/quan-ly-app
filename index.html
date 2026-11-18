@@ -235,6 +235,27 @@ dialog>form{display:flex;flex-direction:column;max-height:92vh}
 @keyframes reveal{from{clip-path:inset(0 100% 0 0)}}
 @keyframes fadein{from{opacity:0}}
 .hcard-in{animation:rise .5s cubic-bezier(.2,.8,.2,1) both}
+/* Tổng quan: việc cần làm → số chính → chi tiết gập */
+.todo-list{display:grid;gap:8px;margin-bottom:16px}
+.todo{display:flex;align-items:center;gap:10px;width:100%;padding:12px 14px;border-radius:14px;border:1px solid var(--line);background:var(--card);color:var(--text);font:inherit;text-align:left;cursor:pointer;box-shadow:var(--shadow)}
+.todo .ti{font-size:20px;flex:none}.todo b{font-size:15px}.todo .s{margin-left:auto;font-size:12.5px;color:var(--muted);white-space:nowrap}
+.todo.bad{background:var(--badsoft);border-color:var(--bad)}.todo.bad .s{color:var(--bad);font-weight:700}
+.todo.warn{background:var(--warnsoft);border-color:var(--warn)}.todo.warn .s{color:var(--warn);font-weight:700}
+.todo.go{background:var(--soft);border-color:color-mix(in srgb,var(--accent) 45%,transparent)}
+.todo-ok{color:var(--ok);font-size:14px;font-weight:600;padding:2px 2px 0}
+.hero{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;margin-bottom:16px}
+.hero .card{margin:0;padding:16px 18px}
+.hero .main{grid-column:1/-1;display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:6px 16px}
+.hero .lb{font-size:12.5px;color:var(--muted);font-weight:600;letter-spacing:.02em;text-transform:uppercase}
+.hero .kv{font-size:28px;font-weight:800;letter-spacing:-.02em;margin:4px 0 2px;text-shadow:var(--numglow);font-variant-numeric:tabular-nums}
+.hero .main .kv{font-size:44px;line-height:1.05}
+.hero .sub{font-size:12.5px;color:var(--muted)}.hero .sub b{color:var(--text)}
+.hero .kv.pos{color:var(--money)}.hero .kv.neg{color:var(--bad)}
+.hero .bar{margin:6px 0 4px}
+.hmore{padding:0}.hmore>summary{cursor:pointer;padding:14px 20px;font-weight:600;color:var(--muted);list-style:none}.hmore>summary::-webkit-details-marker{display:none}
+.hmore>summary::after{content:" ▸"}.hmore[open]>summary::after{content:" ▾"}.hmore[open]{padding:0 20px 16px}.hmore[open]>summary{padding:14px 0}
+.hmore h3{font-size:14px;color:var(--muted);margin:8px 0}
+@media(max-width:760px){.hero{grid-template-columns:repeat(2,minmax(0,1fr))}.hero .main .kv{font-size:38px}.hero .kv{font-size:24px}.hero .chkc{grid-column:1/-1}}
 @keyframes rise{from{opacity:0;transform:translateY(10px)}}
 .chart{display:block;width:100%;height:auto}
 .chart .gr{transform-box:fill-box;transform-origin:50% 100%;animation:grow .8s cubic-bezier(.2,.8,.2,1) both}
@@ -406,7 +427,15 @@ main>div:not(.hidden){animation:pagein .5s cubic-bezier(.2,.8,.2,1)}
 .ccrow{display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:8px 10px;margin:6px 0;border-radius:10px;background:var(--soft);border-left:4px solid var(--line)}
 .ccrow.paid{border-left-color:var(--ok)}.ccrow.soon{border-left-color:var(--warn)}.ccrow.late{border-left-color:var(--bad)}
 .ccchk{display:flex;align-items:center;gap:10px;flex:1 1 170px;margin:0;cursor:pointer;color:var(--text);font-size:14px}.ccchk input{width:22px;height:22px;flex:none;margin:0;accent-color:var(--ok)}
-.ccrow .ccAmt{width:112px;margin:0;text-align:right}.ccrow .ccDate{width:150px;margin:0}
+.ccrow .ccAmt{width:112px;margin:0;text-align:right}
+button.ccdue{border:0;background:none;padding:0;font:inherit;font-size:12px;cursor:pointer;text-align:left;color:var(--muted);text-decoration:underline dotted;text-underline-offset:3px}
+.ccrow.paid{background:var(--oksoft);border-left-color:var(--ok);box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--ok) 35%,transparent)}
+.ccrow.paid .ccchk b,.ccrow.paid .ccchk .mono{opacity:.65}.ccpaid{font-size:13px;font-weight:700;color:var(--ok)}
+.ccok{font-size:26px;font-weight:800;color:var(--ok);line-height:1;margin-left:auto}
+.ccrow.soon{background:var(--warnsoft)}.ccrow.late{background:var(--badsoft)}
+.ccedit{flex-basis:100%;display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:8px;padding-top:8px;border-top:1px solid var(--line);margin-top:4px}
+.ccedit label{margin:0}.ccedit .cechk{display:flex;align-items:center;gap:6px;color:var(--text);font-size:13px}.ccedit .cechk input{width:auto;margin:0}.ccedit .row{grid-column:1/-1}
+.fxrow.done .fxAmt{border-color:var(--ok);background:var(--oksoft);color:var(--ok);font-weight:700}.fxrow.done .fxD::after{content:" ✓";color:var(--ok);font-weight:800}
 .ccdue{font-size:12px;color:var(--muted)}.ccrow.soon .ccdue{color:var(--warn);font-weight:600}.ccrow.late .ccdue{color:var(--bad);font-weight:600}.ccrow.paid .ccdue{color:var(--ok)}
 .ccset{display:grid;grid-template-columns:2fr 1fr 1fr 2fr auto;gap:8px;align-items:end;margin-bottom:10px}.ccset label{margin:0}
 @media(max-width:760px){.ccset{grid-template-columns:1fr 1fr;padding-bottom:10px;border-bottom:1px solid var(--line)}.ccset label:first-child,.ccset label:nth-child(4){grid-column:1/-1}.ccrow .ccAmt,.ccrow .ccDate{flex:1}}
@@ -462,21 +491,22 @@ main>div:not(.hidden){animation:pagein .5s cubic-bezier(.2,.8,.2,1)}
     <div><h2 class="pg" id="homeTitle">Tổng quan</h2></div>
     <div class="row"><button class="btn" id="hmPrev">‹ Tháng trước</button><b id="hmLabel" class="hmlabel"></b><button class="btn" id="hmNext">Tháng sau ›</button></div>
   </div>
+  <!-- thứ tự theo mức quan trọng: việc cần làm ngay → số chính → nút nhanh → chi tiết (gập) -->
+  <div class="todo-list" id="homeTodo"></div>
+  <div class="hero" id="homeHero"></div>
   <div class="quick">
-    <button class="btn primary" data-go="ebay" data-act="#new">📦 Thêm hàng eBay</button>
-    <button class="btn" data-go="spend" data-focus="#spForm [name=amount]">💵 Ghi chi tiêu</button>
-    <button class="btn" data-go="work">⏱ Clock In / Out</button>
+    <button class="btn primary" data-go="ebay" data-act="#new">📦 Thêm hàng</button>
+    <button class="btn" data-go="spend" data-focus="#spForm [name=amount]">💵 Ghi chi</button>
+    <button class="btn" data-go="work">⏱ Clock In/Out</button>
   </div>
-  <div class="grid4" id="homeCards"></div>
-  <div class="grid2">
-    <div class="card chk"><h3>💵 Check lương</h3><div id="homeCheck"></div></div>
-    <div class="card"><h3>Giờ làm tuần này</h3><div id="homeWeek"></div></div>
-  </div>
-  <div class="grid2">
-    <div class="card"><h3>Thu nhập và chi tiêu · 6 tháng</h3><div id="homeChart"></div></div>
-    <div class="card"><h3 id="homeDonutTitle">Chi tiêu theo danh mục</h3><div id="homeDonut"></div></div>
-  </div>
-  <div class="card"><h3 id="homeBudgetTitle">Ngân sách tháng này</h3><div id="homeBudget"></div></div>
+  <details class="card hmore" id="homeMore">
+    <summary>📊 Biểu đồ & ngân sách</summary>
+    <div class="grid2">
+      <div><h3>Thu & chi · 6 tháng</h3><div id="homeChart"></div></div>
+      <div><h3 id="homeDonutTitle">Chi theo danh mục</h3><div id="homeDonut"></div></div>
+    </div>
+    <h3 id="homeBudgetTitle">Ngân sách</h3><div id="homeBudget"></div>
+  </details>
 </div>
 
 <div id="mod-ebay" class="hidden">
@@ -1614,23 +1644,28 @@ function renderHome(){
   const mks=[-5,-4,-3,-2,-1,0].map(k=>mShift(mk,k)),stats=mks.map(m=>monthStats(m,calc)),s=stats[5],p=stats[4];
   $("#homeTitle").textContent="Tổng quan";
   $("#hmLabel").textContent=mLabel(mk);
-  const ser=k=>stats.map(x=>x[k]);
-  const card=(l,v,sub,cls,dl,sp,i)=>`<div class="card hc hcard-in" style="animation-delay:${i*0.06}s"><div class="lb"><span>${l}</span>${dl}</div><div class="bigv ${cls}" data-count="${v}">${money(v)}</div><div class="muted" style="font-size:12px">${sub||""}</div>${sp}</div>`;
-  $("#homeCards").innerHTML=
-    card("Lãi bán eBay",s.ebay,`${s.sold} cái đã bán`,s.ebay>=0?"pos":"neg",delta(s.ebay,p.ebay),spark(ser("ebay"),"var(--accent)"),0)+
-    card("Tiền công ước tính",s.pay,`${s.hrs.toFixed(1)} giờ (trước thuế)`,"",delta(s.pay,p.pay),spark(ser("pay"),"var(--ok)"),1)+
-    card("Chi tiêu",s.chi,[s.fixed?`📌 Cố định ${money(s.fixed)}`:"",s.thu?`Thu khác ${money(s.thu)}`:"",cardDueNote()].filter(Boolean).join(" · "),"",delta(s.chi,p.chi,true),spark(ser("chi"),"var(--warn)"),2)+
-    card("Tổng thu nhập − chi",s.net,"Lãi eBay + tiền công + thu khác − chi",s.net>=0?"pos":"neg",delta(s.net,p.net),spark(ser("net"),"var(--ok)"),3);
-  countUp($("#homeCards"));
-  // tuần này (luôn là tuần hiện tại, không theo tháng đang chọn)
-  const wk=weekStartOf(t),we=addDays(wk,6),ws=DB.shifts.filter(x=>x.date>=wk&&x.date<=we);
-  const tot=ws.reduce((a,x)=>a+(calc[x.id]?calc[x.id].h:0),0),ot=ws.reduce((a,x)=>a+(calc[x.id]?calc[x.id].ot:0),0);
-  const lim=n(S().otAfter)||40,pct=Math.min(100,tot/lim*100);
-  const dh=[0,1,2,3,4,5,6].map(k=>{const d=addDays(wk,k);return [d,ws.filter(x=>x.date===d).reduce((a,x)=>a+(calc[x.id]?calc[x.id].h:0),0)]}),dmx=Math.max(8,...dh.map(x=>x[1]));
-  $("#homeWeek").innerHTML=`<div>${tot.toFixed(2)} / ${lim} giờ${ot>0?` · <b class="neg">tăng ca ${ot.toFixed(2)} giờ</b>`:""}</div><div class="bar ${hrBarCls(tot,lim)}"><i style="width:${pct}%"></i></div>`+
-    `<div class="wbars">${dh.map(([d,h],i)=>`<div class="${d===t?"t":""}" title="${d}: ${h.toFixed(2)} giờ"><span>${h?h.toFixed(1):""}</span><div class="b ${h?"":"z"}" style="height:${(h/dmx*60).toFixed(1)}px;animation-delay:${(i*0.05).toFixed(2)}s"></div><span>${DOW[parseD(d).getDay()]}</span></div>`).join("")}</div>`+
-    (DB.clock?`<div class="pos" style="margin-top:8px">● Đang trong ca từ ${hhmm(new Date(DB.clock.start))}</div>`:"");
-  $("#homeCheck").innerHTML=checkHtml(t,calc);
+  // 1) việc cần làm ngay (luôn theo hôm nay, không theo tháng đang xem)
+  const todo=[],nowM=mKey(new Date());
+  const ship=ordersOf(DB.items.filter(i=>i.status!=="kho")).filter(o=>o.stage==="ship");
+  if(ship.length){const w=Math.max(0,...ship.map(o=>daysAgo(o.f.saleDate)||0));todo.push([w>=2?"bad":"go","📮",`${ship.length} đơn cần ship`,w?`chờ ${w} ngày`:"hôm nay","ebay:ship"])}
+  for(const c of cards().filter(c=>c.name)){const [st,lb]=cardState(c,nowM);if(st==="late"||st==="soon")todo.push([st==="late"?"bad":"warn","💳",`Trả thẻ ${c.name}`,lb,"spend"])}
+  const fxTodo=fixedOf(nowM).filter(e=>String(e.amount)==="").length;
+  if(fxTodo)todo.push(["warn","📌",`${fxTodo} khoản cố định chưa trả`,mLabel(nowM),"spend"]);
+  if(DB.clock)todo.push(["go","⏱","Đang trong ca",`từ ${hhmm(new Date(DB.clock.start))}`,"work"]);
+  const rank={bad:0,warn:1,go:2};todo.sort((a,b)=>rank[a[0]]-rank[b[0]]); // quá hạn lên đầu
+  $("#homeTodo").innerHTML=todo.length?todo.map(([cl,ic,t1,s,go])=>`<button type="button" class="todo ${cl}" data-todo="${go}"><span class="ti">${ic}</span><b>${esc(t1)}</b><span class="s">${esc(s)}</span></button>`).join(""):`<div class="todo-ok">✓ Không có việc gấp</div>`;
+  $$("#homeTodo [data-todo]").forEach(b=>b.onclick=()=>{const [m,tab]=b.dataset.todo.split(":");if(tab){ebTab=tab;try{localStorage.setItem("ebTab",tab)}catch(e){}}showMod(m)});
+  // 2) số chính: mỗi thẻ 1 con số + nhãn ngắn + 1 dòng phụ
+  const {cur,next}=checkFor(t),ck=cur&&cur.pay>=t?cur:next,ckS=ck?periodSum(ck,calc):null;
+  const wk=weekStartOf(t),we=addDays(wk,6),wc=DB.shifts.filter(x=>x.date>=wk&&x.date<=we).reduce((a,x)=>addC(a,calc[x.id]),Z0());
+  const lim=n(S().otAfter)||40,toOt=wc.h+(S().leaveOt?wc.hol+wc.pto:0);
+  const box=(cls,lb,v,vcls,sub,i,extra="")=>`<div class="card hcard-in ${cls}" style="animation-delay:${i*0.06}s"><div><div class="lb">${lb}</div><div class="kv ${vcls}"${typeof v==="number"?` data-count="${v}"`:""}>${typeof v==="number"?money(v):v}</div>${extra}<div class="sub">${sub}</div></div>${cls==="main"?`<div class="sub">${delta(s.net,p.net)}</div>`:""}</div>`;
+  $("#homeHero").innerHTML=
+    box("main",`Còn lại · ${mLabel(mk)}`,s.net,s.net>=0?"pos":"neg",`Thu <b>${money(s.ebay+s.pay+s.thu)}</b> · Chi <b>${money(s.chi)}</b>`,0)+
+    box("chkc","Check kế tiếp",ckS?ckS.pay:"—","pos",ck?`${dowl(ck.pay)} ${dmy(ck.pay)} · ${fh(ckS.h+ckS.hol+ckS.pto)} giờ`:"",1)+
+    box("","Lãi eBay",s.ebay,s.ebay>=0?"pos":"neg",`${s.sold} món đã bán`,2)+
+    box("","Giờ tuần này",`${fh(wc.h)}<small style="font-size:14px;color:var(--muted)"> / ${lim}</small>`,"",wc.ot>0?`<b class="neg">+${fh(wc.ot)}h tăng ca</b>`:`còn ${fh(Math.max(0,lim-toOt))}h tới OT`,3,`<div class="bar ${hrBarCls(toOt,lim)}"><i style="width:${Math.min(100,toOt/lim*100)}%"></i></div>`);
+  countUp($("#homeHero"));
   $("#homeChart").innerHTML=barChart(mks,stats,mk);
   $("#homeDonutTitle").textContent="Chi tiêu theo danh mục · "+mLabel(mk);
   $("#homeDonut").innerHTML=donut(mk);
@@ -1685,7 +1720,7 @@ function renderFixed(){
   const tot=fx.reduce((a,e)=>a+n(e.amount),0),filled=fx.filter(e=>String(e.amount)!=="").length;
   $("#fxCard").innerHTML=`<div class="row" style="justify-content:space-between;margin-bottom:6px"><h3 style="margin:0">📌 Chi cố định</h3><b>${money(tot)}</b></div>`+
     (fx.length?`<div class="muted" style="font-size:12.5px;margin-bottom:6px">Đã điền ${filled}/${fx.length}</div><div class="bar"><i style="width:${fx.length?filled/fx.length*100:0}%"></i></div>`:"")+
-    `<div class="fxlist">${fx.map(e=>`<div class="fxrow${String(e.amount)===""?" todo":""}" data-fx="${e.id}"><input class="fxName" value="${esc(e.note||"")}" placeholder="Tên (vd. Rent)" aria-label="Tên khoản"><span class="fxD">$</span><input class="fxAmt" type="number" step="0.01" min="0" inputmode="decimal" value="${esc(e.amount)}" placeholder="0.00" aria-label="Số tiền"><button type="button" class="mini" data-fxdel title="Xoá khoản này khỏi tháng">✕</button></div>`).join("")}</div>`+
+    `<div class="fxlist">${fx.map(e=>`<div class="fxrow${String(e.amount)===""?" todo":" done"}" data-fx="${e.id}"><input class="fxName" value="${esc(e.note||"")}" placeholder="Tên (vd. Rent)" aria-label="Tên khoản"><span class="fxD">$</span><input class="fxAmt" type="number" step="0.01" min="0" inputmode="decimal" value="${esc(e.amount)}" placeholder="0.00" aria-label="Số tiền"><button type="button" class="mini" data-fxdel title="Xoá khoản này khỏi tháng">✕</button></div>`).join("")}</div>`+
     (!fx.length&&!prev.length?`<p class="muted" style="margin:6px 0">Thêm các khoản trả hằng tháng: Rent/Mortgage, Bảo hiểm, Subscription…</p>`:"")+
     `<div class="row" style="margin-top:8px">${missing.length?`<button type="button" class="btn primary" id="fxRepeat">🔁 Lặp lại từ ${mLabel(mShift(spM,-1))} (${missing.length})</button>`:""}<button type="button" class="btn" id="fxAdd">+ Thêm khoản</button></div>`;
   $$("#fxCard [data-fx]").forEach(r=>{
@@ -1701,7 +1736,9 @@ function renderFixed(){
 }
 const cards=()=>Array.isArray(S().cards)?S().cards:(S().cards=[]);
 const daysIn=mk=>{const [y,m]=mk.split("-").map(Number);return new Date(y,m,0).getDate()};
-const dueOf=(c,mk)=>mk+"-"+String(Math.min(Math.max(1,n(c.due)||1),daysIn(mk))).padStart(2,"0");
+// due riêng của tháng (sửa ở Chi tiêu, lưu trong lần trả của tháng đó) thắng due chung trong Cài đặt
+const dueDay=(c,mk)=>{const p=cardPay(c,mk);return n(p&&p.due)||n(c.due)||1};
+const dueOf=(c,mk)=>mk+"-"+String(Math.min(Math.max(1,dueDay(c,mk)),daysIn(mk))).padStart(2,"0");
 const cardPay=(c,mk)=>DB.expenses.find(e=>e.type==="the"&&e.cardId===c.id&&e.month===mk);
 // trạng thái 1 thẻ trong 1 tháng: đã trả / quá hạn / sắp due (≤3 ngày) / chưa tới
 function cardState(c,mk){
@@ -1717,9 +1754,19 @@ function renderCards(){
   const cs=cards().filter(c=>c.name);
   const paidAmt=cs.reduce((a,c)=>{const p=cardPay(c,spM);return a+(p&&p.paid?n(p.amount):0)},0),paidN=cs.filter(c=>(cardPay(c,spM)||{}).paid).length;
   $("#ccCard").innerHTML=`<div class="row" style="justify-content:space-between;margin-bottom:6px"><h3 style="margin:0">💳 Trả thẻ tín dụng</h3>${cs.length?`<span class="muted">Đã trả ${paidN}/${cs.length} · ${money(paidAmt)}</span>`:""}</div>`+
-    (cs.length?cs.map(c=>{const p=cardPay(c,spM)||{},[st,lb]=cardState(c,spM),due=dueOf(c,spM);
-      return `<div class="ccrow ${st}" data-cc="${esc(c.id)}"><label class="ccchk"><input type="checkbox" ${p.paid?"checked":""}><span><b>${esc(c.name)}</b>${c.last4?` <span class="mono muted">••${esc(c.last4)}</span>`:""}<br><span class="ccdue">Due ${fdate(due+"T12:00:00")} · ${lb}</span></span></label>`+
-        `<span class="fxD">$</span><input class="ccAmt" type="number" step="0.01" min="0" inputmode="decimal" value="${esc(p.amount??"")}" placeholder="Số tiền trả" aria-label="Số tiền đã trả"><input class="ccDate" type="date" value="${esc(p.date||"")}" aria-label="Ngày trả"></div>`}).join("")
+    // chưa trả lên trên (gần due trước), đã trả xuống dưới
+    (cs.length?cs.map(c=>({c,p:cardPay(c,spM)||{}})).sort((a,b)=>(!!a.p.paid-!!b.p.paid)||dueOf(a.c,spM).localeCompare(dueOf(b.c,spM))).map(({c,p})=>{const [st,lb]=cardState(c,spM),due=dueOf(c,spM),own=n(p.due)&&n(p.due)!==n(c.due);
+      return `<div class="ccrow ${st}" data-cc="${esc(c.id)}"><label class="ccchk"><input type="checkbox" ${p.paid?"checked":""} aria-label="Đã trả"><span><b>${esc(c.name)}</b>${c.last4?` <span class="mono muted">••${esc(c.last4)}</span>`:""}<br>`+
+        (p.paid?`<span class="ccpaid">Đã trả ${money(n(p.amount))}${p.date?` · ${fdate(p.date+"T12:00:00")}`:""}</span>`
+          :`<button type="button" class="ccdue" data-ccedit title="Bấm để đổi ngày due">Due ${fdate(due+"T12:00:00")}${own?" (riêng tháng này)":""} ✎ · ${lb}</button>`)+`</span></label>`+
+        (p.paid?`<span class="ccok" aria-hidden="true">✓</span>`:`<span class="fxD">$</span><input class="ccAmt" type="number" step="0.01" min="0" inputmode="decimal" value="${esc(p.amount??"")}" placeholder="Số tiền trả" aria-label="Số tiền đã trả">`)+
+        `<button type="button" class="mini" data-ccedit title="Sửa due, số tiền, ngày trả, tên thẻ">✎</button>`+
+        `<div class="ccedit hidden"><label>Due ngày<input class="ceDue" type="number" min="1" max="31" inputmode="numeric" value="${dueDay(c,spM)}"></label>`+
+        `<label class="cechk"><input type="checkbox" class="ceAll">Đổi luôn cho các tháng sau</label>`+
+        `<label>Số tiền đã trả<input class="ceAmt" type="number" step="0.01" min="0" inputmode="decimal" value="${esc(p.amount??"")}"></label>`+
+        `<label>Ngày trả<input class="ceDate" type="date" value="${esc(p.date||"")}"></label>`+
+        `<label>Tên thẻ<input class="ceName" value="${esc(c.name)}"></label><label>4 số cuối<input class="ceL4" inputmode="numeric" maxlength="4" value="${esc(c.last4||"")}"></label>`+
+        `<div class="row"><button type="button" class="btn primary" data-cesave>Lưu</button><button type="button" class="btn" data-ccedit>Đóng</button></div></div></div>`}).join("")
       +`<p class="muted" style="font-size:12px;margin:8px 0 0">Chỉ để theo dõi, không cộng vào tổng chi (các món mua bằng thẻ đã ghi trong chi tiêu).</p>`
       :`<p class="muted" style="margin:6px 0">Chưa có thẻ. Thêm ở <a href="#" id="ccGo">Cài đặt → 💳 Thẻ tín dụng</a>.</p>`);
   if($("#ccGo"))$("#ccGo").onclick=e=>{e.preventDefault();showMod("set");$("#cardSet").scrollIntoView({block:"start"})};
@@ -1728,8 +1775,19 @@ function renderCards(){
     const rec=()=>{let p=cardPay(c,spM);if(!p){p={id:uid(),type:"the",cardId:c.id,month:spM,note:c.name,cat:"💳 Trả thẻ",paid:false,amount:"",date:""};DB.expenses.push(p)}return p};
     r.querySelector("input[type=checkbox]").onchange=ev=>{const p=rec();p.paid=ev.target.checked;if(p.paid&&!p.date)p.date=today();p.note=c.name;save();renderSpend();
       if(p.paid&&String(p.amount)==="")setTimeout(()=>{const a=$(`#ccCard [data-cc="${c.id}"] .ccAmt`);if(a)a.focus()},0)};
-    r.querySelector(".ccAmt").onchange=ev=>{const p=rec();p.amount=ev.target.value===""?"":n(ev.target.value);if(p.amount!==""){p.paid=true;if(!p.date)p.date=today()}save();renderSpend()};
-    r.querySelector(".ccDate").onchange=ev=>{const p=rec();p.date=ev.target.value;save()};
+    const amt=r.querySelector(".ccAmt");
+    if(amt)amt.onchange=ev=>{const p=rec();p.amount=ev.target.value===""?"":n(ev.target.value);if(p.amount!==""){p.paid=true;if(!p.date)p.date=today()}save();renderSpend()};
+    r.querySelectorAll("[data-ccedit]").forEach(b=>b.onclick=ev=>{ev.preventDefault();const box=r.querySelector(".ccedit");box.classList.toggle("hidden");if(!box.classList.contains("hidden"))box.querySelector(".ceDue").focus()});
+    r.querySelector("[data-cesave]").onclick=()=>{
+      const q=s=>r.querySelector(s),cc=cards().find(x=>x.id===c.id);if(!cc)return;
+      if(isField(document.activeElement))document.activeElement.blur(); // để Chi tiêu vẽ lại ngay
+      const d=q(".ceDue").value.trim()?Math.min(31,Math.max(1,Math.round(n(q(".ceDue").value))||1)):"";
+      const nm=q(".ceName").value.trim();if(nm)cc.name=nm;cc.last4=q(".ceL4").value.replace(/\D/g,"").slice(-4);
+      const p=rec();p.note=cc.name;
+      // đổi luôn = sửa due trong Cài đặt (các tháng sau theo); không thì chỉ tháng này
+      if(q(".ceAll").checked){if(d)cc.due=d;delete p.due}else if(d&&d!==n(cc.due))p.due=d;else delete p.due;
+      const a=q(".ceAmt").value.trim();p.amount=a===""?"":n(a);if(a!==""){p.paid=true;p.date=q(".ceDate").value||p.date||today()}else p.date=q(".ceDate").value;
+      save();renderSpend()};
   });
 }
 // Cài đặt → thẻ tín dụng

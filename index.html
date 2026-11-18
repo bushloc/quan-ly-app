@@ -722,6 +722,13 @@ details.ydet>summary::-webkit-details-marker{display:none}details.ydet[open]>sum
 .hrs{flex-wrap:wrap;row-gap:4px}.hrs .hbar{flex:1 1 60px}.hrs .hs{white-space:normal;margin-left:auto;text-align:right}
 .fab{transition:transform .25s,opacity .25s}.fab.away{transform:translateY(90px) scale(.8);opacity:0;pointer-events:none}
 .oc-fold .oc-sh{padding:12px 16px}.oc-fold .oc-sn b{font-size:14.5px}.oc-fold.open .chev{transform:rotate(180deg)}.oc-fold.open{border-color:var(--hl)}.oc-ex{border-top:1px solid var(--line)}
+.oc-fold .oc-sh{align-items:flex-start}.oc-fold .chev{margin-top:2px}
+.oc-meta{display:flex;flex-wrap:wrap;align-items:center;gap:6px 8px;margin-top:3px;font-size:12.5px;color:var(--muted);min-width:0}
+.oc-meta .bu{color:var(--text);opacity:.85;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.oc-meta .tn{font-size:12px}.oc-meta .mini{min-height:26px;padding:0 10px;font-size:12px}
+.oc-meta a.mini.trk{display:inline-flex;align-items:center;border-radius:8px;background:var(--grad);color:#fff;border:0;text-decoration:none;font-weight:600}
+.sdot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-left:8px;vertical-align:middle;background:var(--muted)}.sdot.ok{background:var(--ok)}.sdot.bad{background:var(--bad)}.sdot.go{background:var(--accent)}
+.oc-meta .bu{flex:1 1 100%}.oc-meta .tn{margin-right:auto}.oc-meta{gap:6px 8px}
 </style>
 </head>
 <body>
@@ -1321,7 +1328,7 @@ function orderCard(o){
   if(o.stage==="ret")foot=`<div class="oc-f muted" style="font-size:12.5px">${us.filter(u=>u.f.status==="tra").map(u=>{const rs=u.its.map(i=>i.retSerial).filter(Boolean),ok=rs.every(r=>u.its.some(i=>ns(i.serial)===ns(r)));return `${esc(u.serials)}: hoàn ${money(u.sum("refund"))}${rs.length?` · serial nhận về <span class="mono">${rs.map(esc).join(" + ")}</span> ${ok?"<b class='pos'>khớp</b>":"<b class='neg'>KHÔNG khớp</b>"}`:""}`}).join("<br>")}</div>`;
   const okey=o.its.map(i=>i.id).join(","),inner=`${head}${trkRow}<div class="oc-b"><div class="oc-items">${rows}</div>${tot}</div>${foot}`;
   if(o.stage==="done"){const open=ebOpen.has(okey);
-    return `<div class="oc oc-fold ${STG[o.stage][1]}${open?" open":""}" data-ord="${esc(okey)}"><div class="oc-sh" data-toggle role="button" tabindex="0"><span class="oc-sn"><b class="mono">${f.orderId?"#"+esc(f.orderId):"(không có Order ID)"}</b></span><span class="chev">▾</span></div>${open?`<div class="oc-ex">${inner}</div>`:""}</div>`}
+    return `<div class="oc oc-fold ${STG[o.stage][1]}${open?" open":""}" data-ord="${esc(okey)}"><div class="oc-sh" data-toggle role="button" tabindex="0"><span class="oc-sn"><b class="mono">${f.orderId?"#"+esc(f.orderId):"(không có Order ID)"}${(()=>{const r=trkOf(f);return r&&!r.error?`<i class="sdot ${r.st==="delivered"?"ok":r.st==="exception"?"bad":"go"}" title="${esc((TST[r.st]||TST.unknown)[1])}"></i>`:""})()}</b><span class="oc-meta">${f.buyer?`<span class="bu">${esc(f.buyer)}</span>`:""}${f.tracking?`<span class="tn mono">${esc(String(f.tracking).length>12?String(f.tracking).slice(0,4)+"…"+String(f.tracking).slice(-4):f.tracking)}</span><button type="button" class="mini" data-copy="${esc(f.tracking)}">Copy</button><a href="${esc(trackLink(f.tracking).u)}" class="mini trk" data-trk="${esc(trackLink(f.tracking).u)}">Track ↗</a>`:`<span class="muted">chưa có tracking</span>`}</span></span><span class="chev">▾</span></div>${open?`<div class="oc-ex">${inner}</div>`:""}</div>`}
   return `<div class="oc ${STG[o.stage][1]}" data-ord="${esc(okey)}">${inner}</div>`;
 }
 function lotCard(l){

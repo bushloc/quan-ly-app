@@ -558,7 +558,10 @@ h2.pg{font-size:24px;margin-bottom:12px}
 .chart text{font-size:16px}
 .ysum{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin-bottom:10px}.ysum>div{background:var(--soft);border-radius:12px;padding:10px 14px}.ysum span{display:block;font-size:12px;color:var(--muted)}.ysum b{font-size:22px;font-weight:800;font-variant-numeric:tabular-nums}
 .ytab{font-size:13.5px;font-variant-numeric:tabular-nums}.ytab th,.ytab td{padding:6px 10px}.ytab tbody tr{cursor:default}.ytab tbody tr:hover{background:none}.ytab tr.cur td{background:var(--soft);font-weight:700}.ytab tr.fut td{color:var(--muted);opacity:.6}.ytab tfoot td{font-weight:800;border-top:2px solid var(--line);border-bottom:0}.ytab .gr{color:var(--muted);font-weight:500}.ytab th.gr{font-size:11.5px;line-height:1.15}.ytab tfoot tr.avg td{font-weight:500;color:var(--muted);border-top:0}
-@media(max-width:760px){.ysum{gap:6px}.ysum>div{padding:8px 10px}.ysum b{font-size:16px}.ytab{font-size:13px}.ytab th,.ytab td{padding:5px 6px}}
+@media(max-width:760px){.ysum{gap:6px}.ysum>div{padding:8px 10px;min-width:0}.ysum b{font-size:16px}.ytab{font-size:12.5px;width:100%}.ytab th,.ytab td{padding:5px 4px}.ytab th{font-size:10.5px}.ytab th.gr{font-size:10px}}
+@media(max-width:400px){.ysum b{font-size:13.5px}.ytab{font-size:11.5px}.donut svg{width:96px;height:96px}.ytab th,.ytab td{padding:5px 3px}.ytab th:first-child,.ytab td:first-child{padding-left:6px}}
+@media(max-width:760px){nav.subnav.eb-tabs{display:flex;width:100%;overflow-x:auto;padding:3px;gap:1px}nav.subnav.eb-tabs button{flex:1 0 auto;min-width:0;padding:8px 5px;font-size:12.5px;letter-spacing:-.01em}nav.subnav.eb-tabs button .badge,nav.subnav.eb-tabs button b{margin-left:3px}}
+#homeYear{overflow-x:auto;max-width:100%}.ysum>div,.ysum b{min-width:0}.ysum b{overflow-wrap:anywhere}
 </style>
 </head>
 <body>
@@ -658,7 +661,7 @@ h2.pg{font-size:24px;margin-bottom:12px}
     <div class="row" style="justify-content:space-between;margin-bottom:8px"><h3 style="margin:0">Ngân sách theo danh mục</h3><button class="btn" id="spBudgetEdit">Chỉnh ngân sách</button></div>
     <div id="spBars"></div>
   </div>
-  <div class="card" style="padding:0"><div id="spList"></div></div>
+  <div class="card" style="padding:0;overflow:hidden"><div id="spList"></div></div>
 </div>
 
 <div id="mod-work" class="hidden">
@@ -1776,13 +1779,13 @@ function donut(mk,inc){
 function yearSummary(yr,mks,stats,cur){
   const now=mKey(new Date()),inc=s=>s.ebay+s.wage+s.thu,has=(m,s)=>m<=now||inc(s)||s.chi;
   const T=stats.reduce((a,s)=>({i:a.i+inc(s),c:a.c+s.chi,g:a.g+s.pay}),{i:0,c:0,g:0}),nm=mks.filter((m,i)=>m<=now&&has(m,stats[i])).length||1;
-  const cell=v=>`<td class="num">${money(v)}</td>`;
+  const mY=v=>(v<0?"-$":"$")+Math.round(Math.abs(v)).toLocaleString("en-US"),cell=v=>`<td class="num">${mY(v)}</td>`;
   return `<h3>Tổng kết năm ${yr}</h3><div class="ysum"><div><span>Tổng thu</span><b class="pos">${money(T.i)}</b></div><div><span>Tổng chi</span><b class="neg">${money(T.c)}</b></div><div><span>Còn lại</span><b class="${T.i-T.c>=0?"pos":"neg"}">${money(T.i-T.c)}</b></div></div>`+
     `<table class="ytab"><thead><tr><th>Tháng</th><th class="num">Thu</th><th class="num">Chi</th><th class="num">Còn lại</th><th class="num gr">Lương<br>trước thuế</th></tr></thead><tbody>`+
     mks.map((m,i)=>{const s=stats[i],net=inc(s)-s.chi;return has(m,s)
-      ?`<tr class="${m===cur?"cur":""}"><td>T${+m.slice(5)}</td>${cell(inc(s))}${cell(s.chi)}<td class="num ${net>=0?"pos":"neg"}">${money(net)}</td>${cell(s.pay).replace('class="num"','class="num gr"')}</tr>`
+      ?`<tr class="${m===cur?"cur":""}"><td>T${+m.slice(5)}</td>${cell(inc(s))}${cell(s.chi)}<td class="num ${net>=0?"pos":"neg"}">${mY(net)}</td>${cell(s.pay).replace('class="num"','class="num gr"')}</tr>`
       :`<tr class="fut"><td>T${+m.slice(5)}</td><td class="num">—</td><td class="num">—</td><td class="num">—</td><td class="num gr">—</td></tr>`}).join("")+
-    `</tbody><tfoot><tr><td>Cả năm</td>${cell(T.i)}${cell(T.c)}<td class="num ${T.i-T.c>=0?"pos":"neg"}">${money(T.i-T.c)}</td><td class="num gr">${money(T.g)}</td></tr><tr class="avg"><td>TB/tháng</td>${cell(T.i/nm)}${cell(T.c/nm)}${cell((T.i-T.c)/nm)}<td class="num gr">${money(T.g/nm)}</td></tr></tfoot></table>`;
+    `</tbody><tfoot><tr><td>Cả năm</td>${cell(T.i)}${cell(T.c)}<td class="num ${T.i-T.c>=0?"pos":"neg"}">${mY(T.i-T.c)}</td><td class="num gr">${mY(T.g)}</td></tr><tr class="avg"><td>TB/tháng</td>${cell(T.i/nm)}${cell(T.c/nm)}${cell((T.i-T.c)/nm)}<td class="num gr">${mY(T.g/nm)}</td></tr></tfoot></table>`;
 }
 function renderHome(){
   const mk=homeM,t=today(),calc=calcShifts();

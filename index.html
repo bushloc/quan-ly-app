@@ -218,6 +218,17 @@ dialog>form{display:flex;flex-direction:column;max-height:92vh}
 .chk .cknext{margin-top:12px;padding-top:10px;border-top:1px dashed var(--line);font-size:13px;color:var(--muted)}
 .chk .cknext b{color:var(--text)}
 .card.chk h3{margin:0 0 8px}
+.pl{margin-top:14px;padding-top:10px;border-top:1px dashed var(--line)}
+.pl-h{display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;font-size:13px;margin-bottom:6px}
+.plrow{display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--line);font-size:13.5px}
+.plrow:last-child{border-bottom:0}
+.plrow .pld{flex:1;min-width:0}.plrow .plg{color:var(--muted);font-variant-numeric:tabular-nums;white-space:nowrap}
+.plrow .plg small{font-size:11px}
+.plrow input{width:96px;text-align:right;padding:6px 8px}
+.plrow.got{border-left:3px solid var(--ok);padding-left:8px}
+.plrow.got input{color:var(--ok);font-weight:700}
+.plrow.fut{opacity:.65}
+@media(max-width:560px){.plrow{flex-wrap:wrap}.plrow .pld{flex-basis:100%}.plrow .plg{flex:1}}
 #wkCheck{border-left:4px solid var(--ok)}
 
 /* Tổng quan: tháng, biểu đồ, hiệu ứng */
@@ -546,7 +557,7 @@ h2.pg{font-size:24px;margin-bottom:12px}
 .donut li.dthu{font-weight:600;padding-bottom:5px;margin-bottom:3px;border-bottom:1px solid var(--line)}.donut li.dtot{color:var(--muted);border-top:1px solid var(--line);margin-top:3px;padding-top:5px}.donut li.dtot i{background:none}
 .chart text{font-size:16px}
 .ysum{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin-bottom:10px}.ysum>div{background:var(--soft);border-radius:12px;padding:10px 14px}.ysum span{display:block;font-size:12px;color:var(--muted)}.ysum b{font-size:22px;font-weight:800;font-variant-numeric:tabular-nums}
-.ytab{font-size:13.5px;font-variant-numeric:tabular-nums}.ytab th,.ytab td{padding:6px 10px}.ytab tbody tr{cursor:default}.ytab tbody tr:hover{background:none}.ytab tr.cur td{background:var(--soft);font-weight:700}.ytab tr.fut td{color:var(--muted);opacity:.6}.ytab tfoot td{font-weight:800;border-top:2px solid var(--line);border-bottom:0}.ytab tfoot tr.avg td{font-weight:500;color:var(--muted);border-top:0}
+.ytab{font-size:13.5px;font-variant-numeric:tabular-nums}.ytab th,.ytab td{padding:6px 10px}.ytab tbody tr{cursor:default}.ytab tbody tr:hover{background:none}.ytab tr.cur td{background:var(--soft);font-weight:700}.ytab tr.fut td{color:var(--muted);opacity:.6}.ytab tfoot td{font-weight:800;border-top:2px solid var(--line);border-bottom:0}.ytab .gr{color:var(--muted);font-weight:500}.ytab th.gr{font-size:11.5px;line-height:1.15}.ytab tfoot tr.avg td{font-weight:500;color:var(--muted);border-top:0}
 @media(max-width:760px){.ysum{gap:6px}.ysum>div{padding:8px 10px}.ysum b{font-size:16px}.ytab{font-size:13px}.ytab th,.ytab td{padding:5px 6px}}
 </style>
 </head>
@@ -732,10 +743,11 @@ h2.pg{font-size:24px;margin-bottom:12px}
       <label>Tuần bắt đầu từ<select id="stWeek"><option value="0">Chủ nhật</option><option value="1">Thứ hai</option></select></label>
       <label>Nghỉ trưa mặc định (phút)<input id="stLunch" type="number" step="5" min="0"></label>
       <label>Ngày bắt đầu một kỳ lương (2 tuần, check nhận T5 sau kỳ)<input id="stPay" type="date"></label>
+      <label>% thuế ước tính (chỉ dùng cho check chưa nhập số thực nhận)<input id="stTax" type="number" step="0.5" min="0" max="60"></label>
     </div>
     <label style="display:flex;gap:8px;align-items:center;margin-top:10px;color:var(--text)"><input id="stLeaveOt" type="checkbox" style="width:auto;margin:0">Holiday/PTO tính vào mốc giờ tăng ca (mặc định tắt: chỉ giờ làm thật mới tính tới mốc)</label>
     <div class="row" style="margin-top:12px"><button class="btn primary" id="stSaveWork">Lưu</button><span id="stWorkSaved" class="muted"></span></div>
-    <p class="muted" style="margin-bottom:0">Tiền công trong app là <b>ước tính trước thuế</b>, tăng ca tính theo từng tuần. Giờ Holiday/PTO luôn trả lương thường, không bao giờ thành tăng ca.</p>
+    <p class="muted" style="margin-bottom:0">Tiền công ở tab Giờ làm là <b>ước tính trước thuế</b>, tăng ca tính theo từng tuần. <b>Thu</b> ở Tổng quan dùng <b>lương thực nhận</b> bạn nhập ở từng check (chưa nhập thì ước tính theo % thuế và các check trước). Giờ Holiday/PTO luôn trả lương thường, không bao giờ thành tăng ca.</p>
   </div>
 </div>
 </main>
@@ -1679,7 +1691,36 @@ function monthStats(mk,calc){
   const fixed=ex.filter(e=>e.type==="co").reduce((a,e)=>a+n(e.amount),0);
   const sh=DB.shifts.filter(s=>monthOf(s.date)===mk);
   const pay=sh.reduce((a,s)=>a+(calc[s.id]?calc[s.id].pay:0),0),hrs=sh.reduce((a,s)=>a+(calc[s.id]?calc[s.id].h:0),0);
-  return {sold:sold.length,ebay,chi,thu,fixed,pay,hrs,net:ebay+pay+thu-chi};
+  // pay = lương TRƯỚC thuế theo ngày làm (đầu tháng tới cuối tháng); wage = lương THỰC NHẬN theo ngày nhận check, dùng cho Thu
+  const w=wageOf(mk,calc);
+  return {sold:sold.length,ebay,chi,thu,fixed,pay,hrs,wage:w.v,wageEst:w.est,net:ebay+w.v+thu-chi};
+}
+/* Lương thực nhận (sau thuế): mỗi check 1 bản ghi type "pay" trong expenses (id pay_<ngày bắt đầu kỳ>), nên 2 máy không đè nhau.
+   Chưa nhập số thật thì ước tính = trước thuế × tỷ lệ học từ các check gần nhất đã nhập (lần đầu dùng % thuế trong Cài đặt).
+   Check chưa tới ngày nhận mà chưa nhập thì chưa tính vào Thu. */
+const taxPct=()=>{const v=parseFloat(S().taxPct);return isFinite(v)&&v>=0&&v<100?v:20};
+const payRec=pp=>DB.expenses.find(e=>e.type==="pay"&&e.id==="pay_"+pp.st);
+const payHas=e=>e&&String(e.amount)!==""&&n(e.amount)>=0;
+function netRatio(calc){
+  let g=0,nn=0;
+  const rs=DB.expenses.filter(e=>e.type==="pay"&&payHas(e)&&n(e.amount)>0).sort((a,b)=>b.st.localeCompare(a.st)).slice(0,6);
+  for(const e of rs){const gr=n(e.gross)>0?n(e.gross):periodSum({st:e.st,en:addDays(e.st,13)},calc).pay;if(gr>0){g+=gr;nn+=n(e.amount)}}
+  return g>0?Math.min(1,nn/g):1-taxPct()/100;
+}
+function payNet(pp,calc,ratio){
+  const e=payRec(pp);
+  if(payHas(e))return {v:n(e.amount),est:false};
+  return {v:periodSum(pp,calc).pay*ratio,est:true};
+}
+function wageOf(mk,calc){
+  const ratio=netRatio(calc),t=today(),k0=Math.floor(dayDiff(mk+"-01",payStart())/14);
+  let v=0,est=false;
+  for(let k=k0-3;k<=k0+4;k++){
+    const pp=payPeriod(k);if(monthOf(pp.pay)!==mk)continue;
+    const p=payNet(pp,calc,ratio);
+    if(!p.est||pp.pay<=t){v+=p.v;if(p.est&&p.v>0)est=true}
+  }
+  return {v,est};
 }
 // % so với tháng trước; với chi tiêu thì tăng là xấu
 function delta(cur,prev,badUp){
@@ -1705,7 +1746,7 @@ function countUp(root){
 }
 function barChart(mks,stats,cur){
   // thu gộp 1 cột (lãi eBay + tiền công + thu khác), chi màu đỏ; 12 tháng của năm, tháng chưa tới để trống
-  const W=600,H=220,base=186,top=14,inc=stats.map(s=>s.ebay+s.pay+s.thu),chi=stats.map(s=>s.chi);
+  const W=600,H=220,base=186,top=14,inc=stats.map(s=>s.ebay+s.wage+s.thu),chi=stats.map(s=>s.chi);
   const mx=Math.max(1,...inc,...chi),gw=W/mks.length,bw=Math.min(30,gw/3.2),sc=v=>Math.max(0,v)/mx*(base-top);
   let g="";for(let k=1;k<=3;k++){const y=base-(base-top)*k/3;g+=`<line class="grid" x1="0" x2="${W}" y1="${y}" y2="${y}"/>`}
   mks.forEach((mk,i)=>{
@@ -1733,15 +1774,15 @@ function donut(mk,inc){
 }
 // Tổng kết năm: 3 số lớn + bảng T1–T12 (Thu · Chi · Còn lại) + dòng cả năm
 function yearSummary(yr,mks,stats,cur){
-  const now=mKey(new Date()),inc=s=>s.ebay+s.pay+s.thu,has=(m,s)=>m<=now||inc(s)||s.chi;
-  const T=stats.reduce((a,s)=>({i:a.i+inc(s),c:a.c+s.chi}),{i:0,c:0}),nm=mks.filter((m,i)=>m<=now&&has(m,stats[i])).length||1;
+  const now=mKey(new Date()),inc=s=>s.ebay+s.wage+s.thu,has=(m,s)=>m<=now||inc(s)||s.chi;
+  const T=stats.reduce((a,s)=>({i:a.i+inc(s),c:a.c+s.chi,g:a.g+s.pay}),{i:0,c:0,g:0}),nm=mks.filter((m,i)=>m<=now&&has(m,stats[i])).length||1;
   const cell=v=>`<td class="num">${money(v)}</td>`;
   return `<h3>Tổng kết năm ${yr}</h3><div class="ysum"><div><span>Tổng thu</span><b class="pos">${money(T.i)}</b></div><div><span>Tổng chi</span><b class="neg">${money(T.c)}</b></div><div><span>Còn lại</span><b class="${T.i-T.c>=0?"pos":"neg"}">${money(T.i-T.c)}</b></div></div>`+
-    `<table class="ytab"><thead><tr><th>Tháng</th><th class="num">Thu</th><th class="num">Chi</th><th class="num">Còn lại</th></tr></thead><tbody>`+
+    `<table class="ytab"><thead><tr><th>Tháng</th><th class="num">Thu</th><th class="num">Chi</th><th class="num">Còn lại</th><th class="num gr">Lương<br>trước thuế</th></tr></thead><tbody>`+
     mks.map((m,i)=>{const s=stats[i],net=inc(s)-s.chi;return has(m,s)
-      ?`<tr class="${m===cur?"cur":""}"><td>T${+m.slice(5)}</td>${cell(inc(s))}${cell(s.chi)}<td class="num ${net>=0?"pos":"neg"}">${money(net)}</td></tr>`
-      :`<tr class="fut"><td>T${+m.slice(5)}</td><td class="num">—</td><td class="num">—</td><td class="num">—</td></tr>`}).join("")+
-    `</tbody><tfoot><tr><td>Cả năm</td>${cell(T.i)}${cell(T.c)}<td class="num ${T.i-T.c>=0?"pos":"neg"}">${money(T.i-T.c)}</td></tr><tr class="avg"><td>TB/tháng</td>${cell(T.i/nm)}${cell(T.c/nm)}${cell((T.i-T.c)/nm)}</tr></tfoot></table>`;
+      ?`<tr class="${m===cur?"cur":""}"><td>T${+m.slice(5)}</td>${cell(inc(s))}${cell(s.chi)}<td class="num ${net>=0?"pos":"neg"}">${money(net)}</td>${cell(s.pay).replace('class="num"','class="num gr"')}</tr>`
+      :`<tr class="fut"><td>T${+m.slice(5)}</td><td class="num">—</td><td class="num">—</td><td class="num">—</td><td class="num gr">—</td></tr>`}).join("")+
+    `</tbody><tfoot><tr><td>Cả năm</td>${cell(T.i)}${cell(T.c)}<td class="num ${T.i-T.c>=0?"pos":"neg"}">${money(T.i-T.c)}</td><td class="num gr">${money(T.g)}</td></tr><tr class="avg"><td>TB/tháng</td>${cell(T.i/nm)}${cell(T.c/nm)}${cell((T.i-T.c)/nm)}<td class="num gr">${money(T.g/nm)}</td></tr></tfoot></table>`;
 }
 function renderHome(){
   const mk=homeM,t=today(),calc=calcShifts();
@@ -1762,13 +1803,13 @@ function renderHome(){
   $("#homeTodo").innerHTML=todo.length?todo.map(([cl,ic,t1,s,go])=>`<button type="button" class="tdo ${cl}" data-todo="${go}"><i class="tdot"></i><b>${esc(t1)}</b><span class="s">${esc(s)}</span></button>`).join(""):`<div class="todo-ok">✓ Không có việc gấp</div>`;
   $$("#homeTodo [data-todo]").forEach(b=>b.onclick=()=>{const [m,tab]=b.dataset.todo.split(":");if(tab){ebTab=tab;try{localStorage.setItem("ebTab",tab)}catch(e){}}showMod(m)});
   // 2) số chính: mỗi thẻ 1 con số + nhãn ngắn + 1 dòng phụ
-  const {cur,next}=checkFor(t),ck=cur&&cur.pay>=t?cur:next,ckS=ck?periodSum(ck,calc):null;
+  const {cur,next}=checkFor(t),ck=cur&&cur.pay>=t?cur:next,ckS=ck?periodSum(ck,calc):null,ckN=ck?payNet(ck,calc,netRatio(calc)):null;
   const wk=weekStartOf(t),we=addDays(wk,6),wc=DB.shifts.filter(x=>x.date>=wk&&x.date<=we).reduce((a,x)=>addC(a,calc[x.id]),Z0());
   const lim=n(S().otAfter)||40,toOt=wc.h+(S().leaveOt?wc.hol+wc.pto:0);
   const box=(cls,lb,v,vcls,sub,i,extra="")=>`<div class="card hcard-in ${cls}" style="animation-delay:${i*0.06}s"><div><div class="lb">${lb}</div><div class="kv ${vcls}"${typeof v==="number"?` data-count="${v}"`:""}>${typeof v==="number"?money(v):v}</div>${extra}<div class="sub">${sub}</div></div></div>`;
   $("#homeHero").innerHTML=
-    box("main",`Còn lại · ${mLabel(mk)}`,s.net,s.net>=0?"pos":"neg",`Thu <b>${money(s.ebay+s.pay+s.thu)}</b> · Chi <b>${money(s.chi)}</b>`,0)+
-    box("chkc","Check kế tiếp",ckS?ckS.pay:"—","pos",ck?`${dowl(ck.pay)} ${dmy(ck.pay)} · ${fh(ckS.h+ckS.hol+ckS.pto)} giờ`:"",1)+
+    box("main",`Còn lại · ${mLabel(mk)}`,s.net,s.net>=0?"pos":"neg",`Thu <b>${money(s.ebay+s.wage+s.thu)}</b> · Chi <b>${money(s.chi)}</b><br><span class="muted">Lương tháng: trước thuế <b>${money(s.pay)}</b> · thực nhận <b>${s.wageEst?"~":""}${money(s.wage)}</b></span>`,0)+
+    box("chkc",ckN&&ckN.est?"Check kế tiếp · ước tính":"Check kế tiếp",ckN?ckN.v:"—","pos",ck?`${dowl(ck.pay)} ${dmy(ck.pay)} · trước thuế ${money(ckS.pay)}`:"",1)+
     box("","Lãi eBay",s.ebay,s.ebay>=0?"pos":"neg",`${s.sold} món đã bán`,2)+
     box("","Giờ tuần này",`${fh(wc.h)}<small style="font-size:14px;color:var(--muted)"> / ${lim}</small>`,"",wc.ot>0?`<b class="neg">+${fh(wc.ot)}h tăng ca</b>`:`còn ${fh(Math.max(0,lim-toOt))}h tới OT`,3,`<div class="bar ${hrBarCls(toOt,lim)}"><i style="width:${Math.min(100,toOt/lim*100)}%"></i></div>`);
   countUp($("#homeHero"));
@@ -1781,7 +1822,7 @@ function renderHome(){
   $("#homeChartTitle").textContent="Thu & chi · năm "+yr;
   $("#homeChart").innerHTML=barChart(mks,stats,mk);
   $("#homeDonutTitle").textContent="Thu & chi theo danh mục · "+mLabel(mk);
-  $("#homeDonut").innerHTML=donut(mk,s.ebay+s.pay+s.thu);
+  $("#homeDonut").innerHTML=donut(mk,s.ebay+s.wage+s.thu);
   $("#homeYear").innerHTML=yearSummary(yr,mks,stats,mk);
   $("#homeBudgetTitle").textContent="Ngân sách · "+mLabel(mk);
   $("#homeBudget").innerHTML=budgetBars(mk)||`<span class="muted">Chưa đặt ngân sách. Vào “Chi tiêu” để đặt.</span>`;
@@ -1819,6 +1860,24 @@ function checkHtml(ref,calc){
   return h;
 }
 
+// Các check gần đây: mỗi dòng có ô "Thực nhận" (số trên paystub). Chưa nhập thì ô để số ước tính mờ.
+function payListHtml(calc){
+  const t=today(),ratio=netRatio(calc);let kN=Math.floor((dayDiff(t,payStart())-PAY_LAG)/14)-1;
+  while(payPeriod(kN).pay<t)kN++; // check kế tiếp (chưa tới ngày nhận)
+  const rows=[];for(let k=kN;k>=kN-6;k--)rows.push(payPeriod(k));
+  const body=rows.map(pp=>{const g=periodSum(pp,calc).pay,e=payRec(pp),has=payHas(e),est=g*ratio,fut=pp.pay>=t&&!has;
+    if(!has&&!g&&!fut)return "";
+    return `<div class="plrow${has?" got":""}${fut?" fut":""}" data-pp="${pp.st}"><span class="pld"><b>${dowl(pp.pay)} ${dmy(pp.pay)}</b> <span class="muted">kỳ ${dmy(pp.st)}–${dmy(pp.en)}</span></span><span class="plg">${money(g)} <small>trước thuế</small></span><span class="fxD">$</span><input class="plNet" type="number" step="0.01" min="0" inputmode="decimal" value="${has?esc(e.amount):""}" placeholder="${est.toFixed(2)}" aria-label="Thực nhận check ${dmy(pp.pay)}"></div>`}).join("");
+  return `<div class="pl"><div class="pl-h"><b>Thực nhận từng check</b><span class="muted">gõ số trên paystub · số mờ là ước tính</span></div>${body}</div>`;
+}
+function bindPayList(calc){
+  $$("#wkCheck [data-pp]").forEach(r=>{
+    const st=r.dataset.pp,pp={st,en:addDays(st,13),pay:addDays(st,PAY_LAG)},inp=r.querySelector(".plNet");
+    const rec=()=>{let e=payRec(pp);if(!e){e={id:"pay_"+st,type:"pay",st,date:pp.pay,cat:"💵 Lương",note:"Check lương",amount:""};DB.expenses.push(e)}return e};
+    // lưu ngay khi gõ; vẽ lại (cập nhật tổng) khi rời ô
+    inp.oninput=inp.onchange=ev=>{const e=rec(),v=ev.target.value;e.amount=v===""?"":n(v);e.gross=periodSum(pp,calc).pay;save();if(ev.type==="change")renderWork()};
+  });
+}
 /* ===== Chi tiêu & Budget ===== */
 let spM=mKey(new Date());
 function expOf(mk){return DB.expenses.filter(e=>monthOf(e.date)===mk)}
@@ -2092,7 +2151,8 @@ function renderWork(){
       :`<div class="day empty${isT?" today":fut?" future":""}" data-day="${d}">${head}<div class="plus">${isT?"+ Thêm ca":fut?"+":"Nghỉ"}</div></div>`;
   }
   $("#wkDays").innerHTML=h;
-  $("#wkCheck").innerHTML=`<h3>💵 Check lương trong tuần này</h3>`+checkHtml(wkCur,calc);
+  $("#wkCheck").innerHTML=`<h3>💵 Check lương trong tuần này</h3>`+checkHtml(wkCur,calc)+payListHtml(calc);
+  bindPayList(calc);
   $$("#wkDays .day").forEach(el=>el.onclick=e=>{
     const sh=e.target.closest("[data-sh]"),add=e.target.closest("[data-add]");
     if(add)return openShift(null,add.dataset.add);
@@ -2162,7 +2222,7 @@ $("#shDel").onclick=async()=>{if(shCur&&await ask("Xoá ca này?")){DB.shifts=DB
 /* ===== Cài đặt ===== */
 function renderSet(){
   if(holdWhileTyping("set",$("#mod-set"),renderSet))return;
-  $("#stWage").value=S().wage;$("#stOtAfter").value=S().otAfter;$("#stOtMult").value=S().otMult;$("#stWeek").value=S().weekStart;$("#stLunch").value=lunch();$("#stLeaveOt").checked=!!S().leaveOt;$("#stPay").value=payStart();$("#stTheme").value=S().theme||"dark";
+  $("#stWage").value=S().wage;$("#stOtAfter").value=S().otAfter;$("#stOtMult").value=S().otMult;$("#stWeek").value=S().weekStart;$("#stLunch").value=lunch();$("#stLeaveOt").checked=!!S().leaveOt;$("#stPay").value=payStart();$("#stTax").value=taxPct();$("#stTheme").value=S().theme||"dark";
   $("#bkText").innerHTML=API.info.electron
     ?`Dữ liệu lưu thành file trong thư mục <b class="mono">${esc(API.info.dir)}</b> (ảnh nằm trong thư mục con <span class="mono">photos</span>). App tự sao lưu mỗi ngày vào thư mục <span class="mono">backup</span>. Nếu để thư mục này trong OneDrive thì có thêm bản dự phòng trên mạng.`
     :`Dữ liệu lưu trong trình duyệt này. Hãy tải file sao lưu thường xuyên và cất vào C:\\Dev\\Online hoặc OneDrive.`;
@@ -2171,7 +2231,7 @@ function renderSet(){
   backupAge();
 }
 $("#stSaveWork").onclick=()=>{
-  Object.assign(S(),{wage:n($("#stWage").value),otAfter:n($("#stOtAfter").value)||40,otMult:n($("#stOtMult").value)||1.5,weekStart:+$("#stWeek").value,lunch:Math.max(0,n($("#stLunch").value)),leaveOt:$("#stLeaveOt").checked,payStart:$("#stPay").value||payStart()});
+  Object.assign(S(),{wage:n($("#stWage").value),otAfter:n($("#stOtAfter").value)||40,otMult:n($("#stOtMult").value)||1.5,weekStart:+$("#stWeek").value,lunch:Math.max(0,n($("#stLunch").value)),leaveOt:$("#stLeaveOt").checked,payStart:$("#stPay").value||payStart(),taxPct:Math.min(60,Math.max(0,n($("#stTax").value)))});
   save();$("#stWorkSaved").textContent="Đã lưu";setTimeout(()=>$("#stWorkSaved").textContent="",1500);
 };
 // Giao diện: tối / sáng / theo Windows (đổi ngay, không cần bấm Lưu)

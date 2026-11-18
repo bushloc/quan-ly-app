@@ -677,6 +677,50 @@ h2.pg{font-size:24px;margin-bottom:12px}
 .cdet{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px 10px;margin-top:10px;padding:10px 12px;border-radius:12px;background:var(--soft)}
 .cdet>b{grid-column:1/-1;font-size:13px}.cdet>div{display:flex;flex-direction:column;min-width:0}.cdet>div span{font-size:11px;color:var(--muted)}.cdet>div b{font-size:15px;font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
 .cdet small{grid-column:1/-1;font-size:11.5px;color:var(--muted)}
+
+/* ===== Bố cục A–H v1.9.11 ===== */
+/* A: việc cần làm thành thanh gọn */
+.todo-list{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px}
+.tdo{width:auto;flex:1 1 auto;padding:7px 12px;gap:8px;border-radius:999px;min-height:0}
+.tdo .tdot{width:8px;height:8px;border-radius:50%;flex:none;background:var(--muted)}.tdo.bad .tdot{background:var(--bad)}.tdo.warn .tdot{background:var(--warn)}.tdo.go .tdot{background:var(--accent)}
+.tdo b{font-size:13.5px}.tdo .s{margin-left:6px;font-size:11.5px}
+/* B/C: hero 1 ô lớn + 2 ô nhỏ; giờ tuần là thanh mỏng */
+.hero{grid-template-columns:repeat(2,minmax(0,1fr))!important}.hero .chkc{grid-column:auto!important}
+.hrs{display:flex;align-items:center;gap:12px;width:100%;margin:0 0 14px;padding:10px 14px;font:inherit;color:var(--text);text-align:left;cursor:pointer}
+.hrs .hl{font-size:13px;color:var(--muted);white-space:nowrap}.hrs b{font-size:16px;font-variant-numeric:tabular-nums;white-space:nowrap}.hrs b small{font-size:12px;color:var(--muted);font-weight:500}
+.hrs .hbar{flex:1;min-width:30px;margin:0;height:6px}.hrs .hs{font-size:12px;color:var(--muted);white-space:nowrap}
+details.ydet>summary{cursor:pointer;list-style:none;padding:8px 12px;margin:10px 0 6px;border-radius:10px;background:var(--soft);font-size:13px;font-weight:600;color:var(--muted);text-align:center}
+details.ydet>summary::-webkit-details-marker{display:none}details.ydet[open]>summary{margin-bottom:10px}
+/* D: form ghi khoản gọn */
+.spf{display:grid;grid-template-columns:minmax(0,1.2fr) minmax(0,1.4fr) minmax(0,.8fr) auto;gap:10px;align-items:end}.spf label{display:flex;flex-direction:column;gap:4px}.spf input,.spf select{margin:0;min-height:44px}
+.spf label{margin:0;min-width:0}.spf .fb{min-height:44px}
+.spf .fd{grid-column:1/-1}.spf .fd>summary{cursor:pointer;font-size:12.5px;color:var(--muted);padding:2px 0;list-style:none}.spf .fd>summary::-webkit-details-marker{display:none}.spf .fd>summary::before{content:"▸ "}.spf .fd[open]>summary::before{content:"▾ "}
+.fdb{display:grid;grid-template-columns:1fr 2fr;gap:10px;margin-top:8px}.fdb label{margin:0}
+@media(max-width:760px){.spf{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}.spf .fb{grid-column:auto}.spf .ft{grid-column:auto}}
+/* E: gập khi đã trả hết */
+.foldable .chd{cursor:pointer}.foldable .chd h3::after{content:" ▾";color:var(--muted);font-size:12px}.foldable.folded .chd h3::after{content:" ▸"}
+.folded .cbody{display:none}.folded{padding-top:12px;padding-bottom:12px}.folded .chd{margin-bottom:0}
+.okc{color:var(--ok);font-weight:700}
+/* G: nút Thêm nổi (phone) */
+.fab{display:none}
+@media(max-width:760px){
+  .fab{display:flex;position:fixed;right:16px;bottom:calc(84px + env(safe-area-inset-bottom));z-index:25;width:56px;height:56px;border-radius:50%;border:0;background:var(--grad);color:#fff;font-size:32px;line-height:1;align-items:center;justify-content:center;box-shadow:var(--glow),0 6px 18px rgba(0,0,0,.35);cursor:pointer}
+  .fab.hidden{display:none}
+  .eb-tools #new{display:none}
+  /* F: thanh số liệu eBay một khối mỏng */
+  #sum.sum{display:flex!important;gap:0!important;padding:0!important;background:var(--card)!important;border:1px solid var(--line)!important;border-radius:14px!important;margin-bottom:8px!important;box-shadow:var(--shadow)!important;overflow:hidden}
+  #sum.sum>div{flex:1 1 0;min-width:0;padding:7px 10px!important;border-radius:0!important;background:none!important;border:0!important;box-shadow:none!important;border-left:1px solid var(--line)!important;font-size:10.5px;color:var(--muted)}
+  #sum.sum>div:first-child{border-left:0!important}
+  #sum.sum b{font-size:15px;color:var(--text);margin-top:1px}
+  #sum.sum>div>span{display:none!important}
+}
+/* H: check lương gập */
+.ckfold>summary{display:flex;align-items:center;gap:10px;flex-wrap:wrap;cursor:pointer;list-style:none;font-size:14px}.ckfold>summary::-webkit-details-marker{display:none}
+.ckfold>summary::after{content:"▾";margin-left:auto;color:var(--muted)}.ckfold[open]>summary::after{content:"▴"}
+.ckfold>summary b{font-size:16px}.ckfold>summary b small{font-size:11px;color:var(--muted);font-weight:500}.ckfold>summary .net{font-size:12.5px;color:var(--ok);font-weight:600}
+.ckfold[open]>summary{margin-bottom:10px}
+.hrs{flex-wrap:wrap;row-gap:4px}.hrs .hbar{flex:1 1 60px}.hrs .hs{white-space:normal;margin-left:auto;text-align:right}
+.fab{transition:transform .25s,opacity .25s}.fab.away{transform:translateY(90px) scale(.8);opacity:0;pointer-events:none}
 </style>
 </head>
 <body>
@@ -693,6 +737,7 @@ h2.pg{font-size:24px;margin-bottom:12px}
 <main>
 <div id="warn" class="warnbar"></div>
 
+<button type="button" id="fab" class="fab hidden" aria-label="Thêm">+</button>
 <div id="mod-home">
   <div class="hhead">
     <div><h2 class="pg" id="homeTitle">Tổng quan</h2></div>
@@ -701,13 +746,14 @@ h2.pg{font-size:24px;margin-bottom:12px}
   <!-- thứ tự theo mức quan trọng: việc cần làm ngay → số chính → nút nhanh → chi tiết (gập) -->
   <div class="todo-list" id="homeTodo"></div>
   <div class="hero" id="homeHero"></div>
+  <button type="button" class="card hrs" id="homeHours" data-go="work"></button>
   <div class="grid2 hsec">
-    <div class="card"><h3>Chi cố định</h3><div id="homeFixed"></div></div>
     <div class="card"><h3 id="homeBudgetTitle">Ngân sách</h3><div id="homeBudget"></div></div>
+    <div class="card"><h3>Chi cố định</h3><div id="homeFixed"></div></div>
   </div>
   <div class="grid2 hsec">
-    <div class="card"><h3 id="homeDonutTitle">Chi theo danh mục</h3><div id="homeDonut"></div></div>
     <div class="card"><h3 id="homeChartTitle">Thu & chi</h3><div id="homeChart"></div></div>
+    <div class="card"><h3 id="homeDonutTitle">Chi theo danh mục</h3><div id="homeDonut"></div></div>
   </div>
   <div class="card hsec" id="homeYear"></div>
 </div>
@@ -763,13 +809,12 @@ h2.pg{font-size:24px;margin-bottom:12px}
   </div>
   <div class="card">
     <h3>Ghi khoản mới</h3>
-    <form id="spForm" class="f2" autocomplete="off">
-      <label>Ngày<input name="date" type="date" required></label>
-      <label>Loại<select name="type"><option value="chi">Chi</option><option value="thu">Thu</option></select></label>
-      <label>Số tiền ($)<input name="amount" type="number" step="0.01" min="0" required></label>
-      <label>Danh mục<select name="cat"></select></label>
-      <label>Ghi chú<input name="note" placeholder="vd. Walmart, xăng…"></label>
-      <label>&nbsp;<button class="btn primary" style="width:100%">+ Thêm</button></label>
+    <form id="spForm" class="spf" autocomplete="off">
+      <label class="fa">Số tiền ($)<input name="amount" type="number" step="0.01" min="0" inputmode="decimal" required></label>
+      <label class="fc">Danh mục<select name="cat"></select></label>
+      <label class="ft">Loại<select name="type"><option value="chi">Chi</option><option value="thu">Thu</option></select></label>
+      <button class="btn primary fb">+ Thêm</button>
+      <details class="fd"><summary>Ngày &amp; ghi chú</summary><div class="fdb"><label>Ngày<input name="date" type="date"></label><label>Ghi chú<input name="note" placeholder="vd. Walmart, xăng…"></label></div></details>
     </form>
   </div>
   <div class="card">
@@ -1809,12 +1854,25 @@ function showMod(m){
   $$("main>div[id^=mod-]").forEach(d=>d.classList.toggle("hidden",d.id!=="mod-"+m));
   const f={home:renderHome,ebay:render,spend:renderSpend,work:renderWork,set:renderSet}[m];
   if(f)f();
+  updateFab();
 }
+function updateFab(){
+  const m=($$("#side button").find(b=>b.classList.contains("on"))||{dataset:{}}).dataset.mod;
+  const el=$("#fab");if(!el)return;
+  el.classList.toggle("hidden",!(m==="spend"||(m==="ebay"&&!$("#tab-kho").classList.contains("hidden"))));
+  el.dataset.m=m;
+}
+{let ly=0;addEventListener("scroll",()=>{const y=scrollY,el=$("#fab");if(!el)return;if(y>ly+8)el.classList.add("away");else if(y<ly-8||y<40)el.classList.remove("away");ly=y},{passive:true})}
+$("#fab").onclick=()=>{
+  if($("#fab").dataset.m==="ebay"){$("#new").click();return}
+  const f=$("#spForm");f.scrollIntoView({behavior:"smooth",block:"center"});setTimeout(()=>f.amount.focus(),350);
+};
 $$("#side button").forEach(b=>b.onclick=()=>showMod(b.dataset.mod));
 $$(".subnav button").forEach(b=>b.onclick=()=>{
   $$(".subnav button").forEach(x=>x.classList.toggle("on",x===b));
   $$("#mod-ebay>section").forEach(s=>s.classList.toggle("hidden",s.id!=="tab-"+b.dataset.tab));
   if(b.dataset.eb&&b.dataset.eb!=="check"){ebTab=b.dataset.eb;try{localStorage.setItem("ebTab",ebTab)}catch(e){}render()}
+  updateFab();
 });
 $$("[data-go]").forEach(b=>b.onclick=()=>{
   showMod(b.dataset.go);
@@ -1918,16 +1976,17 @@ function donut(mk,inc){
     `<ul><li class="dthu"><i style="background:var(--ok);border-radius:50%"></i><span>Thu</span><span>${money(inc)}</span></li>${arr.map(([c,v])=>`<li><i style="background:${col(c)}"></i><span>${esc(c)}</span><span>${money(v)} <span class="muted" style="font-weight:400">${(v/tot*100).toFixed(0)}%</span></span></li>`).join("")}${tot?`<li class="dtot"><i></i><span>Tổng chi</span><span>${money(tot)}</span></li>`:""}</ul></div>`;
 }
 // Tổng kết năm: 3 số lớn + bảng T1–T12 (Thu · Chi · Còn lại) + dòng cả năm
+let yrOpen=false;
 function yearSummary(yr,mks,stats,cur){
   const now=mKey(new Date()),inc=s=>s.ebay+s.wage+s.thu,has=(m,s)=>m<=now||inc(s)||s.chi;
   const T=stats.reduce((a,s)=>({i:a.i+inc(s),c:a.c+s.chi,g:a.g+s.pay}),{i:0,c:0,g:0}),nm=mks.filter((m,i)=>m<=now&&has(m,stats[i])).length||1;
   const mY=v=>(v<0?"-$":"$")+Math.round(Math.abs(v)).toLocaleString("en-US"),cell=v=>`<td class="num">${mY(v)}</td>`;
   return `<h3>Tổng kết năm ${yr}</h3><div class="ysum"><div><span>Tổng thu</span><b class="pos">${money(T.i)}</b></div><div><span>Tổng chi</span><b class="neg">${money(T.c)}</b></div><div><span>Còn lại</span><b class="${T.i-T.c>=0?"pos":"neg"}">${money(T.i-T.c)}</b></div></div>`+
-    `<table class="ytab"><thead><tr><th>Tháng <small>· lương trước thuế</small></th><th class="num">Thu</th><th class="num">Chi</th><th class="num">Còn lại</th></tr></thead><tbody>`+
+    `<details class="ydet"${yrOpen?" open":""}><summary>Xem bảng 12 tháng</summary><table class="ytab"><thead><tr><th>Tháng <small>· lương trước thuế</small></th><th class="num">Thu</th><th class="num">Chi</th><th class="num">Còn lại</th></tr></thead><tbody>`+
     mks.map((m,i)=>{const s=stats[i],net=inc(s)-s.chi;return has(m,s)
       ?`<tr class="${m===cur?"cur":""}"><td>T${+m.slice(5)}${s.pay?`<small class="gr">lương ${mY(s.pay)}</small>`:""}</td>${cell(inc(s))}${cell(s.chi)}<td class="num ${net>=0?"pos":"neg"}">${mY(net)}</td></tr>`
       :`<tr class="fut"><td>T${+m.slice(5)}</td><td class="num">—</td><td class="num">—</td><td class="num">—</td></tr>`}).join("")+
-    `</tbody><tfoot><tr><td>Cả năm<small class="gr">lương ${mY(T.g)}</small></td>${cell(T.i)}${cell(T.c)}<td class="num ${T.i-T.c>=0?"pos":"neg"}">${mY(T.i-T.c)}</td></tr><tr class="avg"><td>TB/tháng<small class="gr">lương ${mY(T.g/nm)}</small></td>${cell(T.i/nm)}${cell(T.c/nm)}${cell((T.i-T.c)/nm)}</tr></tfoot></table>`;
+    `</tbody><tfoot><tr><td>Cả năm<small class="gr">lương ${mY(T.g)}</small></td>${cell(T.i)}${cell(T.c)}<td class="num ${T.i-T.c>=0?"pos":"neg"}">${mY(T.i-T.c)}</td></tr><tr class="avg"><td>TB/tháng<small class="gr">lương ${mY(T.g/nm)}</small></td>${cell(T.i/nm)}${cell(T.c/nm)}${cell((T.i-T.c)/nm)}</tr></tfoot></table></details>`;
 }
 function renderHome(){
   const mk=homeM,t=today(),calc=calcShifts();
@@ -1955,8 +2014,8 @@ function renderHome(){
   $("#homeHero").innerHTML=
     box("main",`Còn lại · ${mLabel(mk)}`,s.net,s.net>=0?"pos":"neg",`Thu <b>${money(s.ebay+s.wage+s.thu)}</b> · Chi <b>${money(s.chi)}</b><br><span class="muted">Lương tháng: trước thuế <b>${money(s.pay)}</b> · thực nhận <b>${s.wageEst?"~":""}${money(s.wage)}</b></span>`,0)+
     box("chkc",ckN&&ckN.est?"Check kế tiếp · ước tính":"Check kế tiếp",ckN?ckN.v:"—","pos",ck?`${dowl(ck.pay)} ${dmy(ck.pay)} · trước thuế ${money(ckS.pay)}`:"",1)+
-    box("","Lãi eBay",s.ebay,s.ebay>=0?"pos":"neg",`${s.sold} món đã bán`,2)+
-    box("","Giờ tuần này",`${fh(wc.h)}<small style="font-size:14px;color:var(--muted)"> / ${lim}</small>`,"",wc.ot>0?`<b class="neg">+${fh(wc.ot)}h tăng ca</b>`:`còn ${fh(Math.max(0,lim-toOt))}h tới OT`,3,`<div class="bar ${hrBarCls(toOt,lim)}"><i style="width:${Math.min(100,toOt/lim*100)}%"></i></div>`);
+    box("","Lãi eBay",s.ebay,s.ebay>=0?"pos":"neg",`${s.sold} món đã bán`,2);
+  $("#homeHours").innerHTML=`<span class="hl">⏱ Giờ tuần này</span><b>${fh(wc.h)}<small> / ${lim}</small></b><span class="hbar bar ${hrBarCls(toOt,lim)}"><i style="width:${Math.min(100,toOt/lim*100)}%"></i></span><span class="hs">${wc.ot>0?`<b class="neg">+${fh(wc.ot)}h OT</b>`:`còn ${fh(Math.max(0,lim-toOt))}h tới OT`}</span>`;
   countUp($("#homeHero"));
   // chi cố định theo 6 nhóm, đúng màu nhóm
   const fxm=fxRows(mk),fxT=fxm.reduce((a,r)=>a+n(r.amt),0),fxG=FXC.map(([k,l,c])=>({l,c,v:fxm.filter(r=>r.cat===k).reduce((a,r)=>a+n(r.amt),0)}));
@@ -1972,6 +2031,7 @@ function renderHome(){
   $("#homeBudgetTitle").textContent="Ngân sách · "+mLabel(mk);
   $("#homeBudget").innerHTML=budgetBars(mk)||`<span class="muted">Chưa đặt ngân sách. Vào “Chi tiêu” để đặt.</span>`;
 }
+$("#homeYear").addEventListener("toggle",e=>{if(e.target.matches("details.ydet"))yrOpen=e.target.open},true);
 $("#homeChart").addEventListener("click",e=>{const h=e.target.closest("[data-m]");if(h){homeM=h.dataset.m;renderHome()}});
 $("#hmPrev").onclick=()=>{homeM=mShift(homeM,-1);renderHome()};
 $("#hmNext").onclick=()=>{homeM=mShift(homeM,1);renderHome()};
@@ -2074,6 +2134,17 @@ function fxRec(row,mk){
   return e;
 }
 /* Chi tiêu: mỗi khoản 1 dòng: chấm màu nhóm · tên · số tiền (gợi ý mờ) · nút Trả. Thêm, đổi tên, đổi nhóm, xoá: Cài đặt → Chi cố định */
+const foldOpen=new Set();
+function foldCard(card,key){
+  const rows=[...card.querySelectorAll("[data-fx],[data-cc]")];if(!rows.length)return;
+  const all=rows.every(r=>r.matches(".paid")||r.querySelector('[aria-pressed="true"]'));
+  const head=card.querySelector(".chd");if(!head)return;
+  let body=card.querySelector(".cbody");
+  if(!body){body=document.createElement("div");body.className="cbody";[...card.children].forEach(c=>{if(c!==head)body.appendChild(c)});card.appendChild(body)}
+  card.classList.toggle("foldable",all);card.classList.toggle("folded",all&&!foldOpen.has(key));
+  head.onclick=all?()=>{foldOpen.has(key)?foldOpen.delete(key):foldOpen.add(key);card.classList.toggle("folded")}:null;
+  const m=head.querySelector(".muted");if(m&&all&&!m.dataset.ok){m.dataset.ok=1;m.insertAdjacentHTML("beforeend",' <span class="okc">✓</span>')}
+}
 function renderFixed(){
   const rows=fxRows(spM),tot=rows.reduce((a,r)=>a+n(r.amt),0),paidN=rows.filter(r=>r.paid).length;
   $("#fxCard").innerHTML=`<div class="chd"><h3>Chi cố định</h3><span class="muted">${rows.length?`Đã trả ${paidN}/${rows.length} · `:""}<b>${money(tot)}</b></span></div>`+
@@ -2180,7 +2251,7 @@ function renderSpend(){
   $("#spMonth").textContent=mLabel(spM);
   const all=expOf(spM),list=all.filter(e=>e.type==="chi"||e.type==="thu"); // cố định + trả thẻ hiện ở 2 ô riêng
   const chi=all.filter(isChi).reduce((a,e)=>a+n(e.amount),0),thu=list.filter(e=>e.type==="thu").reduce((a,e)=>a+n(e.amount),0);
-  renderFixed();renderCards();
+  renderFixed();renderCards();foldCard($("#fxCard"),"fx");foldCard($("#ccCard"),"cc");
   const lim=Object.values(DB.budgets).reduce((a,v)=>a+n(v),0);
   const budSpent=Object.keys(DB.budgets).filter(c=>n(DB.budgets[c])>0).reduce((a,c)=>a+list.filter(e=>e.type==="chi"&&e.cat===c).reduce((x,e)=>x+n(e.amount),0),0);
   $("#spSum").innerHTML=`<div>Tổng chi<b>${money(chi)}</b></div><div>Tổng thu<b>${money(thu)}</b></div><div>Thu − chi<b class="${thu-chi>=0?"pos":"neg"}">${money(thu-chi)}</b></div>`+(lim>0?`<div>Ngân sách còn lại<b class="${lim-budSpent>=0?"pos":"neg"}">${money(lim-budSpent)}</b></div>`:"");
@@ -2201,8 +2272,8 @@ $("#spPrev").onclick=()=>{spM=mShift(spM,-1);renderSpend()};
 $("#spNext").onclick=()=>{spM=mShift(spM,1);renderSpend()};
 $("#spForm").onsubmit=e=>{
   e.preventDefault();const f=e.target;
-  DB.expenses.push({id:uid(),date:f.date.value,type:f.type.value,amount:n(f.amount.value),cat:f.cat.value,note:f.note.value.trim()});
-  save();spM=monthOf(f.date.value);f.amount.value="";f.note.value="";renderSpend();f.amount.focus();
+  DB.expenses.push({id:uid(),date:f.date.value||today(),type:f.type.value,amount:n(f.amount.value),cat:f.cat.value,note:f.note.value.trim()});
+  save();spM=monthOf(f.date.value||today());f.amount.value="";f.note.value="";renderSpend();f.amount.focus();
 };
 let exCur=null;
 function openExpense(id){
@@ -2272,6 +2343,8 @@ const lunch=()=>{const v=parseFloat(S().lunch);return isFinite(v)&&v>=0?v:30};
 // thanh giờ tuần: xanh khi còn xa, vàng khi còn ≤5 giờ tới ngưỡng, đỏ khi tăng ca
 const hrBarCls=(tot,lim)=>tot>lim?"over":tot>=lim-5?"warn":"go";
 const dm=s=>{const d=parseD(s);return d.getDate()+"/"+(d.getMonth()+1)};
+let ckOpen=false;
+$("#wkCheck").addEventListener("toggle",e=>{if(e.target.matches("details.ckfold"))ckOpen=e.target.open},true);
 function renderWork(){
   if(holdWhileTyping("work",$("#mod-work"),renderWork))return;
   if(!wkCur)wkCur=weekStartOf(today());
@@ -2297,7 +2370,8 @@ function renderWork(){
       :`<div class="day empty${isT?" today":fut?" future":""}" data-day="${d}">${head}<div class="plus">${isT?"+ Thêm ca":fut?"+":"Nghỉ"}</div></div>`;
   }
   $("#wkDays").innerHTML=h;
-  $("#wkCheck").innerHTML=`<h3>💵 Check lương trong tuần này</h3>`+checkHtml(wkCur,calc)+payListHtml(calc);
+  const {cur:ckc,next:ckn}=checkFor(wkCur),ckp=ckc||ckn,ckq=ckp?payNet(ckp,calc,netRatio(calc)):null;
+  $("#wkCheck").innerHTML=`<details class="ckfold"${ckOpen?" open":""}><summary><span>💵 Check ${ckp?dowl(ckp.pay)+" "+dmy(ckp.pay):""}</span><b>${ckp?money(periodSum(ckp,calc).pay):"—"}<small> trước thuế</small></b>${ckq?`<span class="net">thực nhận ${ckq.est?"~":""}${money(ckq.v)}</span>`:""}</summary>`+checkHtml(wkCur,calc)+payListHtml(calc)+`</details>`;
   bindPayList(calc);
   $$("#wkDays .day").forEach(el=>el.onclick=e=>{
     const sh=e.target.closest("[data-sh]"),add=e.target.closest("[data-add]");

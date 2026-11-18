@@ -635,6 +635,29 @@ h2.pg{font-size:24px;margin-bottom:12px}
   .day.empty{padding:6px 12px}.day.empty .plus{margin:0 0 0 auto;font-size:12px}
   .wkmonth{font-size:12.5px}
 }
+
+/* ===== eBay: tên 1 dòng, Cần ship thu gọn, Xong từng hàng, tab nổi bật ===== */
+.oc-n b,.u-n b,.lot-n b,.oc-sn b{white-space:nowrap!important;overflow:hidden;text-overflow:ellipsis;display:block!important;-webkit-line-clamp:unset!important}
+.oc-n,.u-n,.lot-n,.oc-sn{min-width:0}
+.oc-sh{display:flex;align-items:center;gap:10px;padding:10px 14px;cursor:pointer;min-width:0}
+.oc-sn{flex:1;display:flex;flex-direction:column;gap:1px}.oc-sn small{font-size:12px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.oc-sn .late{color:var(--bad);font-weight:600}
+.oc-sh .num{font-weight:700;font-variant-numeric:tabular-nums;flex:none}.oc-sh .chev{color:var(--muted);transition:transform .2s;flex:none}
+.oc-ship.open .chev{transform:rotate(180deg)}.oc-ship.open{border-color:var(--hl)}
+.oc-sf{padding:2px 14px 12px;border-top:1px solid var(--line)}.oc-sf .oc-q{margin-top:8px;display:grid;grid-template-columns:1fr 1fr;gap:8px 10px}.oc-sf .oc-q label{margin:0;min-width:0;font-size:12px}.oc-sf .oc-q .q-trk{grid-column:1/-1!important}.oc-sf .oc-q .btn{grid-column:1/-1}
+.oc-sa{display:flex;gap:8px;justify-content:flex-end;margin-top:8px}
+.oc-kv{display:flex;flex-direction:column;padding:2px 16px 6px}.oc-kv>div{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:6px 0;border-bottom:1px dashed var(--line);min-width:0}.oc-kv>div:last-child{border-bottom:0}
+.oc-kv span{font-size:12px;color:var(--muted);flex:none}.oc-kv b{font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}
+.oc-kv .kvt{flex-wrap:wrap;align-items:flex-start}.oc-kv .kvt>div{display:flex;flex-direction:column;align-items:flex-end;gap:6px;min-width:0;max-width:100%}
+#ebTabs{padding:5px;gap:6px;background:var(--card)}
+#ebTabs button{font-size:14.5px;font-weight:700;padding:10px 18px;border:1px solid var(--line);background:var(--soft);color:var(--text);border-radius:12px;position:relative}
+#ebTabs button.on{background:var(--grad);color:#fff;border-color:transparent;box-shadow:var(--glow)}
+@media(max-width:760px){
+  #ebTabs{display:grid!important;grid-template-columns:repeat(5,minmax(0,1fr));gap:4px;padding:4px}
+  #ebTabs button{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;padding:6px 2px;min-height:54px;font-size:11.5px;font-weight:700;white-space:nowrap}
+  #ebTabs button .te{display:block!important;font-size:19px;line-height:1.1}
+  #ebTabs button i{position:absolute;top:2px;right:3px;font-size:10px;min-width:16px;padding:0 4px;line-height:16px;margin:0}
+  .oc-sh{padding:9px 12px}.oc-kv{padding:0 12px 4px}.oc-sf{padding:2px 12px 10px}
+}
 </style>
 </head>
 <body>
@@ -1192,9 +1215,29 @@ function unitsOf(its){
   }
   return out.map(u=>({...u,sum:k=>u.its.reduce((a,i)=>a+n(i[k]),0),serials:u.its.map(i=>i.serial||"?").join(" + ")}));
 }
+const ebOpen=new Set();
+function shipCard(o){
+  const f=o.f,key=o.its.map(i=>i.id).join(","),us=unitsOf(o.its),wait=daysAgo(f.saleDate),open=ebOpen.has(key);
+  const qv=(k,v)=>esc(qDraft[key+"|"+k]??v);
+  const nm=(f.name||"(chưa đặt tên)")+(us.length>1?` +${us.length-1} món`:"");
+  const sub=[us.map(u=>u.kit?u.serials:(u.f.serial||"thiếu serial")).join(", "),f.saleDate?"bán "+fdate(f.saleDate+"T12:00:00"):"",wait!=null&&wait>=2?`<span class="late">chờ ${wait} ngày</span>`:""].filter(Boolean).join(" · ");
+  const form=open?`<div class="oc-sf">
+    <div class="oc-kv"><div><span>Người mua</span><b>${esc(f.buyer||"—")}</b></div><div><span>Bán</span><b>${money(o.price+o.charge)}</b></div></div>
+    <div class="oc-q">
+      <label>Order ID<input class="mono" data-q="orderId" value="${qv("orderId",f.orderId||"")}" autocomplete="off"></label>
+      <label>Phí eBay<input data-q="fees" type="number" step="0.01" min="0" inputmode="decimal" value="${qv("fees",o.fees?o.fees.toFixed(2):"")}"></label>
+      <label>Ship bạn trả<input data-q="ship" type="number" step="0.01" min="0" inputmode="decimal" value="${qv("ship",f.shipTotal||"")}"></label>
+      <label class="q-trk">Tracking<input class="mono" data-q="tracking" value="${qv("tracking","")}" placeholder="Dán số tracking…" autocomplete="off"></label>
+      <button type="button" class="btn primary" data-savetrk>Lưu · chuyển sang Xong</button>
+    </div>
+    <div class="oc-sa"><button type="button" class="mini" data-open="${f.id}">✏️ Sửa món</button><button type="button" class="mini" data-unsell title="Bấm nhầm? Đưa về kho">↶ Về kho</button></div></div>`:"";
+  return `<div class="oc oc-ship ${STG.ship[1]}${open?" open":""}" data-ord="${esc(key)}"><div class="oc-sh" data-toggle role="button" tabindex="0"><span class="oc-sn"><b>${esc(nm)}</b><small>${sub}</small></span><span class="num">${money(o.price+o.charge)}</span><span class="chev">▾</span></div>${form}</div>`;
+}
 function orderCard(o){
-  const f=o.f,[lb,cl]=STG[o.stage],wait=o.stage==="ship"?daysAgo(f.saleDate):null,us=unitsOf(o.its);
-  const head=`<div class="oc-h"><span class="tag ${cl}">${lb}</span>${f.orderId?`<b class="mono">#${esc(f.orderId)}</b>`:`<b class="muted">(không có Order ID)</b>`}<span class="muted">${esc(f.buyer||"")}</span><span class="muted">${f.saleDate?"bán "+fdate(f.saleDate+"T12:00:00"):""}</span>${wait!=null&&wait>=2?`<span class="tag st-late">chờ ${wait} ngày</span>`:""}<span style="flex:1"></span>${us.length>1?`<span class="muted">${us.length} món</span>`:""}<button type="button" class="mini" data-unsell title="Bấm nhầm? Đưa về kho">↶ Về kho</button></div>`;
+  if(o.stage==="ship")return shipCard(o);
+  const f=o.f,[lb,cl]=STG[o.stage],wait=null,us=unitsOf(o.its);
+  const head=`<div class="oc-h"><span class="tag ${cl}">${lb}</span><span class="muted">${f.saleDate?"bán "+fdate(f.saleDate+"T12:00:00"):""}</span><span style="flex:1"></span>${us.length>1?`<span class="muted">${us.length} món</span>`:""}<button type="button" class="mini" data-unsell title="Bấm nhầm? Đưa về kho">↶ Về kho</button></div>
+  <div class="oc-kv"><div><span>Order ID</span>${f.orderId?`<b class="mono">#${esc(f.orderId)}</b>`:`<b class="muted">(không có)</b>`}</div><div><span>Người mua</span><b>${esc(f.buyer||"—")}</b></div>${f.tracking?`<div class="kvt"><span>Tracking</span><div>${trkLine(f)}${trkChip(f)}</div></div>`:""}</div>`;
   const rows=us.map(u=>{const i=u.f,pic=(u.its.find(x=>(x.photos||[]).length)||{}).photos;return `<div class="oc-i" data-open="${i.id}">${pic?`<img class="thumb sm" src="${ph(pic[0])}" alt="" data-zoom title="Xem ảnh lớn">`:""}<span class="oc-n" title="${esc(i.name||"")}"><b>${u.kit?`<span class="kit-tag">🔗 kit ${u.its.length} thanh</span> `:""}${esc(i.name||"(chưa đặt tên)")}</b><span class="mono muted">${esc(u.kit?u.serials:(i.serial||"thiếu serial"))}</span></span>${i.status==="tra"?`<span class="tag s-tra">trả ${u.sum("refund")?money(u.sum("refund")):""}</span>`:""}<span class="num">${money(u.sum("price"))}</span>${o.stage==="done"&&i.status==="ban"?`<button type="button" class="mini" data-ret="${i.id}" title="Ghi nhận ${u.kit?"cả kit":"món này"} bị trả lại">↩ Trả</button>`:""}${o.stage==="done"?`<button type="button" class="mini" data-rs="${i.id}" title="Restock: nhập thêm hàng giống ${u.kit?"kit":"món"} này">🔁</button>`:""}</div>`}).join("");
   // gọn: chỉ Bán và Lãi; bấm ▸ xem chi tiết
   const tot=`<details class="oc-t"><summary><span>Bán <b>${money(o.price+o.charge)}</b></span><span>Lãi <b class="${o.profit>=0?"pos":"neg"}">${money(o.profit)}</b></span></summary>
@@ -1208,7 +1251,7 @@ function orderCard(o){
     <label class="q-trk">Tracking<input class="mono" data-q="tracking" value="${qv("tracking","")}" placeholder="Dán số tracking…" autocomplete="off"></label>
     <button type="button" class="btn primary" data-savetrk>Lưu</button></div>`;
   // tracking hiện ngay dưới tiêu đề thẻ (dễ thấy), kit dùng chung 1 tracking
-  const trkRow=f.tracking&&o.stage!=="ship"?`<div class="oc-tr">${trkLine(f)}${trkChip(f)}</div>`:"";
+  const trkRow="";
   if(o.stage==="ret")foot=`<div class="oc-f muted" style="font-size:12.5px">${us.filter(u=>u.f.status==="tra").map(u=>{const rs=u.its.map(i=>i.retSerial).filter(Boolean),ok=rs.every(r=>u.its.some(i=>ns(i.serial)===ns(r)));return `${esc(u.serials)}: hoàn ${money(u.sum("refund"))}${rs.length?` · serial nhận về <span class="mono">${rs.map(esc).join(" + ")}</span> ${ok?"<b class='pos'>khớp</b>":"<b class='neg'>KHÔNG khớp</b>"}`:""}`}).join("<br>")}</div>`;
   return `<div class="oc ${STG[o.stage][1]}" data-ord="${esc(o.its.map(i=>i.id).join(","))}">${head}${trkRow}<div class="oc-b"><div class="oc-items">${rows}</div>${tot}</div>${foot}</div>`;
 }
@@ -1311,6 +1354,7 @@ $("#list").addEventListener("click",async e=>{
   if(t.closest("input"))return;
   const z=t.closest("[data-zoom]");if(z){$("#viewer img").src=z.src;$("#viewer").showModal();return}
   const sb=t.closest("[data-sub]");if(sb){ebSub=sb.dataset.sub;render();return}
+  const tg=t.closest("[data-toggle]");if(tg){const k=tg.closest("[data-ord]").dataset.ord;ebOpen.has(k)?ebOpen.delete(k):ebOpen.add(k);render();return}
   const ord=t.closest("[data-ord]"),lot=t.closest("[data-lot]"),ids=(ord||lot)?(ord||lot).dataset[ord?"ord":"lot"].split(","):[];
   const upd=async fn=>{for(const id of ids){const i=DB.items.find(x=>x.id===id);if(i)fn(i)}save();await reload()};
   if(t.closest("[data-qsell]")){
@@ -1331,6 +1375,7 @@ $("#list").addEventListener("click",async e=>{
 });
 $("#list").addEventListener("keydown",e=>{
   if(e.key!=="Enter")return;
+  if(e.target.matches("[data-toggle]")){e.preventDefault();e.target.click();return}
   if(e.target.matches("[data-q]")){e.target.blur();e.target.closest("[data-ord]").querySelector("[data-savetrk]").click()}
   if(e.target.matches("[data-qprice]")){e.target.blur();e.target.closest("[data-lot]").querySelector("[data-qsell]").click()}
 });

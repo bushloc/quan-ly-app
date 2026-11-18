@@ -428,17 +428,13 @@ main>div:not(.hidden){animation:pagein .5s cubic-bezier(.2,.8,.2,1)}
 .ccrow.paid{border-left-color:var(--ok)}.ccrow.soon{border-left-color:var(--warn)}.ccrow.late{border-left-color:var(--bad)}
 .ccchk{display:flex;align-items:center;gap:10px;flex:1 1 170px;margin:0;cursor:pointer;color:var(--text);font-size:14px}.ccchk input{width:22px;height:22px;flex:none;margin:0;accent-color:var(--ok)}
 .ccrow .ccAmt{width:112px;margin:0;text-align:right}
-button.ccdue{border:0;background:none;padding:0;font:inherit;font-size:12px;cursor:pointer;text-align:left;color:var(--muted);text-decoration:underline dotted;text-underline-offset:3px}
 .ccrow.paid{background:var(--oksoft);border-left-color:var(--ok);box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--ok) 35%,transparent)}
 .ccrow.paid .ccchk b,.ccrow.paid .ccchk .mono{opacity:.65}.ccpaid{font-size:13px;font-weight:700;color:var(--ok)}
-.ccok{font-size:26px;font-weight:800;color:var(--ok);line-height:1;margin-left:auto}
 .ccrow.soon{background:var(--warnsoft)}.ccrow.late{background:var(--badsoft)}
-.ccedit{flex-basis:100%;display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:8px;padding-top:8px;border-top:1px solid var(--line);margin-top:4px}
-.ccedit label{margin:0}.ccedit .cechk{display:flex;align-items:center;gap:6px;color:var(--text);font-size:13px}.ccedit .cechk input{width:auto;margin:0}.ccedit .row{grid-column:1/-1}
-.fxrow.done .fxAmt{border-color:var(--ok);background:var(--oksoft);color:var(--ok);font-weight:700}.fxrow.done .fxD::after{content:" ✓";color:var(--ok);font-weight:800}
+.fxrow.done .fxAmt{border-color:var(--ok);background:var(--oksoft);color:var(--ok);font-weight:700}.fxN{flex:1;min-width:0;font-size:14px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.ccrow.paid .ccAmt{border-color:var(--ok);background:var(--oksoft);color:var(--ok);font-weight:700}
 .ccdue{font-size:12px;color:var(--muted)}.ccrow.soon .ccdue{color:var(--warn);font-weight:600}.ccrow.late .ccdue{color:var(--bad);font-weight:600}.ccrow.paid .ccdue{color:var(--ok)}
 .ccset{display:grid;grid-template-columns:2fr 1fr 1fr 2fr auto;gap:8px;align-items:end;margin-bottom:10px}.ccset label{margin:0}
-@media(max-width:760px){.ccset{grid-template-columns:1fr 1fr;padding-bottom:10px;border-bottom:1px solid var(--line)}.ccset label:first-child,.ccset label:nth-child(4){grid-column:1/-1}.ccrow .ccAmt,.ccrow .ccDate{flex:1}}
+@media(max-width:760px){.ccset{grid-template-columns:1fr 1fr;padding-bottom:10px;border-bottom:1px solid var(--line)}.ccset label:first-child,.ccset label:nth-child(4){grid-column:1/-1}.ccrow .ccAmt{flex:1}.ccrow .fxD{display:none}}
 .lbs{display:none}
 /* ===== iPhone / màn hình hẹp: thanh tab dưới, 1 cột, nút to ===== */
 @media(max-width:760px){
@@ -592,6 +588,12 @@ button.ccdue{border:0;background:none;padding:0;font:inherit;font-size:12px;curs
 <div id="mod-set" class="hidden">
   <h2 class="pg">Cài đặt & Sao lưu</h2>
 
+  <div class="card" id="fxSet">
+    <h3 style="margin-top:0">📌 Chi cố định</h3>
+    <div class="row mhead" style="margin:0 0 8px"><button type="button" class="btn" id="fxSetPrev">‹</button><b id="fxSetM"></b><button type="button" class="btn" id="fxSetNext">›</button></div>
+    <div id="fxSetList"></div>
+    <p class="muted" style="font-size:12px;margin:8px 0 0">Số tiền mỗi tháng điền ở tab Chi tiêu.</p>
+  </div>
   <div class="card" id="cardSet">
     <h3 style="margin-top:0">💳 Thẻ tín dụng</h3>
     <p class="muted" style="margin-top:0">Lưu ngày due hằng tháng để nhắc trong tab Chi tiêu. Không lưu số thẻ, chỉ 4 số cuối (tuỳ chọn).</p>
@@ -1714,30 +1716,47 @@ function expOf(mk){return DB.expenses.filter(e=>monthOf(e.date)===mk)}
 const FIXED_CAT="📌 Cố định";
 const isChi=e=>e.type==="chi"||e.type==="co";
 const fixedOf=mk=>DB.expenses.filter(e=>e.type==="co"&&monthOf(e.date)===mk).sort((a,b)=>(a.ord||0)-(b.ord||0));
+/* Chi tiêu: chỉ điền số tiền tháng này (không xoá/đổi tên ở đây). Thêm, đổi tên, xoá khoản: Cài đặt → 📌 Chi cố định */
+const fxAdd=(mk,note,amount,ord)=>DB.expenses.push({id:uid(),date:mk+"-01",type:"co",cat:FIXED_CAT,note,amount,ord});
+function fxRepeat(mk){const fx=fixedOf(mk),names=new Set(fx.map(e=>e.note));let o=fx.length;for(const e of fixedOf(mShift(mk,-1)).filter(e=>!names.has(e.note)))fxAdd(mk,e.note,e.amount,++o);save()}
 function renderFixed(){
   const fx=fixedOf(spM),prev=fixedOf(mShift(spM,-1)),names=new Set(fx.map(e=>e.note));
   const missing=prev.filter(e=>!names.has(e.note));
   const tot=fx.reduce((a,e)=>a+n(e.amount),0),filled=fx.filter(e=>String(e.amount)!=="").length;
   $("#fxCard").innerHTML=`<div class="row" style="justify-content:space-between;margin-bottom:6px"><h3 style="margin:0">📌 Chi cố định</h3><b>${money(tot)}</b></div>`+
     (fx.length?`<div class="muted" style="font-size:12.5px;margin-bottom:6px">Đã điền ${filled}/${fx.length}</div><div class="bar"><i style="width:${fx.length?filled/fx.length*100:0}%"></i></div>`:"")+
-    `<div class="fxlist">${fx.map(e=>`<div class="fxrow${String(e.amount)===""?" todo":" done"}" data-fx="${e.id}"><input class="fxName" value="${esc(e.note||"")}" placeholder="Tên (vd. Rent)" aria-label="Tên khoản"><span class="fxD">$</span><input class="fxAmt" type="number" step="0.01" min="0" inputmode="decimal" value="${esc(e.amount)}" placeholder="0.00" aria-label="Số tiền"><button type="button" class="mini" data-fxdel title="Xoá khoản này khỏi tháng">✕</button></div>`).join("")}</div>`+
-    (!fx.length&&!prev.length?`<p class="muted" style="margin:6px 0">Thêm các khoản trả hằng tháng: Rent/Mortgage, Bảo hiểm, Subscription…</p>`:"")+
-    `<div class="row" style="margin-top:8px">${missing.length?`<button type="button" class="btn primary" id="fxRepeat">🔁 Lặp lại từ ${mLabel(mShift(spM,-1))} (${missing.length})</button>`:""}<button type="button" class="btn" id="fxAdd">+ Thêm khoản</button></div>`;
+    `<div class="fxlist">${fx.map(e=>`<div class="fxrow${String(e.amount)===""?" todo":" done"}" data-fx="${e.id}"><span class="fxN">${esc(e.note||"(chưa đặt tên)")}</span><span class="fxD">$</span><input class="fxAmt" type="number" step="0.01" min="0" inputmode="decimal" value="${esc(e.amount)}" placeholder="0.00" aria-label="Số tiền ${esc(e.note||"")}"></div>`).join("")}</div>`+
+    (missing.length?`<div class="row" style="margin-top:8px"><button type="button" class="btn primary" id="fxRepeat">🔁 Lặp lại từ ${mLabel(mShift(spM,-1))} (${missing.length})</button></div>`:"")+
+    `<p class="muted" style="font-size:12px;margin:8px 0 0">Thêm, đổi tên, xoá khoản ở <a href="#" id="fxGo">Cài đặt</a>.</p>`;
   $$("#fxCard [data-fx]").forEach(r=>{
     const id=r.dataset.fx,ex=()=>DB.expenses.find(x=>x.id===id)||{}; // tìm lại mỗi lần: đồng bộ có thể đã thay object
-    r.querySelector(".fxName").oninput=r.querySelector(".fxName").onchange=ev=>{ex().note=ev.target.value.trim();save()};
     r.querySelector(".fxAmt").oninput=ev=>{ex().amount=ev.target.value===""?"":n(ev.target.value);save()};
     r.querySelector(".fxAmt").onchange=ev=>{ex().amount=ev.target.value===""?"":n(ev.target.value);save();renderSpend()};
-    r.querySelector("[data-fxdel]").onclick=async()=>{if(await ask(`Xoá “${ex().note||"khoản này"}” khỏi ${mLabel(spM)}?\n(Các tháng khác không đổi.)`)){DB.expenses=DB.expenses.filter(x=>x.id!==id);save();renderSpend()}};
   });
-  const add=(note,amount,ord)=>DB.expenses.push({id:uid(),date:spM+"-01",type:"co",cat:FIXED_CAT,note,amount,ord});
-  if($("#fxRepeat"))$("#fxRepeat").onclick=()=>{let o=fx.length;for(const e of missing)add(e.note,e.amount,++o);save();renderSpend()};
-  $("#fxAdd").onclick=()=>{add("","",fx.length+1);save();renderSpend();const r=$$("#fxCard .fxName");r[r.length-1].focus()};
+  if($("#fxRepeat"))$("#fxRepeat").onclick=()=>{fxRepeat(spM);renderSpend()};
+  $("#fxGo").onclick=e=>{e.preventDefault();fxSetM=spM;showMod("set");$("#fxSet").scrollIntoView({block:"start"})};
 }
+// Cài đặt → Chi cố định: danh sách khoản của từng tháng (đổi tên, xoá, thêm, lặp lại)
+let fxSetM=mKey(new Date());
+function renderFixedSet(){
+  const fx=fixedOf(fxSetM),prev=fixedOf(mShift(fxSetM,-1)),names=new Set(fx.map(e=>e.note)),missing=prev.filter(e=>!names.has(e.note));
+  $("#fxSetM").textContent=mLabel(fxSetM);
+  $("#fxSetList").innerHTML=(fx.map(e=>`<div class="fxrow" data-fxs="${e.id}"><input class="fxName" value="${esc(e.note||"")}" placeholder="Tên (vd. Rent)" aria-label="Tên khoản"><button type="button" class="mini" data-fxdel title="Xoá khoản này khỏi tháng">✕</button></div>`).join("")||`<p class="muted" style="margin:6px 0">Chưa có khoản nào trong tháng này.</p>`)+
+    `<div class="row" style="margin-top:8px">${missing.length?`<button type="button" class="btn primary" id="fxsRepeat">🔁 Lặp lại từ ${mLabel(mShift(fxSetM,-1))} (${missing.length})</button>`:""}<button type="button" class="btn" id="fxsAdd">+ Thêm khoản</button></div>`;
+  $$("#fxSetList [data-fxs]").forEach(r=>{
+    const id=r.dataset.fxs,ex=()=>DB.expenses.find(x=>x.id===id)||{};
+    r.querySelector(".fxName").oninput=r.querySelector(".fxName").onchange=ev=>{ex().note=ev.target.value.trim();save()};
+    r.querySelector("[data-fxdel]").onclick=async()=>{if(await ask(`Xoá “${ex().note||"khoản này"}” khỏi ${mLabel(fxSetM)}?\n(Các tháng khác không đổi.)`)){DB.expenses=DB.expenses.filter(x=>x.id!==id);save();renderFixedSet()}};
+  });
+  if($("#fxsRepeat"))$("#fxsRepeat").onclick=()=>{fxRepeat(fxSetM);renderFixedSet()};
+  $("#fxsAdd").onclick=()=>{fxAdd(fxSetM,"","",fx.length+1);save();renderFixedSet();const r=$$("#fxSetList .fxName");r[r.length-1].focus()};
+}
+$("#fxSetPrev").onclick=()=>{fxSetM=mShift(fxSetM,-1);renderFixedSet()};
+$("#fxSetNext").onclick=()=>{fxSetM=mShift(fxSetM,1);renderFixedSet()};
 const cards=()=>Array.isArray(S().cards)?S().cards:(S().cards=[]);
 const daysIn=mk=>{const [y,m]=mk.split("-").map(Number);return new Date(y,m,0).getDate()};
-// due riêng của tháng (sửa ở Chi tiêu, lưu trong lần trả của tháng đó) thắng due chung trong Cài đặt
-const dueDay=(c,mk)=>{const p=cardPay(c,mk);return n(p&&p.due)||n(c.due)||1};
+// thông tin thẻ (tên, 4 số cuối, due) chỉ sửa trong Cài đặt; Chi tiêu chỉ ghi nhận đã trả
+const dueDay=c=>n(c.due)||1;
 const dueOf=(c,mk)=>mk+"-"+String(Math.min(Math.max(1,dueDay(c,mk)),daysIn(mk))).padStart(2,"0");
 const cardPay=(c,mk)=>DB.expenses.find(e=>e.type==="the"&&e.cardId===c.id&&e.month===mk);
 // trạng thái 1 thẻ trong 1 tháng: đã trả / quá hạn / sắp due (≤3 ngày) / chưa tới
@@ -1755,39 +1774,20 @@ function renderCards(){
   const paidAmt=cs.reduce((a,c)=>{const p=cardPay(c,spM);return a+(p&&p.paid?n(p.amount):0)},0),paidN=cs.filter(c=>(cardPay(c,spM)||{}).paid).length;
   $("#ccCard").innerHTML=`<div class="row" style="justify-content:space-between;margin-bottom:6px"><h3 style="margin:0">💳 Trả thẻ tín dụng</h3>${cs.length?`<span class="muted">Đã trả ${paidN}/${cs.length} · ${money(paidAmt)}</span>`:""}</div>`+
     // chưa trả lên trên (gần due trước), đã trả xuống dưới
-    (cs.length?cs.map(c=>({c,p:cardPay(c,spM)||{}})).sort((a,b)=>(!!a.p.paid-!!b.p.paid)||dueOf(a.c,spM).localeCompare(dueOf(b.c,spM))).map(({c,p})=>{const [st,lb]=cardState(c,spM),due=dueOf(c,spM),own=n(p.due)&&n(p.due)!==n(c.due);
-      return `<div class="ccrow ${st}" data-cc="${esc(c.id)}"><label class="ccchk"><input type="checkbox" ${p.paid?"checked":""} aria-label="Đã trả"><span><b>${esc(c.name)}</b>${c.last4?` <span class="mono muted">••${esc(c.last4)}</span>`:""}<br>`+
-        (p.paid?`<span class="ccpaid">Đã trả ${money(n(p.amount))}${p.date?` · ${fdate(p.date+"T12:00:00")}`:""}</span>`
-          :`<button type="button" class="ccdue" data-ccedit title="Bấm để đổi ngày due">Due ${fdate(due+"T12:00:00")}${own?" (riêng tháng này)":""} ✎ · ${lb}</button>`)+`</span></label>`+
-        (p.paid?`<span class="ccok" aria-hidden="true">✓</span>`:`<span class="fxD">$</span><input class="ccAmt" type="number" step="0.01" min="0" inputmode="decimal" value="${esc(p.amount??"")}" placeholder="Số tiền trả" aria-label="Số tiền đã trả">`)+
-        `<button type="button" class="mini" data-ccedit title="Sửa due, số tiền, ngày trả, tên thẻ">✎</button>`+
-        `<div class="ccedit hidden"><label>Due ngày<input class="ceDue" type="number" min="1" max="31" inputmode="numeric" value="${dueDay(c,spM)}"></label>`+
-        `<label class="cechk"><input type="checkbox" class="ceAll">Đổi luôn cho các tháng sau</label>`+
-        `<label>Số tiền đã trả<input class="ceAmt" type="number" step="0.01" min="0" inputmode="decimal" value="${esc(p.amount??"")}"></label>`+
-        `<label>Ngày trả<input class="ceDate" type="date" value="${esc(p.date||"")}"></label>`+
-        `<label>Tên thẻ<input class="ceName" value="${esc(c.name)}"></label><label>4 số cuối<input class="ceL4" inputmode="numeric" maxlength="4" value="${esc(c.last4||"")}"></label>`+
-        `<div class="row"><button type="button" class="btn primary" data-cesave>Lưu</button><button type="button" class="btn" data-ccedit>Đóng</button></div></div></div>`}).join("")
-      +`<p class="muted" style="font-size:12px;margin:8px 0 0">Chỉ để theo dõi, không cộng vào tổng chi (các món mua bằng thẻ đã ghi trong chi tiêu).</p>`
+    (cs.length?cs.map(c=>({c,p:cardPay(c,spM)||{}})).sort((a,b)=>(!!a.p.paid-!!b.p.paid)||dueOf(a.c,spM).localeCompare(dueOf(b.c,spM))).map(({c,p})=>{const [st,lb]=cardState(c,spM),due=dueOf(c,spM);
+      // điền số tiền = đã trả; xoá số = chưa trả (không có ô tick)
+      return `<div class="ccrow ${st}" data-cc="${esc(c.id)}"><div class="ccchk"><span><b>${esc(c.name)}</b>${c.last4?` <span class="mono muted">••${esc(c.last4)}</span>`:""}<br>`+
+        (p.paid?`<span class="ccpaid">Đã trả${p.date?` · ${fdate(p.date+"T12:00:00")}`:""}</span>`
+          :`<span class="ccdue">Due ${fdate(due+"T12:00:00")} · ${lb}</span>`)+`</span></div>`+
+        `<span class="fxD">$</span><input class="ccAmt" type="number" step="0.01" min="0" inputmode="decimal" value="${esc(p.amount??"")}" placeholder="Số tiền trả" aria-label="Số tiền đã trả ${esc(c.name)}"></div>`}).join("")
+      +`<p class="muted" style="font-size:12px;margin:8px 0 0">Chỉ để theo dõi, không cộng vào tổng chi. Sửa tên, 4 số cuối, due ở <a href="#" id="ccGo">Cài đặt</a>.</p>`
       :`<p class="muted" style="margin:6px 0">Chưa có thẻ. Thêm ở <a href="#" id="ccGo">Cài đặt → 💳 Thẻ tín dụng</a>.</p>`);
   if($("#ccGo"))$("#ccGo").onclick=e=>{e.preventDefault();showMod("set");$("#cardSet").scrollIntoView({block:"start"})};
   $$("#ccCard [data-cc]").forEach(r=>{
     const c=cs.find(x=>x.id===r.dataset.cc);
     const rec=()=>{let p=cardPay(c,spM);if(!p){p={id:uid(),type:"the",cardId:c.id,month:spM,note:c.name,cat:"💳 Trả thẻ",paid:false,amount:"",date:""};DB.expenses.push(p)}return p};
-    r.querySelector("input[type=checkbox]").onchange=ev=>{const p=rec();p.paid=ev.target.checked;if(p.paid&&!p.date)p.date=today();p.note=c.name;save();renderSpend();
-      if(p.paid&&String(p.amount)==="")setTimeout(()=>{const a=$(`#ccCard [data-cc="${c.id}"] .ccAmt`);if(a)a.focus()},0)};
-    const amt=r.querySelector(".ccAmt");
-    if(amt)amt.onchange=ev=>{const p=rec();p.amount=ev.target.value===""?"":n(ev.target.value);if(p.amount!==""){p.paid=true;if(!p.date)p.date=today()}save();renderSpend()};
-    r.querySelectorAll("[data-ccedit]").forEach(b=>b.onclick=ev=>{ev.preventDefault();const box=r.querySelector(".ccedit");box.classList.toggle("hidden");if(!box.classList.contains("hidden"))box.querySelector(".ceDue").focus()});
-    r.querySelector("[data-cesave]").onclick=()=>{
-      const q=s=>r.querySelector(s),cc=cards().find(x=>x.id===c.id);if(!cc)return;
-      if(isField(document.activeElement))document.activeElement.blur(); // để Chi tiêu vẽ lại ngay
-      const d=q(".ceDue").value.trim()?Math.min(31,Math.max(1,Math.round(n(q(".ceDue").value))||1)):"";
-      const nm=q(".ceName").value.trim();if(nm)cc.name=nm;cc.last4=q(".ceL4").value.replace(/\D/g,"").slice(-4);
-      const p=rec();p.note=cc.name;
-      // đổi luôn = sửa due trong Cài đặt (các tháng sau theo); không thì chỉ tháng này
-      if(q(".ceAll").checked){if(d)cc.due=d;delete p.due}else if(d&&d!==n(cc.due))p.due=d;else delete p.due;
-      const a=q(".ceAmt").value.trim();p.amount=a===""?"":n(a);if(a!==""){p.paid=true;p.date=q(".ceDate").value||p.date||today()}else p.date=q(".ceDate").value;
-      save();renderSpend()};
+    r.querySelector(".ccAmt").onchange=ev=>{const p=rec();p.amount=ev.target.value===""?"":n(ev.target.value);p.note=c.name;
+      if(p.amount!==""){p.paid=true;if(!p.date)p.date=today()}else{p.paid=false;p.date=""}save();renderSpend()};
   });
 }
 // Cài đặt → thẻ tín dụng
@@ -2018,7 +2018,7 @@ function renderSet(){
     ?`Dữ liệu lưu thành file trong thư mục <b class="mono">${esc(API.info.dir)}</b> (ảnh nằm trong thư mục con <span class="mono">photos</span>). App tự sao lưu mỗi ngày vào thư mục <span class="mono">backup</span>. Nếu để thư mục này trong OneDrive thì có thêm bản dự phòng trên mạng.`
     :`Dữ liệu lưu trong trình duyệt này. Hãy tải file sao lưu thường xuyên và cất vào C:\\Dev\\Online hoặc OneDrive.`;
   $("#elBtns").classList.toggle("hidden",!API.info.electron);
-  renderCardSet();renderTrkSet();
+  renderFixedSet();renderCardSet();renderTrkSet();
   backupAge();
 }
 $("#stSaveWork").onclick=()=>{

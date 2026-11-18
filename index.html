@@ -721,6 +721,7 @@ details.ydet>summary::-webkit-details-marker{display:none}details.ydet[open]>sum
 .ckfold[open]>summary{margin-bottom:10px}
 .hrs{flex-wrap:wrap;row-gap:4px}.hrs .hbar{flex:1 1 60px}.hrs .hs{white-space:normal;margin-left:auto;text-align:right}
 .fab{transition:transform .25s,opacity .25s}.fab.away{transform:translateY(90px) scale(.8);opacity:0;pointer-events:none}
+.oc-fold .oc-sh{padding:12px 16px}.oc-fold .oc-sn b{font-size:14.5px}.oc-fold.open .chev{transform:rotate(180deg)}.oc-fold.open{border-color:var(--hl)}.oc-ex{border-top:1px solid var(--line)}
 </style>
 </head>
 <body>
@@ -1318,7 +1319,10 @@ function orderCard(o){
   // tracking hiện ngay dưới tiêu đề thẻ (dễ thấy), kit dùng chung 1 tracking
   const trkRow="";
   if(o.stage==="ret")foot=`<div class="oc-f muted" style="font-size:12.5px">${us.filter(u=>u.f.status==="tra").map(u=>{const rs=u.its.map(i=>i.retSerial).filter(Boolean),ok=rs.every(r=>u.its.some(i=>ns(i.serial)===ns(r)));return `${esc(u.serials)}: hoàn ${money(u.sum("refund"))}${rs.length?` · serial nhận về <span class="mono">${rs.map(esc).join(" + ")}</span> ${ok?"<b class='pos'>khớp</b>":"<b class='neg'>KHÔNG khớp</b>"}`:""}`}).join("<br>")}</div>`;
-  return `<div class="oc ${STG[o.stage][1]}" data-ord="${esc(o.its.map(i=>i.id).join(","))}">${head}${trkRow}<div class="oc-b"><div class="oc-items">${rows}</div>${tot}</div>${foot}</div>`;
+  const okey=o.its.map(i=>i.id).join(","),inner=`${head}${trkRow}<div class="oc-b"><div class="oc-items">${rows}</div>${tot}</div>${foot}`;
+  if(o.stage==="done"){const open=ebOpen.has(okey);
+    return `<div class="oc oc-fold ${STG[o.stage][1]}${open?" open":""}" data-ord="${esc(okey)}"><div class="oc-sh" data-toggle role="button" tabindex="0"><span class="oc-sn"><b class="mono">${f.orderId?"#"+esc(f.orderId):"(không có Order ID)"}</b></span><span class="chev">▾</span></div>${open?`<div class="oc-ex">${inner}</div>`:""}</div>`}
+  return `<div class="oc ${STG[o.stage][1]}" data-ord="${esc(okey)}">${inner}</div>`;
 }
 function lotCard(l){
   const f=l.f,us=unitsOf(l.its),avg=l.cost/us.length;

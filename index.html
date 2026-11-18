@@ -583,13 +583,6 @@ h2.pg{font-size:24px;margin-bottom:12px}
   .lot-n{min-width:0;flex:1}.lot-n b{font-size:14px;line-height:1.25;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden}
   .lot-c:not(.lot-list){display:none}
   #list .urows{gap:6px}
-  #list .urow{display:grid;grid-template-columns:34px minmax(0,1fr) auto;grid-template-areas:"ic n p" "ic n b";gap:2px 10px;padding:9px 10px;border-radius:14px;align-items:center}
-  #list .urow>.lot-ic,#list .urow>.thumb{grid-area:ic;align-self:start;width:34px!important;height:34px!important;font-size:16px}
-  #list .urow .u-n{grid-area:n;min-width:0;flex:none}.urow .u-n b{font-size:14px;line-height:1.25;-webkit-line-clamp:2}
-  #list .urow .u-p{grid-area:p;min-width:0;align-items:flex-end;text-align:right;flex:none}
-  #list .urow .u-p input{width:96px;min-height:34px;padding:4px 8px;font-size:15px;text-align:right}
-  #list .urow .u-p .lst-big{font-size:16px!important}
-  #list .urow .ib{grid-area:b;justify-self:end;gap:6px;flex-wrap:nowrap}#list .urow .ib .btn{min-height:34px;padding:0 12px}
   .lot-h>*{min-width:0}.lot-list{min-width:0;max-width:42%;align-items:flex-end;text-align:right;flex:none}.lst-big,.lot-c b{font-size:15px!important}
   .lot-h .ib{position:absolute;right:8px;bottom:6px}
   .lot{position:relative}.lot-s{padding:0 10px 8px;gap:4px}.lot .chip{font-size:12px;padding:2px 8px}
@@ -659,6 +652,26 @@ h2.pg{font-size:24px;margin-bottom:12px}
   .oc-sh{padding:9px 12px}.oc-kv{padding:0 12px 4px}.oc-sf{padding:2px 12px 10px}
 }
 .oc-kv .kvt{flex-direction:column;align-items:stretch;gap:4px}.oc-kv .kvt>div{align-items:stretch;width:100%}.oc-kv .tpill{max-width:100%;min-width:0;flex-wrap:wrap}.oc-kv .tpill .no{min-width:0;overflow-wrap:anywhere;flex:1 1 140px}.oc-kv .tpill .ti{display:none}
+
+/* ===== Kho / Cần ship v1.9.7 ===== */
+.u-ph{width:48px;height:48px;flex:none;display:flex;align-items:center;justify-content:center}
+.u-ph .thumb,.u-ph .lot-ic{width:48px!important;height:48px!important;border-radius:10px;object-fit:cover}
+.u-ph .lot-ic{background:var(--soft);display:flex;align-items:center;justify-content:center;font-size:22px}
+#list .urow{display:grid;grid-template-columns:48px minmax(0,1fr) auto;grid-template-areas:"ph n p" "b b b";gap:8px 12px;align-items:center;padding:12px;border-radius:14px}
+#list .urow .u-ph{grid-area:ph}
+#list .urow .u-n{grid-area:n;min-width:0;flex:none;gap:1px}
+#list .urow .u-n span{font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#list .urow .u-p{grid-area:p;min-width:0;align-items:flex-end;text-align:right;flex:none}
+#list .urow .ib{grid-area:b;display:flex;gap:8px;flex-wrap:nowrap;justify-self:stretch;padding-top:8px;border-top:1px solid var(--line)}
+#list .urow .ib input{flex:1;min-width:0;width:auto;margin:0;min-height:40px;font-size:15px;text-align:left}
+#list .urow .ib .btn{min-height:40px;padding:0 14px;flex:none}
+#list .urow .ib .btn.primary{flex:1 1 auto}#list .urow .ib input~.btn.primary{flex:none}
+.oc-ship .oc-sh{gap:12px}
+.oc-sf{display:flex;flex-direction:column;gap:10px;padding:12px 14px 14px}
+.oc-sf label{margin:0;font-size:12px;min-width:0}.oc-sf label input{margin-top:3px;width:100%;min-height:40px}
+.oc-sf .oc-q2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.oc-sf .btn.primary{min-height:42px}
+.oc-back{background:none;border:0;color:var(--muted);font:inherit;font-size:13px;padding:4px;cursor:pointer;align-self:center}
 </style>
 </head>
 <body>
@@ -1220,19 +1233,19 @@ const ebOpen=new Set();
 function shipCard(o){
   const f=o.f,key=o.its.map(i=>i.id).join(","),us=unitsOf(o.its),wait=daysAgo(f.saleDate),open=ebOpen.has(key);
   const qv=(k,v)=>esc(qDraft[key+"|"+k]??v);
+  const pic=(o.its.find(i=>(i.photos||[]).length)||{}).photos;
   const nm=(f.name||"(chưa đặt tên)")+(us.length>1?` +${us.length-1} món`:"");
-  const sub=[us.map(u=>u.kit?u.serials:(u.f.serial||"thiếu serial")).join(", "),f.saleDate?"bán "+fdate(f.saleDate+"T12:00:00"):"",wait!=null&&wait>=2?`<span class="late">chờ ${wait} ngày</span>`:""].filter(Boolean).join(" · ");
+  const sub=[esc(f.buyer||""),f.saleDate?"bán "+fdate(f.saleDate+"T12:00:00"):"",wait!=null&&wait>=2?`<span class="late">chờ ${wait} ngày</span>`:""].filter(Boolean).join(" · ");
   const form=open?`<div class="oc-sf">
-    <div class="oc-kv"><div><span>Người mua</span><b>${esc(f.buyer||"—")}</b></div><div><span>Bán</span><b>${money(o.price+o.charge)}</b></div></div>
-    <div class="oc-q">
-      <label>Order ID<input class="mono" data-q="orderId" value="${qv("orderId",f.orderId||"")}" autocomplete="off"></label>
+    <label class="q-trk">Tracking<input class="mono" data-q="tracking" value="${qv("tracking","")}" placeholder="Dán số tracking…" autocomplete="off"></label>
+    <label>Order ID<input class="mono" data-q="orderId" value="${qv("orderId",f.orderId||"")}" autocomplete="off"></label>
+    <div class="oc-q2">
       <label>Phí eBay<input data-q="fees" type="number" step="0.01" min="0" inputmode="decimal" value="${qv("fees",o.fees?o.fees.toFixed(2):"")}"></label>
       <label>Ship bạn trả<input data-q="ship" type="number" step="0.01" min="0" inputmode="decimal" value="${qv("ship",f.shipTotal||"")}"></label>
-      <label class="q-trk">Tracking<input class="mono" data-q="tracking" value="${qv("tracking","")}" placeholder="Dán số tracking…" autocomplete="off"></label>
-      <button type="button" class="btn primary" data-savetrk>Lưu · chuyển sang Xong</button>
     </div>
-    <div class="oc-sa"><button type="button" class="mini" data-open="${f.id}">✏️ Sửa món</button><button type="button" class="mini" data-unsell title="Bấm nhầm? Đưa về kho">↶ Về kho</button></div></div>`:"";
-  return `<div class="oc oc-ship ${STG.ship[1]}${open?" open":""}" data-ord="${esc(key)}"><div class="oc-sh" data-toggle role="button" tabindex="0"><span class="oc-sn"><b>${esc(nm)}</b><small>${sub}</small></span><span class="num">${money(o.price+o.charge)}</span><span class="chev">▾</span></div>${form}</div>`;
+    <button type="button" class="btn primary" data-savetrk>Lưu · chuyển sang Xong</button>
+    <button type="button" class="oc-back" data-unsell>↶ Đưa về kho</button></div>`:"";
+  return `<div class="oc oc-ship ${STG.ship[1]}${open?" open":""}" data-ord="${esc(key)}"><div class="oc-sh" data-toggle role="button" tabindex="0"><span class="u-ph">${pic?`<img class="thumb" src="${ph(pic[0])}" alt="">`:`<span class="lot-ic">📦</span>`}</span><span class="oc-sn"><b>${esc(nm)}</b><small>${sub}</small></span><span class="num">${money(o.price+o.charge)}</span><span class="chev">▾</span></div>${form}</div>`;
 }
 function orderCard(o){
   if(o.stage==="ship")return shipCard(o);
@@ -1473,11 +1486,12 @@ async function quickSell(ids,price){
 function unitRow(u){
   const f=u.f,lp=n(f.listPrice);
   const pic=(u.its.find(i=>(i.photos||[]).length)||{}).photos;
+  const ship=f.shipMode==="buyer"?(n(f.shipCharge)?`+ ship ${money(n(f.shipCharge))}`:"+ ship người mua trả"):"Free ship";
   return `<div class="urow" data-lot="${esc(u.its.map(i=>i.id).join(","))}">
-    ${pic?`<img class="thumb" src="${ph(pic[0])}" alt="" data-zoom title="Xem ảnh lớn">`:`<span class="lot-ic">📦</span>`}
-    <div class="u-n" data-open="${f.id}" title="${esc(f.name||"")}"><b>${u.kit?`<span class="kit-tag">🔗 kit</span> `:""}${esc(f.name||"(chưa đặt tên)")}</b><span class="mono muted">${esc(u.serials)}${f.test?` · ${esc(f.test)}`:""}</span></div>
-    <div class="u-p">${lp?`<b class="lst-big">${money(lp)}</b><span>🏷️ ${f.shipMode==="buyer"?(n(f.shipCharge)?`+ ship ${money(n(f.shipCharge))}`:"+ ship người mua trả"):"Free ship"}</span>`:`<input class="mono" data-qprice type="number" step="0.01" min="0" placeholder="Giá bán $">`}<span>vốn ${money(u.sum("cost"))}</span></div>
-    <div class="row ib"><button type="button" class="btn" data-open="${f.id}" title="Sửa">✏️</button><button type="button" class="btn primary" data-qsell title="Bán: chuyển vào Cần ship">💰 Bán</button></div>
+    <div class="u-ph">${pic?`<img class="thumb" src="${ph(pic[0])}" alt="" data-zoom title="Xem ảnh lớn">`:`<span class="lot-ic">📦</span>`}</div>
+    <div class="u-n" data-open="${f.id}" title="${esc(f.name||"")}"><b>${u.kit?`<span class="kit-tag">🔗 kit</span> `:""}${esc(f.name||"(chưa đặt tên)")}</b><span class="mono muted">${esc(u.serials)}${f.test?` · ${esc(f.test)}`:""}</span><span class="muted">vốn ${money(u.sum("cost"))}</span></div>
+    <div class="u-p">${lp?`<b class="lst-big">${money(lp)}</b><span>🏷️ ${ship}</span>`:`<span class="muted">Chưa list</span>`}</div>
+    <div class="row ib">${lp?"":`<input class="mono" data-qprice type="number" step="0.01" min="0" inputmode="decimal" placeholder="Giá bán $">`}<button type="button" class="btn" data-open="${f.id}" title="Sửa">✏️</button><button type="button" class="btn primary" data-qsell title="Bán: chuyển vào Cần ship">💰 Bán</button></div>
   </div>`;
 }
 $$("#ebView button").forEach(b=>b.onclick=()=>{ebView=b.dataset.v;try{localStorage.setItem("ebView",ebView)}catch(e){}render()});

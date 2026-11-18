@@ -673,6 +673,10 @@ h2.pg{font-size:24px;margin-bottom:12px}
 .oc-sf .btn.primary{min-height:42px}
 .oc-back{background:none;border:0;color:var(--muted);font:inherit;font-size:13px;padding:4px;cursor:pointer;align-self:center}
 .oc-kv .kvt input{width:100%;min-height:38px;margin:0;font-size:14px}.trk-act{display:flex;flex-wrap:wrap;gap:6px;align-items:center;justify-content:flex-end}.trk-act .btn.tbtn{min-height:30px;padding:0 12px;font-size:13px;background:var(--grad);border:0;color:#fff;text-decoration:none}
+.chart .hit{cursor:pointer}.chart .sel{fill:var(--soft);stroke:var(--hl);stroke-width:1}
+.cdet{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px 10px;margin-top:10px;padding:10px 12px;border-radius:12px;background:var(--soft)}
+.cdet>b{grid-column:1/-1;font-size:13px}.cdet>div{display:flex;flex-direction:column;min-width:0}.cdet>div span{font-size:11px;color:var(--muted)}.cdet>div b{font-size:15px;font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
+.cdet small{grid-column:1/-1;font-size:11.5px;color:var(--muted)}
 </style>
 </head>
 <body>
@@ -1890,11 +1894,13 @@ function barChart(mks,stats,cur){
   let g="";for(let k=1;k<=3;k++){const y=base-(base-top)*k/3;g+=`<line class="grid" x1="0" x2="${W}" y1="${y}" y2="${y}"/>`}
   mks.forEach((mk,i)=>{
     const cx=gw*i+gw/2,hi=sc(inc[i]),hc=sc(chi[i]),dly=(i*0.04).toFixed(2);
+    if(mk===cur)g+=`<rect class="sel" x="${gw*i+2}" y="${top-6}" width="${gw-4}" height="${base-top+36}" rx="8"/>`;
     g+=`<rect class="gr" x="${cx-bw-1}" y="${base-hi}" width="${bw}" height="${hi}" rx="4" fill="var(--ok)" style="animation-delay:${dly}s"><title>${mLabel(mk)} · thu ${money(inc[i])}</title></rect>`;
     g+=`<rect class="gr" x="${cx+1}" y="${base-hc}" width="${bw}" height="${hc}" rx="4" fill="var(--bad)" style="animation-delay:${dly}s"><title>${mLabel(mk)} · chi ${money(chi[i])}</title></rect>`;
     g+=`<text x="${cx}" y="${base+24}" text-anchor="middle" class="${mk===cur?"cur":""}">T${+mk.slice(5)}</text>`;
+    g+=`<rect class="hit" data-m="${mk}" x="${gw*i}" y="0" width="${gw}" height="${H}" fill="transparent"><title>${mLabel(mk)}</title></rect>`;
   });
-  return `<svg class="chart" viewBox="0 0 ${W} ${H}" role="img" aria-label="Thu và chi 12 tháng">${g}<line class="grid" x1="0" x2="${W}" y1="${base}" y2="${base}"/></svg><div class="lgd"><span><i style="background:var(--ok)"></i>Thu</span><span><i style="background:var(--bad)"></i>Chi</span></div>`;
+  return `<svg class="chart" viewBox="0 0 ${W} ${H}" role="img" aria-label="Thu và chi 12 tháng">${g}<line class="grid" x1="0" x2="${W}" y1="${base}" y2="${base}"/></svg><div class="lgd"><span><i style="background:var(--ok)"></i>Thu</span><span><i style="background:var(--bad)"></i>Chi</span><span class="muted">· chạm một tháng để xem chi tiết</span></div>`+(()=>{const i=mks.indexOf(cur),s=stats[i];if(!s)return "";const th=inc[i],cc=chi[i],net=th-cc;return `<div class="cdet"><b>${mLabel(cur)}</b><div><span>Thu</span><b class="pos">${money(th)}</b></div><div><span>Chi</span><b class="neg">${money(cc)}</b></div><div><span>Còn lại</span><b class="${net>=0?"pos":"neg"}">${money(net)}</b></div><small>eBay ${money(s.ebay)} · Lương ${money(s.wage)} · Thu khác ${money(s.thu)}</small></div>`})();
 }
 function donut(mk,inc){
   // vòng ngoài: chi theo danh mục (khoản cố định theo 6 nhóm, đúng màu nhóm); vòng trong: thu gộp.
@@ -1966,6 +1972,7 @@ function renderHome(){
   $("#homeBudgetTitle").textContent="Ngân sách · "+mLabel(mk);
   $("#homeBudget").innerHTML=budgetBars(mk)||`<span class="muted">Chưa đặt ngân sách. Vào “Chi tiêu” để đặt.</span>`;
 }
+$("#homeChart").addEventListener("click",e=>{const h=e.target.closest("[data-m]");if(h){homeM=h.dataset.m;renderHome()}});
 $("#hmPrev").onclick=()=>{homeM=mShift(homeM,-1);renderHome()};
 $("#hmNext").onclick=()=>{homeM=mShift(homeM,1);renderHome()};
 

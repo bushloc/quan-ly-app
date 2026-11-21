@@ -105,23 +105,21 @@ function cardState(c,mk){
 }
 function renderCards(){
   const cs=cards().filter(c=>c.name);
-  const paidAmt=cs.reduce((a,c)=>{const p=cardPay(c,spM);return a+(p&&p.paid?n(p.amount):0)},0),paidN=cs.filter(c=>(cardPay(c,spM)||{}).paid).length;
-  $("#ccCard").innerHTML=`<div class="chd"><h3>Trả thẻ tín dụng</h3>${cs.length?`<span class="muted">Đã trả ${paidN}/${cs.length} · <b>${money(paidAmt)}</b></span>`:""}</div>`+
+  const paidN=cs.filter(c=>(cardPay(c,spM)||{}).paid).length;
+  $("#ccCard").innerHTML=`<div class="chd"><h3>Trả thẻ tín dụng</h3>${cs.length?`<span class="muted">Đã trả ${paidN}/${cs.length}</span>`:""}</div>`+
     // chưa trả lên trên (gần due trước), đã trả xuống dưới
     (cs.length?cs.map(c=>({c,p:cardPay(c,spM)||{}})).sort((a,b)=>(!!a.p.paid-!!b.p.paid)||dueOf(a.c,spM).localeCompare(dueOf(b.c,spM))).map(({c,p})=>{const [st,lb]=cardState(c,spM),due=dueOf(c,spM);
       // nút "Đã trả / Chưa trả" bật tắt được; điền số tiền cũng tự thành đã trả
       return `<div class="ccrow ${st}" data-cc="${esc(c.id)}"><div class="ccchk"><span><b>${esc(c.name)}</b>${c.last4?` <span class="mono muted">••${esc(c.last4)}</span>`:""}<br>`+
         (p.paid?`<span class="ccpaid">Đã trả${p.date?` · ${fdate(p.date+"T12:00:00")}`:""}</span>`
           :`<span class="ccdue">Due ${fdate(due+"T12:00:00")} · ${lb}</span>`)+`</span></div>`+
-        `<span class="fxD">$</span><input class="ccAmt" type="number" step="0.01" min="0" inputmode="decimal" value="${esc(p.amount??"")}" placeholder="0.00" aria-label="Số tiền đã trả ${esc(c.name)}"><button type="button" class="pt${p.paid?" on":""}" data-ccpaid aria-pressed="${!!p.paid}">${p.paid?"Đã trả":"Trả"}</button></div>`}).join("")
-      +`<p class="hint">Chỉ để theo dõi, không cộng vào tổng chi. Sửa tên, 4 số cuối, due ở <a href="#" id="ccGo">Cài đặt</a>.</p>`
+        `<button type="button" class="pt${p.paid?" on":""}" data-ccpaid aria-pressed="${!!p.paid}">${p.paid?"Đã trả":"Trả"}</button></div>`}).join("")
+      +`<p class="hint">Chỉ nhắc ngày Due, không tính vào chi/thu. Sửa tên, 4 số cuối, due ở <a href="#" id="ccGo">Cài đặt</a>.</p>`
       :`<p class="muted" style="margin:6px 0">Chưa có thẻ. Thêm ở <a href="#" id="ccGo">Cài đặt → Thẻ tín dụng</a>.</p>`);
   if($("#ccGo"))$("#ccGo").onclick=e=>{e.preventDefault();showMod("set");$("#cardSet").scrollIntoView({block:"start"})};
   $$("#ccCard [data-cc]").forEach(r=>{
     const c=cs.find(x=>x.id===r.dataset.cc);
     const rec=()=>{let p=cardPay(c,spM);if(!p){p={id:"the_"+c.id+"_"+spM,type:"the",cardId:c.id,month:spM,note:c.name,cat:"💳 Trả thẻ",paid:false,amount:"",date:""};DB.expenses.push(p)}return p};
-    r.querySelector(".ccAmt").onchange=ev=>{const p=rec();p.amount=ev.target.value===""?"":n(ev.target.value);p.note=c.name;
-      if(p.amount!==""){p.paid=true;if(!p.date)p.date=today()}save();renderSpend()};
     // bấm lại để về chưa trả (giữ số tiền đã nhập)
     r.querySelector("[data-ccpaid]").onclick=b=>{const p=rec();p.paid=b.currentTarget.getAttribute("aria-pressed")!=="true"; /* theo nút đang thấy, không lật 2 lần khi ô số vừa tự đánh dấu đã trả */p.note=c.name;p.date=p.paid?(p.date||today()):"";save();renderSpend()};
   });

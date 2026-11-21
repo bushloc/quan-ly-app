@@ -55,7 +55,7 @@ h2.pg{font-size:24px;margin-bottom:12px}
 .pt.on{background:var(--oksoft);border-color:transparent;color:var(--ok)}
 .fxsrow{border-left:0;padding-left:0}.fxsrow .fxName{flex:1;min-width:0;margin:0}.fxsrow .fxCatSel{width:150px;margin:0}
 /* thẻ tín dụng: 1 dòng, trạng thái = vạch màu bên trái */
-.ccrow{display:grid;grid-template-columns:minmax(0,1fr) 96px auto;gap:8px;align-items:center;padding:7px 0 7px 10px;margin:0;border-radius:0;background:none!important;box-shadow:none!important;border-left:3px solid var(--line);border-top:1px solid var(--line)}
+.ccrow{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;align-items:center;padding:7px 0 7px 10px;margin:0;border-radius:0;background:none!important;box-shadow:none!important;border-left:3px solid var(--line);border-top:1px solid var(--line)}
 .ccrow+.ccrow{margin-top:0}.chd+.ccrow{border-top:0}
 .ccrow .fxD{display:none}.ccchk{font-size:14px;min-width:0}.ccchk>span{min-width:0;overflow:hidden;text-overflow:ellipsis}
 .ccdue,.ccpaid{font-size:12px;font-weight:500}
@@ -86,7 +86,7 @@ h2.pg{font-size:24px;margin-bottom:12px}
   .hero .card:not(.main){padding:10px 10px}.hero .card:not(.main) .kv{font-size:17px}.hero .card:not(.main) .lb{font-size:10.5px;letter-spacing:0}.hero .card:not(.main) .sub{font-size:11px}
   .hero .main .kv{font-size:34px}
   .btn,.subnav button{min-height:40px}
-  .fxrow .fxAmt,.ccrow .ccAmt{width:88px;font-size:16px}.ccrow{grid-template-columns:minmax(0,1fr) 88px auto}
+  .fxrow .fxAmt,.ccrow .ccAmt{width:88px;font-size:16px}.ccrow{grid-template-columns:minmax(0,1fr) auto}
   .pt{min-width:64px;min-height:36px}
   .fxsrow .fxCatSel{width:122px}
   .donut svg{width:112px;height:112px}.donut ul{min-width:0;font-size:12.5px}.donut li span:last-child{white-space:nowrap}

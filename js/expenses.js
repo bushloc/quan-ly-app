@@ -160,11 +160,11 @@ function renderSpend(){
   if(holdWhileTyping("spend",$("#mod-spend"),renderSpend))return;
   $("#spMonth").textContent=mLabel(spM);
   const all=expOf(spM),list=all.filter(e=>e.type==="chi"||e.type==="thu"); // cố định + trả thẻ hiện ở 2 ô riêng
-  const chi=all.filter(isChi).reduce((a,e)=>a+n(e.amount),0),thu=list.filter(e=>e.type==="thu").reduce((a,e)=>a+n(e.amount),0);
+  const ms=monthStats(spM,calcShifts()),chi=all.filter(isChi).reduce((a,e)=>a+n(e.amount),0),thu=ms.ebay+ms.wage+list.filter(e=>e.type==="thu").reduce((a,e)=>a+n(e.amount),0);
   renderFixed();renderCards();foldCard($("#fxCard"),"fx");foldCard($("#ccCard"),"cc");
   const lim=Object.values(DB.budgets).reduce((a,v)=>a+n(v),0);
   const budSpent=Object.keys(DB.budgets).filter(c=>n(DB.budgets[c])>0).reduce((a,c)=>a+list.filter(e=>e.type==="chi"&&e.cat===c).reduce((x,e)=>x+n(e.amount),0),0);
-  $("#spSum").innerHTML=`<div>Tổng chi<b>${money(chi)}</b></div><div>Tổng thu<b>${money(thu)}</b></div><div>Thu − chi<b class="${thu-chi>=0?"pos":"neg"}">${money(thu-chi)}</b></div>`+(lim>0?`<div>Ngân sách còn lại<b class="${lim-budSpent>=0?"pos":"neg"}">${money(lim-budSpent)}</b></div>`:"");
+  $("#spSum").innerHTML=`<div>Tổng chi<b>${money(chi)}</b></div><div>Tổng thu<b>${money(thu)}</b><small class="sub2">gồm lương &amp; eBay</small></div><div>Thu − chi<b class="${thu-chi>=0?"pos":"neg"}">${money(thu-chi)}</b></div>`+(lim>0?`<div>Ngân sách còn lại<b class="${lim-budSpent>=0?"pos":"neg"}">${money(lim-budSpent)}</b></div>`:"");
   // bảng tóm tắt theo danh mục (gập trong thẻ tổng). Trả thẻ không tính; chi cố định gộp 1 dòng
   {
     const by={},cnt={},inc={};let top=0;
@@ -174,7 +174,7 @@ function renderSpend(){
     }
     const rows=Object.entries(by).filter(r=>r[1]>0).sort((a,b)=>b[1]-a[1]);top=rows.reduce((a,r)=>a+r[1],0);
     const tr=([k,v])=>`<div class="spcr"><span class="k">${esc(k)}</span><span class="c">${cnt[k]} khoản</span><span class="p">${top?Math.round(v/top*100):0}%</span><b class="a">${money(v)}</b><span class="bar thin"><i style="width:${top?v/top*100:0}%"></i></span></div>`;
-    const irows=Object.entries(inc).filter(r=>r[1]>0).sort((a,b)=>b[1]-a[1]);
+    const irows=[...(ms.wage>0?[[`💵 Lương${ms.wageEst?" (ước tính)":""}`,ms.wage]]:[]),...(ms.ebay>0?[["📦 Lãi eBay",ms.ebay]]:[]),...Object.entries(inc).filter(r=>r[1]>0).sort((a,b)=>b[1]-a[1])];
     $("#spCatBody").innerHTML=(rows.length?`<div class="spch">Chi</div>${rows.map(tr).join("")}<div class="spcr tot"><span class="k">Tổng chi</span><b class="a neg">${money(top)}</b></div>`:`<p class="muted" style="margin:6px 0">Tháng này chưa có khoản chi.</p>`)+
       (irows.length?`<div class="spch">Thu</div>${irows.map(([k,v])=>`<div class="spcr"><span class="k">${esc(k)}</span><b class="a pos">${money(v)}</b></div>`).join("")}<div class="spcr tot"><span class="k">Tổng thu</span><b class="a pos">${money(irows.reduce((a,r)=>a+r[1],0))}</b></div>`:"");
   }

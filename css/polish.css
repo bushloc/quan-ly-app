@@ -128,3 +128,4 @@ html[data-den="r"] .exrow,html[data-den="r"] .lrow{padding-top:14px;padding-bott
 .spcr.tot{border-bottom:0;font-weight:700;grid-template-columns:1fr auto}
 @media(max-width:760px){.spcr{grid-template-columns:minmax(0,1fr) auto auto}.spcr .c{display:none}}
 .spcr:not(:has(.p)){grid-template-columns:minmax(0,1fr) auto}
+.sum .sub2{display:block;font-size:11px;font-weight:400;opacity:.8;margin-top:1px}

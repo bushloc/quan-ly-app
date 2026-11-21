@@ -103,7 +103,7 @@ function renderHome(){
   const ship=ordersOf(DB.items.filter(i=>i.status!=="kho")).filter(o=>o.stage==="ship");
   if(ship.length){const w=Math.max(0,...ship.map(o=>daysAgo(o.f.saleDate)||0));todo.push([w>=2?"bad":"go","📮",`${ship.length} đơn cần ship`,w?`chờ ${w} ngày`:"hôm nay","ebay:ship"])}
   for(const c of cards().filter(c=>c.name)){const [st,lb]=cardState(c,nowM);if(st==="late"||st==="soon")todo.push([st==="late"?"bad":"warn","💳",`Trả thẻ ${c.name}`,lb,"spend"])}
-  // cùng nguồn fxRows với tab Chi tiêu: bấm Trả ở đó là hết nhắc ở đây
+  // cùng nguồn fxRows với tab Thu & Chi: bấm Trả ở đó là hết nhắc ở đây
   const fxTodo=fxRows(nowM).filter(r=>!r.paid).length;
   if(fxTodo)todo.push(["warn","",`${fxTodo} khoản cố định chưa trả`,mLabel(nowM),"spend"]);
   if(DB.clock)todo.push(["go","⏱","Đang trong ca",`từ ${hhmm(new Date(DB.clock.start))}`,"work"]);
@@ -134,7 +134,7 @@ function renderHome(){
   $("#homeDonut").innerHTML=donut(mk,s.ebay+s.wage+s.thu);
   $("#homeYear").innerHTML=yearSummary(yr,mks,stats,mk);
   $("#homeBudgetTitle").textContent="Ngân sách · "+mLabel(mk);
-  $("#homeBudget").innerHTML=budgetBars(mk)||`<span class="muted">Chưa đặt ngân sách. Vào “Chi tiêu” để đặt.</span>`;
+  $("#homeBudget").innerHTML=budgetBars(mk)||`<span class="muted">Chưa đặt ngân sách. Vào “Thu & Chi” để đặt.</span>`;
 }
 $("#homeYear").addEventListener("toggle",e=>{if(e.target.matches("details.ydet"))yrOpen=e.target.open},true);
 $("#homeChart").addEventListener("click",e=>{const h=e.target.closest("[data-m]");if(h){homeM=h.dataset.m;renderHome()}});

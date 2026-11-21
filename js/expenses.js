@@ -165,6 +165,19 @@ function renderSpend(){
   const lim=Object.values(DB.budgets).reduce((a,v)=>a+n(v),0);
   const budSpent=Object.keys(DB.budgets).filter(c=>n(DB.budgets[c])>0).reduce((a,c)=>a+list.filter(e=>e.type==="chi"&&e.cat===c).reduce((x,e)=>x+n(e.amount),0),0);
   $("#spSum").innerHTML=`<div>Tổng chi<b>${money(chi)}</b></div><div>Tổng thu<b>${money(thu)}</b></div><div>Thu − chi<b class="${thu-chi>=0?"pos":"neg"}">${money(thu-chi)}</b></div>`+(lim>0?`<div>Ngân sách còn lại<b class="${lim-budSpent>=0?"pos":"neg"}">${money(lim-budSpent)}</b></div>`:"");
+  // bảng tóm tắt theo danh mục (gập trong thẻ tổng). Trả thẻ không tính; chi cố định gộp 1 dòng
+  {
+    const by={},cnt={},inc={};let top=0;
+    for(const e of all){
+      if(isChi(e)){const k=e.type==="co"?"📌 Chi cố định":e.cat||"Khác";by[k]=(by[k]||0)+n(e.amount);cnt[k]=(cnt[k]||0)+1}
+      else if(e.type==="thu"){const k=e.cat||"Khác";inc[k]=(inc[k]||0)+n(e.amount)}
+    }
+    const rows=Object.entries(by).filter(r=>r[1]>0).sort((a,b)=>b[1]-a[1]);top=rows.reduce((a,r)=>a+r[1],0);
+    const tr=([k,v])=>`<div class="spcr"><span class="k">${esc(k)}</span><span class="c">${cnt[k]} khoản</span><span class="p">${top?Math.round(v/top*100):0}%</span><b class="a">${money(v)}</b><span class="bar thin"><i style="width:${top?v/top*100:0}%"></i></span></div>`;
+    const irows=Object.entries(inc).filter(r=>r[1]>0).sort((a,b)=>b[1]-a[1]);
+    $("#spCatBody").innerHTML=(rows.length?`<div class="spch">Chi</div>${rows.map(tr).join("")}<div class="spcr tot"><span class="k">Tổng chi</span><b class="a neg">${money(top)}</b></div>`:`<p class="muted" style="margin:6px 0">Tháng này chưa có khoản chi.</p>`)+
+      (irows.length?`<div class="spch">Thu</div>${irows.map(([k,v])=>`<div class="spcr"><span class="k">${esc(k)}</span><b class="a pos">${money(v)}</b></div>`).join("")}<div class="spcr tot"><span class="k">Tổng thu</span><b class="a pos">${money(irows.reduce((a,r)=>a+r[1],0))}</b></div>`:"");
+  }
   const f=$("#spForm");
   if(!f.date.value)f.date.value=today();
   fillCats(f.cat,f.cat.value);

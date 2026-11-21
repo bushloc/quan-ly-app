@@ -65,7 +65,7 @@ function spChips(){
     const exs=DB.expenses.filter(e=>(e.type==="chi"||e.type==="thu")&&([e.note,e.cat,String(e.amount)].some(v=>v&&String(v).toLowerCase().includes(q)))).sort((a,b)=>b.date.localeCompare(a.date)).slice(0,15);
     let h="";
     if(its.length)h+=`<div class="gsg">📦 Món / đơn hàng</div>`+its.map(i=>`<button type="button" class="gsr" data-gi="${esc(i.id)}"><b>${esc(i.name||"(không tên)")}</b><span class="tag s-${i.status}">${stTxt[i.status]||""}</span><small>${[i.orderId&&"Đơn "+esc(i.orderId),i.buyer&&esc(i.buyer),i.serial&&esc(i.serial),i.tracking&&esc(i.tracking)].filter(Boolean).join(" · ")}</small></button>`).join("");
-    if(exs.length)h+=`<div class="gsg">💵 Chi tiêu</div>`+exs.map(e=>`<button type="button" class="gsr" data-ge="${esc(e.id)}"><b>${esc(e.note||e.cat)}</b><span class="a ${e.type==="thu"?"pos":""}">${e.type==="thu"?"+":"-"}${money(n(e.amount))}</span><small>${esc(e.cat)} · ${esc(e.date)}</small></button>`).join("");
+    if(exs.length)h+=`<div class="gsg">💵 Thu & Chi</div>`+exs.map(e=>`<button type="button" class="gsr" data-ge="${esc(e.id)}"><b>${esc(e.note||e.cat)}</b><span class="a ${e.type==="thu"?"pos":""}">${e.type==="thu"?"+":"-"}${money(n(e.amount))}</span><small>${esc(e.cat)} · ${esc(e.date)}</small></button>`).join("");
     $("#gsRes").innerHTML=h||`<p class="muted gsh">Không thấy kết quả nào cho “${esc(q)}”.</p>`;
   }
   qi.oninput=draw;

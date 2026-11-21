@@ -111,3 +111,20 @@ html[data-den="c"] .card{padding-top:10px;padding-bottom:10px}
 html[data-den="c"] .exrow,html[data-den="c"] .lrow{padding-top:6px;padding-bottom:6px}
 html[data-den="r"] .card{padding-top:20px;padding-bottom:20px;margin-bottom:16px}
 html[data-den="r"] .exrow,html[data-den="r"] .lrow{padding-top:14px;padding-bottom:14px}
+
+/* Thu & Chi: thẻ Tháng + Tổng gộp, bảng danh mục gập */
+.spcard .mhead{margin-bottom:12px}
+.spcat{margin-top:12px;border-top:1px solid var(--line);padding-top:8px}
+.spcat>summary{cursor:pointer;color:var(--accent);font-weight:600;font-size:13.5px;padding:4px 0;list-style:none}
+.spcat>summary::before{content:"▸ ";transition:transform .15s}
+.spcat[open]>summary::before{content:"▾ "}
+.spcat>summary::-webkit-details-marker{display:none}
+.spch{font-size:12px;color:var(--muted);margin:10px 0 2px;text-transform:uppercase;letter-spacing:.04em}
+.spcr{display:grid;grid-template-columns:minmax(0,1fr) auto auto auto;gap:2px 10px;align-items:baseline;padding:6px 0;border-bottom:1px solid var(--line);font-size:14px}
+.spcr .k{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.spcr .c,.spcr .p{font-size:12px;color:var(--muted)}
+.spcr .a{text-align:right;font-variant-numeric:tabular-nums;min-width:84px}
+.spcr .bar{grid-column:1/-1;margin:2px 0 0}
+.spcr.tot{border-bottom:0;font-weight:700;grid-template-columns:1fr auto}
+@media(max-width:760px){.spcr{grid-template-columns:minmax(0,1fr) auto auto}.spcr .c{display:none}}
+.spcr:not(:has(.p)){grid-template-columns:minmax(0,1fr) auto}

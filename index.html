@@ -23,7 +23,7 @@
   <h1><span class="logo">🗂</span>Quản Lý Cá Nhân</h1>
   <button data-mod="home" class="on"><span class="ic">🏠</span><span class="lb">Tổng quan</span><span class="lbs">Tổng quan</span></button>
   <button data-mod="ebay"><span class="ic">📦</span><span class="lb">Bán hàng eBay</span><span class="lbs">eBay</span></button>
-  <button data-mod="spend"><span class="ic">💵</span><span class="lb">Chi tiêu</span><span class="lbs">Chi tiêu</span></button>
+  <button data-mod="spend"><span class="ic">💵</span><span class="lb">Thu &amp; Chi</span><span class="lbs">Thu &amp; Chi</span></button>
   <button data-mod="work"><span class="ic">⏱</span><span class="lb">Giờ đi làm</span><span class="lbs">Giờ làm</span></button>
   <button data-mod="set"><span class="ic">⚙</span><span class="lb">Cài đặt & Sao lưu</span><span class="lbs">Cài đặt</span></button>
   <div class="foot">Dữ liệu tự lưu sau mỗi thay đổi.</div>
@@ -91,9 +91,12 @@
 </div>
 
 <div id="mod-spend" class="hidden">
-  <h2 class="pg">Chi tiêu</h2>
-  <div class="row mhead"><button class="btn" id="spPrev">‹</button><b id="spMonth"></b><button class="btn" id="spNext">›</button></div>
-  <div class="card sum" id="spSum"></div>
+  <h2 class="pg">Thu &amp; Chi</h2>
+  <div class="card spcard">
+    <div class="row mhead"><button class="btn" id="spPrev">‹</button><b id="spMonth"></b><button class="btn" id="spNext">›</button></div>
+    <div class="sum" id="spSum"></div>
+    <details class="spcat" id="spCat"><summary>Xem chi tiết theo danh mục</summary><div id="spCatBody"></div></details>
+  </div>
   <div class="grid2 sp-top">
     <div class="card" id="fxCard"></div>
     <div class="card" id="ccCard"></div>
@@ -135,11 +138,11 @@
     <h3 style="margin-top:0">Chi cố định</h3>
     <div id="fxSetList"></div>
     <div class="row" style="margin-top:8px"><button type="button" class="btn" id="fxsAdd">+ Thêm khoản</button></div>
-    <p class="hint">Áp cho mọi tháng. Số tiền điền ở tab Chi tiêu (tự gợi ý số tháng trước).</p>
+    <p class="hint">Áp cho mọi tháng. Số tiền điền ở tab Thu & Chi (tự gợi ý số tháng trước).</p>
   </div>
   <div class="card" id="cardSet">
     <h3 style="margin-top:0">Thẻ tín dụng</h3>
-    <p class="muted" style="margin-top:0">Lưu ngày due hằng tháng để nhắc trong tab Chi tiêu. Không lưu số thẻ, chỉ 4 số cuối (tuỳ chọn).</p>
+    <p class="muted" style="margin-top:0">Lưu ngày due hằng tháng để nhắc trong tab Thu & Chi. Không lưu số thẻ, chỉ 4 số cuối (tuỳ chọn).</p>
     <div id="ccList"></div>
     <button type="button" class="btn" id="ccAdd">+ Thêm thẻ</button>
   </div>

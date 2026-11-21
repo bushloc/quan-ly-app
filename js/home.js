@@ -120,7 +120,7 @@ function renderHome(){
     box("main",`Còn lại · ${mLabel(mk)}`,s.net,s.net>=0?"pos":"neg",`Thu <b>${money(s.ebay+s.wage+s.thu)}</b> · Chi <b>${money(s.chi)}</b><br><span class="muted">Lương tháng: trước thuế <b>${money(s.pay)}</b> · thực nhận <b>${s.wageEst?"~":""}${money(s.wage)}</b></span>`,0,inc>0?`<div class="bar ${spentPct>100?"over":spentPct>85?"warn":"go"}" title="Đã chi so với thu nhập"><i style="width:${Math.min(100,spentPct)}%"></i></div>`:"")+
     box("chkc",ckN&&ckN.est?"Check kế tiếp · ước tính":"Check kế tiếp",ckN?ckN.v:"—","pos",ck?`${dowl(ck.pay)} ${dmy(ck.pay)} · trước thuế ${money(ckS.pay)}`:"",1)+
     box("","Lãi eBay",s.ebay,s.ebay>=0?"pos":"neg",`${s.sold} món đã bán`,2);
-  $("#homeHours").innerHTML=`<span class="hl">⏱ Giờ tuần này</span><b>${fh(wc.h)}<small> / ${lim}</small></b><span class="hbar bar ${hrBarCls(toOt,lim)}"><i style="width:${Math.min(100,toOt/lim*100)}%"></i></span><span class="hs">${wc.ot>0?`<b class="neg">+${fh(wc.ot)}h OT</b>`:`còn ${fh(Math.max(0,lim-toOt))}h tới OT`}</span>`;
+  $("#homeHours").innerHTML=`<span class="hl">⏱ Giờ tuần này</span><b>${fh(wc.h+wc.hol+wc.pto)}<small> / ${lim}</small></b><span class="hbar bar ${hrBarCls(toOt,lim)}"><i style="width:${Math.min(100,toOt/lim*100)}%"></i></span><span class="hs">${wc.ot>0?`<b class="neg">+${fh(wc.ot)}h OT</b>`:`${wc.hol+wc.pto>0?`gồm ${fh(wc.hol+wc.pto)}h nghỉ có lương · `:""}còn ${fh(Math.max(0,lim-toOt))}h tới OT`}</span>`;
   countUp($("#homeHero"));
   // chi cố định theo 6 nhóm, đúng màu nhóm
   const fxm=fxRows(mk),fxT=fxm.reduce((a,r)=>a+n(r.amt),0),fxG=FXC.map(([k,l,c])=>({l,c,v:fxm.filter(r=>r.cat===k).reduce((a,r)=>a+n(r.amt),0)}));

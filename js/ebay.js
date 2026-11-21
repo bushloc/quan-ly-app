@@ -124,7 +124,7 @@ function render(){
       :`<div>Đơn<b>${os.length}</b></div><div>Doanh thu<b>${money(S("price")+S("charge"))}</b></div><div>Lãi<b class="${S("profit")>=0?"pos":"neg"}">${money(S("profit"))}</b></div>`;
   }
   $("#list").innerHTML=html;
-  $("#empty").style.display=html?"none":"block";$("#empty").textContent=empty;
+  $("#empty").style.display=html?"none":"block";$("#empty").innerHTML=emptyBox(empty.replace(/^🎉\s*/,""),{kho:"📦",ship:"🎉",done:"📭",ret:"↩️"}[ebTab]||"📭",ebTab==="kho"&&!stock.length?"+ Thêm hàng":"","new");
 }
 // một bộ xử lý click cho cả danh sách
 $("#list").addEventListener("click",async e=>{

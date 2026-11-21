@@ -1,0 +1,126 @@
+"use strict";
+/* ===== Giao diện thêm: trạng thái trống, badge thanh bên, chip danh mục, tìm kiếm chung, vuốt xoá, màu nhấn ===== */
+
+// 5) trạng thái trống: biểu tượng + câu + nút gợi ý (act = tên hành động xử lý ở dưới)
+function emptyBox(msg,icon,btn,act){
+  return `<div class="emp"><div class="emi">${icon}</div><div class="emt">${esc(msg)}</div>${btn?`<button type="button" class="btn primary" data-emp="${act}">${esc(btn)}</button>`:""}</div>`;
+}
+document.addEventListener("click",e=>{
+  const b=e.target.closest("[data-emp]");if(!b)return;
+  if(b.dataset.emp==="new")$("#new").click();
+  else if(b.dataset.emp==="spend"){const f=$("#spForm");f.scrollIntoView({behavior:"smooth",block:"center"});setTimeout(()=>f.amount.focus(),300)}
+});
+
+// 8) badge số trên thanh dưới / thanh bên
+function updateBadges(){
+  if(typeof DB==="undefined"||!DB.items)return;
+  const nowM=mKey(new Date());
+  const ship=ordersOf(DB.items.filter(i=>i.status!=="kho")).filter(o=>o.stage==="ship").length;
+  let late=0,due=0;
+  for(const c of cards().filter(c=>c.name)){const [st]=cardState(c,nowM);if(st==="late")late++;else if(st==="soon")due++}
+  const fx=fxRows(nowM).filter(r=>!r.paid).length;
+  const v={ebay:[ship,ship?"warn":""],spend:[late+due+fx,late?"bad":"warn"],work:[DB.clock?1:0,"go"]};
+  for(const b of $$("#side button[data-mod]")){
+    const x=v[b.dataset.mod];let i=b.querySelector(".nbadge");
+    if(!x||!x[0]){if(i)i.remove();continue}
+    if(!i){i=document.createElement("i");b.appendChild(i)}
+    i.className="nbadge "+x[1];i.textContent=b.dataset.mod==="work"?"":x[0]>99?"99+":x[0];
+  }
+}
+setInterval(updateBadges,1500);
+
+// 3) ghi chi tiêu nhanh: chip danh mục hay dùng, nhớ danh mục lần trước
+function spChips(){
+  const f=$("#spForm"),box=$("#spChips");if(!f||!box)return;
+  if(!f.dataset.init){f.dataset.init="1";try{const c=localStorage.getItem("lastCat");if(c&&DB.cats.includes(c))f.cat.value=c}catch(e){}}
+  const since=addDays(today(),-90),cnt={};
+  for(const e of DB.expenses)if(e.type==="chi"&&e.date>=since&&DB.cats.includes(e.cat))cnt[e.cat]=(cnt[e.cat]||0)+1;
+  const top=[...new Set([...Object.keys(cnt).sort((a,b)=>cnt[b]-cnt[a]),...DB.cats])].slice(0,6);
+  box.classList.toggle("hidden",f.type.value!=="chi");
+  box.innerHTML=top.map(c=>`<button type="button" class="chip${f.cat.value===c?" on":""}" data-cat="${esc(c)}">${esc(c)}</button>`).join("");
+}
+{
+  const f=$("#spForm");f.insertAdjacentHTML("afterbegin",'<div class="catchips" id="spChips"></div>');
+  $("#spChips").addEventListener("click",e=>{const b=e.target.closest("[data-cat]");if(!b)return;f.cat.value=b.dataset.cat;try{localStorage.setItem("lastCat",b.dataset.cat)}catch(x){}spChips();f.amount.focus()});
+  f.cat.addEventListener("change",()=>{try{localStorage.setItem("lastCat",f.cat.value)}catch(x){}spChips()});
+  f.type.addEventListener("change",spChips);
+  const rs=renderSpend;renderSpend=function(){rs.apply(this,arguments);spChips()};
+}
+
+// 9) tìm kiếm chung: món, đơn, người mua, tracking, chi tiêu
+{
+  document.querySelector("main").insertAdjacentHTML("afterbegin",'<button type="button" id="gsBar" class="gsbar">🔍 <span>Tìm món, đơn, tracking, chi tiêu…</span><kbd>Ctrl K</kbd></button>');
+  document.body.insertAdjacentHTML("beforeend",'<dialog id="gsDlg" class="gsdlg"><div class="gsin"><input id="gsQ" placeholder="Tên món, serial, Order ID, người mua, tracking, ghi chú chi…" autocomplete="off"><button type="button" class="btn" data-close-dlg="gsDlg">Đóng</button></div><div id="gsRes"></div></dialog>');
+  const dlg=$("#gsDlg"),qi=$("#gsQ");
+  const open=()=>{dlg.showModal();qi.value="";draw();qi.focus()};
+  $("#gsBar").onclick=open;
+  addEventListener("keydown",e=>{if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==="k"){e.preventDefault();dlg.open?dlg.close():open()}});
+  $$("[data-close-dlg=gsDlg]").forEach(b=>b.onclick=()=>dlg.close());
+  const stTxt={kho:"Kho",ban:"Đã bán",tra:"Trả"};
+  function draw(){
+    const q=qi.value.trim().toLowerCase(),qs=ns(q);
+    if(q.length<2){$("#gsRes").innerHTML=`<p class="muted gsh">Gõ ít nhất 2 ký tự. Tìm cả món trong kho, đơn đã bán/trả và khoản chi.</p>`;return}
+    const hit=i=>[i.name,i.serial,i.orderId,i.buyer,i.tracking].some(v=>v&&(String(v).toLowerCase().includes(q)||(qs.length>=3&&ns(v).includes(qs))));
+    const its=DB.items.filter(hit).slice(0,25);
+    const exs=DB.expenses.filter(e=>(e.type==="chi"||e.type==="thu")&&([e.note,e.cat,String(e.amount)].some(v=>v&&String(v).toLowerCase().includes(q)))).sort((a,b)=>b.date.localeCompare(a.date)).slice(0,15);
+    let h="";
+    if(its.length)h+=`<div class="gsg">📦 Món / đơn hàng</div>`+its.map(i=>`<button type="button" class="gsr" data-gi="${esc(i.id)}"><b>${esc(i.name||"(không tên)")}</b><span class="tag s-${i.status}">${stTxt[i.status]||""}</span><small>${[i.orderId&&"Đơn "+esc(i.orderId),i.buyer&&esc(i.buyer),i.serial&&esc(i.serial),i.tracking&&esc(i.tracking)].filter(Boolean).join(" · ")}</small></button>`).join("");
+    if(exs.length)h+=`<div class="gsg">💵 Chi tiêu</div>`+exs.map(e=>`<button type="button" class="gsr" data-ge="${esc(e.id)}"><b>${esc(e.note||e.cat)}</b><span class="a ${e.type==="thu"?"pos":""}">${e.type==="thu"?"+":"-"}${money(n(e.amount))}</span><small>${esc(e.cat)} · ${esc(e.date)}</small></button>`).join("");
+    $("#gsRes").innerHTML=h||`<p class="muted gsh">Không thấy kết quả nào cho “${esc(q)}”.</p>`;
+  }
+  qi.oninput=draw;
+  $("#gsRes").addEventListener("click",e=>{
+    const bi=e.target.closest("[data-gi]"),be=e.target.closest("[data-ge]");
+    if(bi){
+      const it=DB.items.find(x=>x.id===bi.dataset.gi);if(!it)return;dlg.close();showMod("ebay");$("#q").value="";
+      if(it.status==="kho"){$('#ebTabs [data-eb="kho"]').click();openItem(it.id);return}
+      const o=ordersOf(DB.items.filter(x=>x.status!=="kho")).find(o=>o.its.some(x=>x.id===it.id));if(!o)return;
+      const tab=o.stage==="go"?"done":o.stage;$(`#ebTabs [data-eb="${tab}"]`).click();
+      if(tab!=="ship"){$("#ebMonth").value=monthOf(o.date)}
+      const key=o.its.map(x=>x.id).join(",");ebOpen.add(key);render();
+      const card=$$("#list [data-ord]").find(c=>c.dataset.ord===key);if(card){card.scrollIntoView({block:"center"});card.classList.add("flash")}
+    }else if(be){
+      const ex=DB.expenses.find(x=>x.id===be.dataset.ge);if(!ex)return;dlg.close();spM=monthOf(ex.date);showMod("spend");openExpense(ex.id);
+    }
+  });
+}
+
+// 1) vuốt trái một khoản chi để xoá (hỏi lại trước khi xoá)
+{
+  const L=$("#spList");let st=null;
+  L.addEventListener("touchstart",e=>{const r=e.target.closest(".exrow");if(!r||e.touches.length!==1){st=null;return}st={r,x:e.touches[0].clientX,y:e.touches[0].clientY,dx:0,on:false}},{passive:true});
+  L.addEventListener("touchmove",e=>{if(!st)return;const dx=e.touches[0].clientX-st.x,dy=e.touches[0].clientY-st.y;
+    if(!st.on){if(Math.abs(dy)>14&&Math.abs(dy)>Math.abs(dx)){st=null;return}if(dx<-14&&Math.abs(dx)>Math.abs(dy)*1.5)st.on=true}
+    if(st.on){st.dx=dx;st.r.style.transform=`translateX(${Math.max(-120,dx)}px)`;st.r.classList.toggle("swd",dx<-90)}},{passive:true});
+  L.addEventListener("touchend",async()=>{if(!st)return;const {r,dx,on}=st;st=null;r.style.transform="";r.classList.remove("swd");
+    if(on&&dx<-90){r.dataset.noclick="1";setTimeout(()=>delete r.dataset.noclick,400);const id=r.dataset.ex;
+      if(await ask("Xoá khoản này?")){DB.expenses=DB.expenses.filter(x=>x.id!==id);save();renderSpend()}}});
+  L.addEventListener("click",e=>{const r=e.target.closest(".exrow");if(r&&r.dataset.noclick)e.stopImmediatePropagation()},true);
+}
+
+// 7) màu nhấn + chế độ tối tự theo giờ
+const ACCENTS={
+  blue:{dark:["#60a5fa","#2563eb","#06b6d4"],light:["#2563eb","#2563eb","#0891b2"]},
+  green:{dark:["#34d399","#059669","#06b6d4"],light:["#047857","#059669","#0891b2"]},
+  orange:{dark:["#fb923c","#ea580c","#f59e0b"],light:["#c2410c","#ea580c","#d97706"]},
+  pink:{dark:["#f472b6","#db2777","#a855f7"],light:["#be185d","#db2777","#9333ea"]}
+};
+function applyAccent(){
+  const st=document.documentElement.style,k=S().accent,a=ACCENTS[k];
+  for(const p of ["--accent","--soft","--grad","--glow","--glow-h","--hl"])st.removeProperty(p);
+  if(!a)return;
+  const th=document.documentElement.dataset.theme==="light"?"light":"dark",[ac,c1,c2]=a[th];
+  const rgb=h=>[1,3,5].map(i=>parseInt(h.slice(i,i+2),16)).join(",");
+  st.setProperty("--accent",ac);st.setProperty("--soft",`rgba(${rgb(c1)},${th==="light"?.1:.18})`);
+  st.setProperty("--grad",`linear-gradient(135deg,${c1},${c2})`);
+  st.setProperty("--glow",`0 6px 22px rgba(${rgb(c1)},${th==="light"?.32:.45})`);st.setProperty("--glow-h",`0 8px 30px rgba(${rgb(c1)},${th==="light"?.5:.68})`);
+  st.setProperty("--hl",`rgba(${rgb(c1)},.45)`);
+}
+{
+  const lab=$("#stTheme").closest("label");
+  lab.insertAdjacentHTML("afterend",'<label style="max-width:260px;margin-bottom:0">Màu nhấn<select id="stAccent"><option value="">Tím (mặc định)</option><option value="blue">Xanh dương</option><option value="green">Xanh lá</option><option value="orange">Cam</option><option value="pink">Hồng</option></select></label>');
+  $("#stTheme").insertAdjacentHTML("beforeend",'<option value="time">Tự động theo giờ (tối 18h–7h)</option>');
+  $("#stAccent").onchange=e=>{S().accent=e.target.value;applyAccent();save()};
+  const rs=renderSet;renderSet=function(){rs.apply(this,arguments);$("#stAccent").value=S().accent||""};
+  setInterval(()=>{if(S().theme==="time")applyTheme()},600000);
+}

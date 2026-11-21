@@ -174,7 +174,7 @@ function renderSpend(){
     const arr=byDay[d],dt=arr.filter(e=>e.type==="chi").reduce((a,e)=>a+n(e.amount),0);
     return `<div class="daygrp"><span>${DOW[parseD(d).getDay()]} ${d}</span><span>${dt?"chi "+money(dt):""}</span></div>`+
       arr.map(e=>`<div class="exrow" data-ex="${e.id}"><span class="tag s-kho">${esc(e.cat)}</span><span>${esc(e.note||"")}</span><span class="a ${e.type==="thu"?"pos":""}">${e.type==="thu"?"+":"-"}${money(n(e.amount))}</span></div>`).join("");
-  }).join(""):`<p class="muted" style="padding:16px;margin:0">Tháng này chưa có khoản nào.</p>`;
+  }).join(""):emptyBox("Tháng này chưa có khoản nào.","🧾","+ Ghi khoản đầu tiên","spend");
   $$("#spList [data-ex]").forEach(r=>r.onclick=()=>openExpense(r.dataset.ex));
 }
 $("#spPrev").onclick=()=>{spM=mShift(spM,-1);renderSpend()};

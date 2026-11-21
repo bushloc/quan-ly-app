@@ -16,7 +16,7 @@ $("#stSaveWork").onclick=()=>{
 };
 // Giao diện: tối / sáng / theo Windows (đổi ngay, không cần bấm Lưu)
 const darkMQ=matchMedia("(prefers-color-scheme: dark)");
-function applyTheme(){const t=S().theme||"dark";document.documentElement.dataset.theme=t==="system"?(darkMQ.matches?"dark":"light"):t}
+function applyTheme(){const t=S().theme||"dark",h=new Date().getHours();document.documentElement.dataset.theme=t==="system"?(darkMQ.matches?"dark":"light"):t==="time"?(h>=18||h<7?"dark":"light"):t;if(typeof applyAccent==="function")applyAccent()}
 darkMQ.addEventListener("change",applyTheme);
 $("#stTheme").onchange=e=>{S().theme=e.target.value;applyTheme();save()};
 $("#trkOpen").onclick=()=>{const t=F("tracking").value.trim();if(t)API.openUrl(trackLink(t).u);else F("tracking").focus()};

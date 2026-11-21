@@ -94,7 +94,7 @@ function spChips(){
     if(st.on){st.dx=dx;st.r.style.transform=`translateX(${Math.max(-120,dx)}px)`;st.r.classList.toggle("swd",dx<-90)}},{passive:true});
   L.addEventListener("touchend",async()=>{if(!st)return;const {r,dx,on}=st;st=null;r.style.transform="";r.classList.remove("swd");
     if(on&&dx<-90){r.dataset.noclick="1";setTimeout(()=>delete r.dataset.noclick,400);const id=r.dataset.ex;
-      if(await ask("Xoá khoản này?")){DB.expenses=DB.expenses.filter(x=>x.id!==id);save();renderSpend()}}});
+      const ex=DB.expenses.find(x=>x.id===id);if(ex)delUndo("expenses",ex,"Đã xoá khoản chi",renderSpend)}});
   L.addEventListener("click",e=>{const r=e.target.closest(".exrow");if(r&&r.dataset.noclick)e.stopImmediatePropagation()},true);
 }
 
@@ -124,3 +124,80 @@ function applyAccent(){
   const rs=renderSet;renderSet=function(){rs.apply(this,arguments);$("#stAccent").value=S().accent||""};
   setInterval(()=>{if(S().theme==="time")applyTheme()},600000);
 }
+
+// 8) xoá xong hiện thanh "Hoàn tác" 6 giây thay cho hộp hỏi lại
+let toastT=null;
+function toast(msg,undo){
+  let t=$("#toast");if(!t){document.body.insertAdjacentHTML("beforeend",'<div id="toast" class="toast hidden" role="status"><span></span><button type="button" class="btn">Hoàn tác</button></div>');t=$("#toast")}
+  t.querySelector("span").textContent=msg;const b=t.querySelector("button");b.style.display=undo?"":"none";
+  b.onclick=()=>{clearTimeout(toastT);t.classList.add("hidden");if(undo)undo()};
+  t.classList.remove("hidden");clearTimeout(toastT);toastT=setTimeout(()=>t.classList.add("hidden"),6000);
+}
+function delUndo(arr,obj,label,rerender){
+  const a=DB[arr],idx=a.indexOf(obj);if(idx<0)return;
+  DB[arr]=a.filter(x=>x!==obj);save();rerender();
+  toast(label,()=>{if(!DB[arr].some(x=>x.id===obj.id)){DB[arr].splice(Math.min(idx,DB[arr].length),0,obj);save();rerender()}});
+}
+
+// 1) lời chào + tóm tắt hôm nay trên Tổng quan; 10) hướng dẫn lần đầu khi chưa có dữ liệu
+{
+  const rh=renderHome;
+  renderHome=function(){
+    rh.apply(this,arguments);
+    const h=new Date().getHours(),g=h<11?"Chào buổi sáng ☀️":h<14?"Chào buổi trưa 🌤":h<18?"Chào buổi chiều 🌇":"Chào buổi tối 🌙";
+    const k=$$("#homeTodo .tdo").length,bad=$$("#homeTodo .tdo.bad").length;
+    const d=new Date(),dow=["Chủ nhật","Thứ Hai","Thứ Ba","Thứ Tư","Thứ Năm","Thứ Sáu","Thứ Bảy"][d.getDay()];
+    let el=$("#greet");if(!el){$("#homeTodo").insertAdjacentHTML("beforebegin",'<div id="greet" class="greet"></div>');el=$("#greet")}
+    el.innerHTML=`<b>${g}</b><span>${dow} ${d.getDate()}/${d.getMonth()+1} · ${k?`${k} việc cần để ý${bad?`, ${bad} đã trễ`:""}`:"hôm nay không có việc gấp"}</span>`;
+    let ob=$("#onboard");const empty=!DB.items.length&&!DB.expenses.length&&!DB.shifts.length;let dis=false;try{dis=localStorage.getItem("obDone")==="1"}catch(e){}
+    if(empty&&!dis){
+      if(!ob){el.insertAdjacentHTML("afterend",'<div id="onboard" class="card onb"><h3>Bắt đầu nhanh</h3><div class="onb-s"><button type="button" class="btn" data-go="ebay" data-act="#new"><b>1</b> Thêm món hàng đầu tiên</button><button type="button" class="btn" data-go="spend" data-focus="#spForm [name=amount]"><b>2</b> Ghi khoản chi đầu tiên</button><button type="button" class="btn" data-go="work"><b>3</b> Nhập giờ làm / Clock In</button></div><button type="button" class="btn" id="obX">Để sau</button></div>');
+        $$("#onboard [data-go]").forEach(b=>b.onclick=()=>{showMod(b.dataset.go);if(b.dataset.act)$(b.dataset.act).click();if(b.dataset.focus)$(b.dataset.focus).focus()});
+        $("#obX").onclick=()=>{try{localStorage.setItem("obDone","1")}catch(e){}$("#onboard").remove()}}
+    }else if(ob)ob.remove();
+  };
+}
+
+// 7) nút Clock Out nổi khi đang trong ca (ở mọi tab trừ Giờ làm)
+{
+  document.body.insertAdjacentHTML("beforeend",'<button type="button" id="clkFab" class="clkfab hidden"><i></i><span id="clkT">00:00:00</span><b>Clock Out</b></button>');
+  const tick=()=>{
+    const el=$("#clkFab");
+    if(!DB.clock||!$("#mod-work").classList.contains("hidden")){el.classList.add("hidden");return}
+    const s=Math.max(0,Math.floor((Date.now()-DB.clock.start)/1000));
+    $("#clkT").textContent=[Math.floor(s/3600),Math.floor(s/60)%60,s%60].map(x=>String(x).padStart(2,"0")).join(":");el.classList.remove("hidden");
+  };
+  $("#clkFab").onclick=()=>{$("#clockBtn").click();tick()};
+  setInterval(tick,1000);
+}
+
+// 4) xem ảnh lớn: vuốt hoặc bấm ‹ › để qua ảnh khác của cùng món
+{
+  let gal=[],gi=0;const v=$("#viewer");
+  v.insertAdjacentHTML("beforeend",'<button type="button" class="vnav prev" aria-label="Ảnh trước">‹</button><button type="button" class="vnav next" aria-label="Ảnh sau">›</button><span class="vcnt"></span>');
+  const cnt=()=>{v.querySelector(".vcnt").textContent=gal.length>1?`${gi+1}/${gal.length}`:"";v.classList.toggle("multi",gal.length>1)};
+  const show=d=>{if(gal.length<2)return;gi=(gi+d+gal.length)%gal.length;v.querySelector("img").src=gal[gi];cnt()};
+  document.addEventListener("click",e=>{
+    const im=e.target.closest("img[data-zoom],img[data-v],img[data-pv],img[data-big]");if(!im)return;
+    const sel=["data-zoom","data-v","data-pv","data-big"].find(a=>im.hasAttribute(a)),box=im.closest("#photos,#packs,#res,.oc,.u")||im.parentElement;
+    gal=[...box.querySelectorAll(`img[${sel}]`)].map(x=>x.src);gi=Math.max(0,gal.indexOf(im.src));
+    setTimeout(cnt,0);
+  },true);
+  v.querySelector(".prev").onclick=e=>{e.stopPropagation();show(-1)};v.querySelector(".next").onclick=e=>{e.stopPropagation();show(1)};
+  let x0=null;v.addEventListener("touchstart",e=>{x0=e.touches[0].clientX},{passive:true});
+  v.addEventListener("touchend",e=>{if(x0==null)return;const dx=e.changedTouches[0].clientX-x0;x0=null;if(Math.abs(dx)>50){show(dx<0?1:-1);v.dataset.sw="1";setTimeout(()=>delete v.dataset.sw,300)}});
+  v.addEventListener("click",e=>{if(v.dataset.sw)e.stopImmediatePropagation()},true);
+}
+
+// 9) cỡ chữ + độ thoáng
+function applyView(){const r=document.documentElement;r.dataset.fs=S().fs||"m";r.dataset.den=S().den||"n"}
+{
+  const lab=$("#stTheme").closest("label");
+  lab.insertAdjacentHTML("afterend",'<label style="max-width:260px;margin-bottom:0">Cỡ chữ<select id="stFs"><option value="s">Nhỏ</option><option value="m">Vừa</option><option value="l">Lớn</option></select></label><label style="max-width:260px;margin-bottom:0">Khoảng cách<select id="stDen"><option value="c">Gọn</option><option value="n">Bình thường</option><option value="r">Thoáng</option></select></label>');
+  $("#stFs").onchange=e=>{S().fs=e.target.value;applyView();save()};$("#stDen").onchange=e=>{S().den=e.target.value;applyView();save()};
+  const rs=renderSet;renderSet=function(){rs.apply(this,arguments);$("#stFs").value=S().fs||"m";$("#stDen").value=S().den||"n"};
+  const at=applyTheme;applyTheme=function(){at.apply(this,arguments);applyView()};
+}
+
+// 11) rung nhẹ khi bấm nút chính (Android/Chrome; iPhone chưa hỗ trợ web rung)
+document.addEventListener("click",e=>{if(navigator.vibrate&&e.target.closest(".pt,.btn.primary,.clockbtn,.clkfab,#fab"))navigator.vibrate(12)},true);

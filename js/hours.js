@@ -57,7 +57,7 @@ function renderWork(){
       ?`<div class="tr lv ${s.kind}" data-sh="${s.id}" title="${esc(s.note||"Sửa")}">${LV[s.kind]} ${fh(shiftHours(s)).replace(/\.00$/,"")}h${s.note?` · ${esc(s.note)}`:""}</div>`
       :`<div class="tr" data-sh="${s.id}" title="${esc(s.note||"Sửa ca")}">${esc(s.start)}–${esc(s.end)}${n(s.brk)?` · nghỉ ${n(s.brk)}′`:""}</div>`;
     h+=ds.length
-      ?`<div class="day${isT?" today":""}${ds.some(isLeave)?" lvday":""}" data-day="${d}">${head}<div class="h">${fh(dh)} <small>giờ</small></div>${ds.map(trow).join("")}${dot>0?`<span class="otg">+${fh(dot)}h tăng ca</span>`:""}<div class="p">${money(dp)}</div></div>`
+      ?`<div class="day${isT?" today":""}${ds.some(isLeave)?" lvday":""}" data-day="${d}">${head}<div class="h">${fh(dh)} <small>giờ</small></div><span class="dbar${dot>0?" ot":""}"><i style="width:${Math.min(100,dh/10*100)}%"></i></span>${ds.map(trow).join("")}${dot>0?`<span class="otg">+${fh(dot)}h tăng ca</span>`:""}<div class="p">${money(dp)}</div></div>`
       :`<div class="day empty${isT?" today":fut?" future":""}" data-day="${d}">${head}<div class="plus">${isT?"+ Thêm ca":fut?"+":"Nghỉ"}</div></div>`;
   }
   $("#wkDays").innerHTML=h;
@@ -128,4 +128,4 @@ $("#shForm").onsubmit=e=>{
   if(shCur){Object.assign(shCur,v);if(v.kind==="work")delete shCur.hrs}else DB.shifts.push({id:uid(),...v});
   save();$("#shDlg").close();wkCur=weekStartOf(v.date);renderWork();
 };
-$("#shDel").onclick=async()=>{if(shCur&&await ask("Xoá ca này?")){DB.shifts=DB.shifts.filter(s=>s!==shCur);save();$("#shDlg").close();renderWork()}};
+$("#shDel").onclick=()=>{if(shCur){delUndo("shifts",shCur,"Đã xoá ca",renderWork);$("#shDlg").close()}};

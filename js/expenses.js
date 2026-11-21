@@ -145,7 +145,8 @@ function budgetBars(mk){
   let h="";
   for(const c of rows){
     const lim=n(DB.budgets[c]),sp=spent[c]||0,p=Math.min(100,sp/lim*100);
-    h+=`<div class="row" style="justify-content:space-between"><span>${esc(c)}</span><span class="${sp>lim?"neg":""}">${money(sp)} / ${money(lim)} <span class="muted">(còn ${money(lim-sp)})</span></span></div><div class="bar ${sp>lim?"over":p>85?"warn":""}"><i style="width:${p}%"></i></div>`;
+    const cm=mKey(new Date()),dim=new Date(+mk.slice(0,4),+mk.slice(5),0).getDate(),dn=new Date().getDate(),left=dim-dn+1,pace=mk===cm&&sp<=lim&&p>dn/dim*100+15;
+    h+=`<div class="row" style="justify-content:space-between"><span>${esc(c)}</span><span class="${sp>lim?"neg":""}">${money(sp)} / ${money(lim)} <span class="muted">(còn ${money(lim-sp)})</span></span></div><div class="bar ${sp>lim?"over":p>85||pace?"warn":""}"><i style="width:${p}%"></i></div>${mk===cm&&sp<lim?`<div class="perday ${pace?"warn":""}">≈ ${money((lim-sp)/left)}/ngày · ${left} ngày còn lại${pace?" · đang chi nhanh hơn dự kiến":""}</div>`:""}`;
   }
   if(others.length)h+=`<div class="muted" style="font-size:13px">Chưa đặt hạn mức: ${others.map(c=>`${esc(c)} ${money(spent[c])}`).join(" · ")}</div>`;
   return h;
@@ -196,7 +197,7 @@ $("#exForm").onsubmit=e=>{
   Object.assign(exCur,{date:f.date.value,type:f.type.value,amount:n(f.amount.value),cat:f.cat.value,note:f.note.value.trim()});
   save();$("#exDlg").close();renderSpend();
 };
-$("#exDel").onclick=async()=>{if(exCur&&await ask("Xoá khoản này?")){DB.expenses=DB.expenses.filter(e=>e!==exCur);save();$("#exDlg").close();renderSpend()}};
+$("#exDel").onclick=()=>{if(exCur){delUndo("expenses",exCur,"Đã xoá khoản chi",renderSpend);$("#exDlg").close()}};
 // ngân sách
 function bgRow(name,limit,locked){
   return `<div class="row" style="margin-bottom:8px" data-bgrow><input class="bgName" value="${esc(name)}" ${locked?"readonly":""} placeholder="Tên danh mục" style="flex:1"><input class="bgLim" type="number" min="0" step="1" value="${limit??""}" placeholder="$/tháng" style="width:110px"><button type="button" class="btn danger" data-bgdel>✕</button></div>`;

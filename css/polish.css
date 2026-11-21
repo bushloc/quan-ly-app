@@ -55,3 +55,7 @@ details[open]>*:not(summary){animation:modin .18s ease-out}
 .emt{font-size:14px;max-width:30ch}
 #empty:not([style*="none"]){padding:0}
 @media(max-width:760px){dialog.gsdlg{height:fit-content;max-height:80dvh;margin:8px auto auto;width:calc(100vw - 16px);max-width:none;border-radius:16px}}
+
+/* PTO / Holiday cạnh tổng giờ */
+.lvtag{display:inline-block;font:600 12px/1.6 "Segoe UI",system-ui,sans-serif;padding:0 8px;border-radius:99px;vertical-align:middle;white-space:nowrap;background:var(--soft);color:var(--accent)}
+.lvtag.hol{background:var(--oksoft);color:var(--ok)}

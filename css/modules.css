@@ -62,27 +62,6 @@
 .pill{white-space:nowrap;font-size:10.5px;font-weight:700;background:var(--accent);color:var(--on-accent);border-radius:99px;padding:1px 7px}
 .wkmonth{font-size:13px;color:var(--muted);padding:4px 2px}
 .wkmonth b{color:var(--text);font-weight:600}.wkmonth b.pos{color:var(--ok)}
-/* Check lương */
-.chk .ck{display:flex;justify-content:space-between;align-items:flex-end;gap:16px;flex-wrap:wrap}
-.chk .ckv{font-size:30px;font-weight:700;color:var(--ok);font-variant-numeric:tabular-nums;line-height:1.15}
-.chk .ckv.none{font-size:18px;color:var(--muted);font-weight:600}
-.chk .ckd{font-size:13px;color:var(--muted)}
-.chk .ckd b{color:var(--text)}
-.chk .cknext{margin-top:12px;padding-top:10px;border-top:1px dashed var(--line);font-size:13px;color:var(--muted)}
-.chk .cknext b{color:var(--text)}
-.card.chk h3{margin:0 0 8px}
-.pl{margin-top:14px;padding-top:10px;border-top:1px dashed var(--line)}
-.pl-h{display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;font-size:13px;margin-bottom:6px}
-.plrow{display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--line);font-size:13.5px}
-.plrow:last-child{border-bottom:0}
-.plrow .pld{flex:1;min-width:0}.plrow .plg{color:var(--muted);font-variant-numeric:tabular-nums;white-space:nowrap}
-.plrow .plg small{font-size:11px}
-.plrow input{width:96px;text-align:right;padding:6px 8px}
-.plrow.got{border-left:3px solid var(--ok);padding-left:8px}
-.plrow.got input{color:var(--ok);font-weight:700}
-.plrow.fut{opacity:.65}
-@media(max-width:560px){.plrow{flex-wrap:wrap}.plrow .pld{flex-basis:100%}.plrow .plg{flex:1}}
-#wkCheck{border-left:4px solid var(--ok)}
 
 /* Tổng quan: tháng, biểu đồ, hiệu ứng */
 .hhead{display:flex;justify-content:space-between;align-items:flex-end;gap:12px;flex-wrap:wrap;margin-bottom:18px}

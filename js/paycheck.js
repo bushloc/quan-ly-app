@@ -17,30 +17,4 @@ function checkFor(ref){
 }
 const dmy=s=>{const d=parseD(s);return d.getDate()+"/"+(d.getMonth()+1)};
 const dowl=s=>["CN","T2","T3","T4","T5","T6","T7"][parseD(s).getDay()];
-function checkHtml(ref,calc){
-  const {cur,next}=checkFor(ref),t=today();
-  let h="";
-  if(cur){const c=periodSum(cur,calc);
-    h+=`<div class="ck"><div><div class="ckd">${cur.pay<t?"Đã nhận":"Nhận"} <b>${dowl(cur.pay)} ${dmy(cur.pay)}</b> · cho kỳ <b>${dmy(cur.st)} – ${dmy(cur.en)}</b></div><div class="ckv">${money(c.pay)}</div></div><div class="ckd" style="text-align:right">${c.reg.toFixed(2)} giờ thường${c.ot>0?` + <b class="neg">${c.ot.toFixed(2)} giờ tăng ca</b>`:""}${leaveTxt(c)}<br>${c.n} ca · trước thuế</div></div>`;
-  }else h+=`<div class="ckv none">Tuần này không có check</div>`;
-  if(next){const c=periodSum(next,calc),done=next.en<t;
-    h+=`<div class="cknext">Check kế tiếp: <b>${dowl(next.pay)} ${dmy(next.pay)}</b> · kỳ ${dmy(next.st)} – ${dmy(next.en)} · ${done?"":"tạm tính "}<b class="pos">${money(c.pay)}</b> (${c.h.toFixed(2)} giờ làm${c.hol+c.pto?` + ${(c.hol+c.pto).toFixed(2)} giờ Holiday/PTO`:""})</div>`;
-  }
-  return h;
-}
 
-// Các check gần đây: mỗi dòng có ô "Thực nhận" (số trên paystub). Chưa nhập thì ô để số ước tính mờ.
-function payListHtml(calc){
-  const t=today(),ratio=netRatio(calc);let kN=Math.floor((dayDiff(t,payStart())-PAY_LAG)/14)-1;
-  while(payPeriod(kN).pay<t)kN++; // check kế tiếp (chưa tới ngày nhận)
-  const rows=[];for(let k=kN;k>=kN-6;k--)rows.push(payPeriod(k));
-  const body=rows.map(pp=>{const g=periodSum(pp,calc).pay,e=payRec(pp),has=payHas(e),est=g*ratio,fut=pp.pay>=t&&!has;
-    if(!has&&!g&&!fut)return "";
-    return `<div class="plrow${has?" got":""}${fut?" fut":""}" data-pp="${pp.st}"><span class="pld"><b>${dowl(pp.pay)} ${dmy(pp.pay)}</b> <span class="muted">kỳ ${dmy(pp.st)}–${dmy(pp.en)}</span></span><span class="plg">${money(g)} <small>trước thuế</small></span><span class="plv">${has?`<b class="pos">${money(n(e.amount))}</b> ✓`:`<span class="muted">~${money(est)}</span>`}</span><span class="chev">›</span></div>`}).join("");
-  return `<div class="pl"><div class="pl-h"><b>Thực nhận từng check</b><span class="muted">bấm ngày lương trên lịch (hoặc một dòng) để nhập số thật · ~ là ước tính</span></div>${body}</div>`;
-}
-function bindPayList(calc){
-  $$("#wkCheck [data-pp]").forEach(r=>{
-    r.onclick=()=>openPay(addDays(r.dataset.pp,PAY_LAG)); // nhập số thật trong khung Check (cũng mở từ lịch)
-  });
-}

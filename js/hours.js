@@ -34,8 +34,6 @@ const lunch=()=>{const v=parseFloat(S().lunch);return isFinite(v)&&v>=0?v:30};
 // thanh giờ tuần: xanh khi còn xa, vàng khi còn ≤5 giờ tới ngưỡng, đỏ khi tăng ca
 const hrBarCls=(tot,lim)=>tot>lim?"over":tot>=lim-5?"warn":"go";
 const dm=s=>{const d=parseD(s);return d.getDate()+"/"+(d.getMonth()+1)};
-let ckOpen=false;
-$("#wkCheck").addEventListener("toggle",e=>{if(e.target.matches("details.ckfold"))ckOpen=e.target.open},true);
 function renderWork(){
   if(holdWhileTyping("work",$("#mod-work"),renderWork))return;
   if(!wkCur)wkCur=weekStartOf(today());
@@ -61,9 +59,6 @@ function renderWork(){
       :`<div class="day empty${isT?" today":fut?" future":""}" data-day="${d}">${head}<div class="plus">${isT?"+ Thêm ca":fut?"+":"Nghỉ"}</div></div>`;
   }
   $("#wkDays").innerHTML=h;
-  const {cur:ckc,next:ckn}=checkFor(wkCur),ckp=ckc||ckn,ckq=ckp?payNet(ckp,calc,netRatio(calc)):null;
-  $("#wkCheck").innerHTML=`<details class="ckfold"${ckOpen?" open":""}><summary><span>💵 Check ${ckp?dowl(ckp.pay)+" "+dmy(ckp.pay):""}</span><b>${ckp?money(periodSum(ckp,calc).pay):"—"}<small> trước thuế</small></b>${ckq?`<span class="net">thực nhận ${ckq.est?"~":""}${money(ckq.v)}</span>`:""}</summary>`+checkHtml(wkCur,calc)+payListHtml(calc)+`</details>`;
-  bindPayList(calc);
   $$("#wkDays .day").forEach(el=>el.onclick=e=>{
     const sh=e.target.closest("[data-sh]"),add=e.target.closest("[data-add]");
     if(add)return openShift(null,add.dataset.add);

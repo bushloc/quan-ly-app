@@ -172,8 +172,9 @@ function renderCal(){
     if(ds===t)cls.push("today");if(wkCur&&ds>=wkCur&&ds<=wkEnd)cls.push("cur");
     h+=`<button type="button" class="${cls.join(" ")}" data-cd="${ds}" style="${st}" title="${pays.has(ds)?`Ngày nhận check · ${pays.get(ds).est?"ước tính ":""}${money(pays.get(ds).v)}`:""}">${pays.has(ds)?`<i class="pm">💵 ${pays.get(ds).v>0?(v=>v>=1000?"$"+(v/1000).toFixed(1).replace(/\.0$/,"")+"k":"$"+Math.round(v))(pays.get(ds).v)+(pays.get(ds).est?"":" ✓"):"Lương"}</i>`:""}<span class="n">${d}</span><span class="hh">${lab}</span>${sub?`<span class="ox">${sub}</span>`:""}</button>`;
   }
-  h+=`</div><div class="calk"><span><i class="k w"></i>Ca làm</span><span><i class="k ot"></i>Có OT</span><span><i class="k hol"></i>Holiday</span><span><i class="k pto"></i>PTO</span><span><i class="k pay"></i>💵 Nhận lương</span></div><p class="calhint muted">Bấm vào một ngày để thêm hoặc sửa ca, Holiday, PTO.</p>`;
+  h+=`</div><div class="calk"><span><i class="k w"></i>Ca làm</span><span><i class="k ot"></i>Có OT</span><span><i class="k hol"></i>Holiday</span><span><i class="k pto"></i>PTO</span><span><i class="k pay"></i>💵 Nhận lương</span></div>`;
   box.innerHTML=h;
+  renderMonthChecks(mk,calc);
 }
 $("#mod-work").addEventListener("click",e=>{
   const nav=e.target.closest("#wkCal [data-cm]");if(nav){calM=mShift(calM||monthOf(wkCur||today()),+nav.dataset.cm);return renderCal()}
@@ -253,3 +254,16 @@ function pcSave(v){
 $("#pcForm").onsubmit=ev=>{ev.preventDefault();pcSave($("#pcForm").net.value.trim());$("#pcDlg").close();renderWork();typeof toast==="function"&&toast("Đã lưu số thực nhận")};
 $("#pcClear").onclick=()=>{pcSave("");$("#pcDlg").close();renderWork()};
 $("#pcShift").onclick=()=>{const d=pcCur&&pcCur.pay;$("#pcDlg").close();if(!d)return;const ss=DB.shifts.filter(s=>s.date===d).sort((a,b)=>(isLeave(a)-isLeave(b))||String(a.start).localeCompare(String(b.start)));ss.length?openShift(ss[0].id):openShift(null,d)};
+
+/* Thẻ Check theo tháng của lịch: mỗi check nhận trong tháng 1 dòng, bấm để nhập số thật */
+function renderMonthChecks(mk,calc){
+  const box=$("#wkCheck");if(!box)return;
+  const first=`${mk}-01`,ratio=netRatio(calc),rows=[];
+  let k=Math.floor((dayDiff(first,payStart())-PAY_LAG)/14)-1;
+  for(let i=0;i<5;i++,k++){const pp=payPeriod(k);if(monthOf(pp.pay)===mk)rows.push(pp)}
+  let tot=0,anyEst=false;
+  const body=rows.map(pp=>{const q=payNet(pp,calc,ratio);tot+=q.v;if(q.est)anyEst=true;
+    return `<button type="button" class="mcr${q.est?"":" got"}" data-pay="${pp.pay}"><span class="d">${dowl(pp.pay)} ${dmy(pp.pay)}</span><span class="k">kỳ ${dmy(pp.st)}–${dmy(pp.en)}</span><b class="${q.est?"est":"pos"}">${q.est&&!q.v?"—":(q.est?"~":"")+money(q.v)+(q.est?"":" ✓")}</b></button>`}).join("");
+  box.innerHTML=`<div class="mch"><span>💵 Check ${mLabel(mk).toLowerCase()}</span><b class="pos">${rows.length?(anyEst?"~":"")+money(tot):"—"}</b></div>${body||`<p class="muted" style="margin:4px 0 0">Không có check trong tháng này.</p>`}`;
+}
+$("#wkCheck").addEventListener("click",e=>{const r=e.target.closest("[data-pay]");if(r)openPay(r.dataset.pay)});

@@ -160,8 +160,8 @@ $("#del").onclick=async()=>{if(cur&&await ask(`Xoá "${cur.name}"? Không hoàn 
 $("#check").onclick=check;[$("#rs"),$("#ro")].forEach(i=>i.onkeydown=e=>{if(e.key==="Enter")check()});
 function card(i){return `<div class="card" style="margin:10px 0 0;padding:12px;color:var(--text)"><b>${esc(i.name)}</b> <span class="tag s-${i.status}">${ST[i.status]}</span><br>
   P/N: <span class="mono">${esc(i.pn||"")}</span><br>Serial đã ghi: <b class="mono">${esc(i.serial||"(trống)")}</b><br>Order: <span class="mono">${esc(i.orderId||"")}</span> · Người mua: ${esc(i.buyer||"")}<br>Test: ${esc(i.test||"")}
-  <div class="photos" style="margin:8px 0">${(i.photos||[]).map(d=>`<img src="${ph(d)}" style="width:80px;height:80px;object-fit:cover;border-radius:6px;cursor:zoom-in" data-big>`).join("")}</div>
-  ${(i.packPhotos||[]).length?`<div class="muted" style="font-size:13px">Ảnh đóng gói lúc gửi:</div><div class="photos" style="margin:4px 0 8px">${i.packPhotos.map(d=>`<img src="${ph(d)}" style="width:80px;height:80px;object-fit:cover;border-radius:6px;cursor:zoom-in" data-big>`).join("")}</div>`:""}
+  <div class="photos" style="margin:8px 0">${(i.photos||[]).map(d=>`<img loading="lazy" src="${ph(d)}" style="width:80px;height:80px;object-fit:cover;border-radius:6px;cursor:zoom-in" data-big>`).join("")}</div>
+  ${(i.packPhotos||[]).length?`<div class="muted" style="font-size:13px">Ảnh đóng gói lúc gửi:</div><div class="photos" style="margin:4px 0 8px">${i.packPhotos.map(d=>`<img loading="lazy" src="${ph(d)}" style="width:80px;height:80px;object-fit:cover;border-radius:6px;cursor:zoom-in" data-big>`).join("")}</div>`:""}
   <button class="btn" data-open="${i.id}">Mở / ghi nhận trả hàng</button></div>`}
 function check(){
   const s=$("#rs").value.trim(),k=ns(s),o=$("#ro").value.trim().toLowerCase(),out=$("#res");

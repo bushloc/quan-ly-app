@@ -130,3 +130,12 @@ svg.pie .pl{font-size:10px;fill:var(--muted)}svg.pie .pv{font-size:14px;font-wei
 .pci>div{background:var(--soft);border-radius:10px;padding:8px 10px;min-width:0}
 .pci span{display:block;font-size:12px;color:var(--muted)}.pci b{font-size:15px;font-variant-numeric:tabular-nums}
 .plrow{cursor:pointer}.plrow .plv{white-space:nowrap;font-variant-numeric:tabular-nums}.plrow .chev{color:var(--muted)}
+
+/* ngày không đi làm: đã qua mờ, sắp tới nét đứt có "+", hôm nay viền tím sáng */
+.cd.off{background:transparent!important;border-color:transparent!important;box-shadow:none}
+.cd.off .n{color:var(--muted);opacity:.6;font-weight:500}
+.cd.fut{background:transparent!important;border:1px dashed color-mix(in srgb,var(--muted) 55%,transparent)!important;box-shadow:none}
+.cd.fut .n{color:var(--muted)}.cd.fut .hh{color:var(--muted);font-size:14px;font-weight:600;opacity:.8}
+.cd.tdy{background:color-mix(in srgb,var(--accent) 10%,var(--card))!important;border:2px solid var(--accent)!important;box-shadow:0 0 10px color-mix(in srgb,var(--accent) 45%,transparent)}
+.cd.tdy .n{color:var(--accent);text-decoration:none;font-weight:800}.cd.tdy .hh{color:var(--accent);font-size:8.5px;letter-spacing:-.02em;font-weight:700;white-space:nowrap}
+.cd.pay.off,.cd.pay.fut{border:1.5px solid #facc15!important}

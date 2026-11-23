@@ -167,6 +167,7 @@ function renderCal(){
       else if(o.hol>0)cls.push("hol");else if(o.pto>0)cls.push("pto");
       if(o.h>0&&o.hol)sub=sub||"+Holiday";if(o.h>0&&o.pto)sub=sub||"+PTO";
       if(tot>0)lab=f1(tot)+"h"}
+    if(!lab){if(ds<t)cls.push("off");else if(ds===t){cls.push("tdy");lab="Hôm nay"}else{cls.push("fut");lab="+"}}
     if(pays.has(ds))cls.push("pay");
     if(ds===t)cls.push("today");if(wkCur&&ds>=wkCur&&ds<=wkEnd)cls.push("cur");
     h+=`<button type="button" class="${cls.join(" ")}" data-cd="${ds}" style="${st}" title="${pays.has(ds)?`Ngày nhận check · ${pays.get(ds).est?"ước tính ":""}${money(pays.get(ds).v)}`:""}">${pays.has(ds)?`<i class="pm">💵 ${pays.get(ds).v>0?(v=>v>=1000?"$"+(v/1000).toFixed(1).replace(/\.0$/,"")+"k":"$"+Math.round(v))(pays.get(ds).v)+(pays.get(ds).est?"":" ✓"):"Lương"}</i>`:""}<span class="n">${d}</span><span class="hh">${lab}</span>${sub?`<span class="ox">${sub}</span>`:""}</button>`;

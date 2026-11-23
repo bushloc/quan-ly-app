@@ -152,27 +152,27 @@ function renderCal(){
   const mk=calM||monthOf(today()),calc=calcShifts(),t=today(),ws=n(S().weekStart);
   const [y,m]=mk.split("-").map(Number),first=`${mk}-01`,dim=new Date(y,m,0).getDate(),last=`${mk}-${String(dim).padStart(2,"0")}`;
   const lead=(parseD(first).getDay()-ws+7)%7,wk0=weekStartOf(t),wkEnd=addDays(wk0,6);
-  const byD={};for(const s of DB.shifts)if(monthOf(s.date)===mk){const c=calc[s.id]||{};const o=byD[s.date]??={h:0,ot:0,hol:0,pto:0};o.h+=c.h||0;o.ot+=c.ot||0;o.hol+=c.hol||0;o.pto+=c.pto||0}
+  const byD={};for(const s of DB.shifts){const c=calc[s.id]||{};const o=byD[s.date]??={h:0,ot:0,hol:0,pto:0};o.h+=c.h||0;o.ot+=c.ot||0;o.hol+=c.hol||0;o.pto+=c.pto||0}
   // ngày nhận check trong tháng
   const pays=new Map(),ratio=netRatio(calc);{let k=Math.floor((dayDiff(first,payStart())-PAY_LAG)/14)-1;for(let i=0;i<5;i++,k++){const pp=payPeriod(k);if(pp.pay>=first&&pp.pay<=last)pays.set(pp.pay,payNet(pp,calc,ratio))}}
-  const f1=v=>v%1?v.toFixed(1):String(v);
-  let h=`<div class="calh"><button type="button" class="btn" data-cm="-1" aria-label="Tháng trước">‹</button><b>${mLabel(mk)}</b><button type="button" class="btn" data-cm="1" aria-label="Tháng sau">›</button></div><div class="calg">`;
-  for(let k=0;k<7;k++)h+=`<span class="cdw">${DOW[(ws+k)%7]}</span>`;
-  for(let k=0;k<lead;k++)h+=`<span></span>`;
-  for(let d=1;d<=dim;d++){
-    const ds=`${mk}-${String(d).padStart(2,"0")}`,o=byD[ds],cls=["cd"];let st="",lab="",sub="";
-    if(o){const tot=o.h+o.hol+o.pto;
-      if(o.ot>0){cls.push("ot");sub=`OT <b>${f1(o.ot)}</b>`}
-      else if(o.h>0){cls.push("w");st=`--a:${Math.round(25+Math.min(1,o.h/10)*55)}%`}
-      else if(o.hol>0)cls.push("hol");else if(o.pto>0)cls.push("pto");
-      if(o.h>0&&o.hol)sub=sub||"+Holiday";if(o.h>0&&o.pto)sub=sub||"+PTO";
-      if(tot>0)lab=f1(tot)+"h"}
-    if(!lab){if(ds<t)cls.push("off");else if(ds===t){cls.push("tdy");lab="Hôm nay"}else{cls.push("fut");lab="+"}}
-    if(pays.has(ds))cls.push("pay");
-    if(ds===t)cls.push("today");if(ds>=wk0&&ds<=wkEnd)cls.push("cur");
-    h+=`<button type="button" class="${cls.join(" ")}" data-cd="${ds}" style="${st}" title="${pays.has(ds)?`Ngày nhận check · ${pays.get(ds).est?"ước tính ":""}${money(pays.get(ds).v)}`:""}">${pays.has(ds)?`<i class="pm">💵 ${pays.get(ds).v>0?(v=>v>=1000?"$"+(v/1000).toFixed(1).replace(/\.0$/,"")+"k":"$"+Math.round(v))(pays.get(ds).v)+(pays.get(ds).est?"":" ✓"):"Lương"}</i>`:""}<span class="n">${d}</span><span class="hh">${lab}</span>${sub?`<span class="ox">${sub}</span>`:""}</button>`;
-  }
-  h+=`</div><div class="calk"><span><i class="k w"></i>Ca làm</span><span><i class="k ot"></i>Có OT</span><span><i class="k hol"></i>Holiday</span><span><i class="k pto"></i>PTO</span><span><i class="k pay"></i>💵 Nhận lương</span></div>`;
+  const f1=v=>{v=+(+v).toFixed(1);return v%1?v.toFixed(1):String(v)},lim=n(S().otAfter)||40;
+  const payLab=p=>p.v>0?(p.v>=1000?"$"+(p.v/1000).toFixed(1).replace(/\.0$/,"")+"k":"$"+Math.round(p.v))+(p.est?"":" ✓"):"Lương";
+  let h=`<div class="calh"><button type="button" class="btn" data-cm="-1" aria-label="Tháng trước">‹</button><b>${mLabel(mk)}</b><button type="button" class="btn" data-cm="1" aria-label="Tháng sau">›</button></div><div class="wcw">`;
+  for(let k=0;k<7;k++)h+=`<span>${DOW[(ws+k)%7]}</span>`;
+  h+=`</div>`;
+  // mỗi tuần một thẻ; tổng tuần tính cả 7 ngày (kể cả ngày thuộc tháng bên cạnh), khớp cách tính OT
+  for(let w0=addDays(first,-lead);w0<=last;w0=addDays(w0,7)){
+    const we=addDays(w0,6),W={h:0,ot:0,lv:0};
+    for(let k=0;k<7;k++){const o=byD[addDays(w0,k)];if(o){W.h+=o.h;W.ot+=o.ot;W.lv+=o.hol+o.pto}}
+    h+=`<div class="wk${W.ot>0?" r":""}${w0===wk0?" now":""}"><div class="wkt"><span class="rg">${dm(w0)} – ${dm(we)}</span><span class="br"><i style="width:${Math.min(100,W.h/lim*100)}%"></i></span><b>${f1(W.h)}h</b>${W.ot>0?`<em>+${f1(W.ot)} OT</em>`:""}${W.lv?`<small>+${f1(W.lv)} nghỉ</small>`:""}</div><div class="wkg">`;
+    for(let k=0;k<7;k++){const ds=addDays(w0,k);
+      if(ds<first||ds>last){h+=`<span></span>`;continue}
+      const o=byD[ds]||{h:0,ot:0,hol:0,pto:0},tot=o.h+o.hol+o.pto,pay=pays.get(ds);
+      const ty=o.ot>0?"ot":o.h>0?"w":o.hol>0?"hol":o.pto>0?"pto":ds<t?"off":"fut";
+      const sub=o.ot>0?`+${f1(o.ot)} OT`:o.h>0&&o.hol?"+Holiday":o.h>0&&o.pto?"+PTO":ty==="hol"?"Holiday":ty==="pto"?"PTO":"";
+      h+=`<button type="button" class="dc ${ty}${ds===t?" td":""}${pay?" pay":""}" data-cd="${ds}" title="${pay?`Ngày nhận check · ${pay.est?"ước tính ":""}${money(pay.v)}`:""}">${pay?`<i class="pm">${payLab(pay)}</i>`:""}<span class="n">${+ds.slice(8)}</span><span class="p">${tot?f1(tot):ty==="fut"?"·":""}</span><span class="o">${sub}</span></button>`}
+    h+=`</div></div>`}
+  h+=`<div class="calk"><span><i class="k w"></i>Ca làm</span><span><i class="k ot"></i>OT</span><span><i class="k hol"></i>Holiday</span><span><i class="k pto"></i>PTO</span><span><i class="k pay"></i>Lương</span></div>`;
   box.innerHTML=h;
   renderMonthChecks(mk,calc);
 }

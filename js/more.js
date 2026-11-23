@@ -169,7 +169,7 @@ function renderCal(){
       if(tot>0)lab=f1(tot)+"h"}
     if(pays.has(ds))cls.push("pay");
     if(ds===t)cls.push("today");if(wkCur&&ds>=wkCur&&ds<=wkEnd)cls.push("cur");
-    h+=`<button type="button" class="${cls.join(" ")}" data-cd="${ds}" style="${st}" title="${pays.has(ds)?`Ngày nhận check · ${pays.get(ds).est?"ước tính ":""}${money(pays.get(ds).v)}`:""}">${pays.has(ds)?`<i class="pm">💵 ${pays.get(ds).v>0?(v=>v>=1000?"$"+(v/1000).toFixed(1).replace(/\.0$/,"")+"k":"$"+Math.round(v))(pays.get(ds).v):"Lương"}</i>`:""}<span class="n">${d}</span><span class="hh">${lab}</span>${sub?`<span class="ox">${sub}</span>`:""}</button>`;
+    h+=`<button type="button" class="${cls.join(" ")}" data-cd="${ds}" style="${st}" title="${pays.has(ds)?`Ngày nhận check · ${pays.get(ds).est?"ước tính ":""}${money(pays.get(ds).v)}`:""}">${pays.has(ds)?`<i class="pm">💵 ${pays.get(ds).v>0?(v=>v>=1000?"$"+(v/1000).toFixed(1).replace(/\.0$/,"")+"k":"$"+Math.round(v))(pays.get(ds).v)+(pays.get(ds).est?"":" ✓"):"Lương"}</i>`:""}<span class="n">${d}</span><span class="hh">${lab}</span>${sub?`<span class="ox">${sub}</span>`:""}</button>`;
   }
   h+=`</div><div class="calk"><span><i class="k w"></i>Ca làm</span><span><i class="k ot"></i>Có OT</span><span><i class="k hol"></i>Holiday</span><span><i class="k pto"></i>PTO</span><span><i class="k pay"></i>💵 Nhận lương</span></div><p class="calhint muted">Bấm vào một ngày để thêm hoặc sửa ca, Holiday, PTO.</p>`;
   box.innerHTML=h;
@@ -178,6 +178,7 @@ $("#mod-work").addEventListener("click",e=>{
   const nav=e.target.closest("#wkCal [data-cm]");if(nav){calM=mShift(calM||monthOf(wkCur||today()),+nav.dataset.cm);return renderCal()}
   const c=e.target.closest("#wkCal [data-cd]");if(!c)return;
   const d=c.dataset.cd;calM=monthOf(d);wkCur=weekStartOf(d);renderWork();
+  if(c.classList.contains("pay"))return openPay(d);
   const ss=DB.shifts.filter(s=>s.date===d).sort((a,b)=>(isLeave(a)-isLeave(b))||String(a.start).localeCompare(String(b.start)));
   ss.length?openShift(ss[0].id):openShift(null,d);
 });
@@ -230,3 +231,24 @@ function ebYearCsv(){
   });
   const rh=renderHome;renderHome=function(){const r=rh.apply(this,arguments);box.innerHTML=ebYearHtml();return r};
 })();
+
+/* Khung Check: bấm ngày lương trên lịch để xem kỳ và nhập số thực nhận thật */
+let pcCur=null;
+function openPay(payDate){
+  const k=Math.round((dayDiff(payDate,payStart())-PAY_LAG)/14),pp=payPeriod(k);if(pp.pay!==payDate)return;
+  pcCur=pp;const calc=calcShifts(),c=periodSum(pp,calc),e=payRec(pp),has=payHas(e),est=c.pay*netRatio(calc);
+  $("#pcTitle").textContent=`💵 Check ${dowl(pp.pay)} ${dmy(pp.pay)}`;
+  $("#pcInfo").innerHTML=`<div class="pci"><div><span>Kỳ lương</span><b>${dmy(pp.st)} – ${dmy(pp.en)}</b></div><div><span>Giờ thường</span><b>${fh(c.reg)}</b></div><div><span>Giờ OT</span><b class="${c.ot>0?"neg":""}">${fh(c.ot)}</b></div>${c.hol?`<div><span>Holiday</span><b>${fh(c.hol)}</b></div>`:""}${c.pto?`<div><span>PTO</span><b>${fh(c.pto)}</b></div>`:""}<div><span>Trước thuế</span><b>${money(c.pay)}</b></div><div><span>${has?"Đã nhập":"Ước tính thực nhận"}</span><b class="pos">${has?money(n(e.amount)):"~"+money(est)}</b></div></div>`;
+  const f=$("#pcForm");f.net.value=has?e.amount:"";f.net.placeholder=est.toFixed(2);
+  $("#pcClear").style.display=has?"":"none";
+  $("#pcShift").textContent=DB.shifts.some(s=>s.date===payDate)?"✏️ Sửa ca ngày này":"+ Thêm ca ngày này";
+  $("#pcDlg").showModal();
+}
+function pcSave(v){
+  const pp=pcCur;if(!pp)return;let e=payRec(pp);
+  if(!e){if(v==="")return;e={id:"pay_"+pp.st,type:"pay",st:pp.st,date:pp.pay,cat:"💵 Lương",note:"Check lương",amount:""};DB.expenses.push(e)}
+  e.amount=v===""?"":n(v);e.gross=periodSum(pp,calcShifts()).pay;save();
+}
+$("#pcForm").onsubmit=ev=>{ev.preventDefault();pcSave($("#pcForm").net.value.trim());$("#pcDlg").close();renderWork();typeof toast==="function"&&toast("Đã lưu số thực nhận")};
+$("#pcClear").onclick=()=>{pcSave("");$("#pcDlg").close();renderWork()};
+$("#pcShift").onclick=()=>{const d=pcCur&&pcCur.pay;$("#pcDlg").close();if(!d)return;const ss=DB.shifts.filter(s=>s.date===d).sort((a,b)=>(isLeave(a)-isLeave(b))||String(a.start).localeCompare(String(b.start)));ss.length?openShift(ss[0].id):openShift(null,d)};

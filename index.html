@@ -309,6 +309,17 @@
   </form>
 </dialog>
 
+<dialog id="pcDlg">
+  <form id="pcForm" method="dialog" autocomplete="off">
+    <div class="dh"><h2 id="pcTitle">💵 Check</h2><button type="button" class="btn" data-close-dlg="pcDlg">✕</button></div>
+    <div class="db">
+      <div id="pcInfo"></div>
+      <label>Thực nhận thật ($) <span class="muted" style="font-weight:400">· số trên paystub</span><input name="net" type="number" step="0.01" min="0" inputmode="decimal"></label>
+    </div>
+    <div class="df"><button type="button" class="btn" id="pcShift">✏️ Sửa ca ngày này</button><div class="row"><button type="button" class="btn danger" id="pcClear">Xoá số</button><button class="btn primary">Lưu</button></div></div>
+  </form>
+</dialog>
+
 <dialog id="bgDlg">
   <form id="bgForm" method="dialog" autocomplete="off">
     <div class="dh"><h2>Ngân sách hàng tháng</h2><button type="button" class="btn" data-close-dlg="bgDlg">✕</button></div>

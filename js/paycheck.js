@@ -36,14 +36,11 @@ function payListHtml(calc){
   const rows=[];for(let k=kN;k>=kN-6;k--)rows.push(payPeriod(k));
   const body=rows.map(pp=>{const g=periodSum(pp,calc).pay,e=payRec(pp),has=payHas(e),est=g*ratio,fut=pp.pay>=t&&!has;
     if(!has&&!g&&!fut)return "";
-    return `<div class="plrow${has?" got":""}${fut?" fut":""}" data-pp="${pp.st}"><span class="pld"><b>${dowl(pp.pay)} ${dmy(pp.pay)}</b> <span class="muted">kỳ ${dmy(pp.st)}–${dmy(pp.en)}</span></span><span class="plg">${money(g)} <small>trước thuế</small></span><span class="fxD">$</span><input class="plNet" type="number" step="0.01" min="0" inputmode="decimal" value="${has?esc(e.amount):""}" placeholder="${est.toFixed(2)}" aria-label="Thực nhận check ${dmy(pp.pay)}"></div>`}).join("");
-  return `<div class="pl"><div class="pl-h"><b>Thực nhận từng check</b><span class="muted">gõ số trên paystub · số mờ là ước tính</span></div>${body}</div>`;
+    return `<div class="plrow${has?" got":""}${fut?" fut":""}" data-pp="${pp.st}"><span class="pld"><b>${dowl(pp.pay)} ${dmy(pp.pay)}</b> <span class="muted">kỳ ${dmy(pp.st)}–${dmy(pp.en)}</span></span><span class="plg">${money(g)} <small>trước thuế</small></span><span class="plv">${has?`<b class="pos">${money(n(e.amount))}</b> ✓`:`<span class="muted">~${money(est)}</span>`}</span><span class="chev">›</span></div>`}).join("");
+  return `<div class="pl"><div class="pl-h"><b>Thực nhận từng check</b><span class="muted">bấm ngày lương trên lịch (hoặc một dòng) để nhập số thật · ~ là ước tính</span></div>${body}</div>`;
 }
 function bindPayList(calc){
   $$("#wkCheck [data-pp]").forEach(r=>{
-    const st=r.dataset.pp,pp={st,en:addDays(st,13),pay:addDays(st,PAY_LAG)},inp=r.querySelector(".plNet");
-    const rec=()=>{let e=payRec(pp);if(!e){e={id:"pay_"+st,type:"pay",st,date:pp.pay,cat:"💵 Lương",note:"Check lương",amount:""};DB.expenses.push(e)}return e};
-    // lưu ngay khi gõ; vẽ lại (cập nhật tổng) khi rời ô
-    inp.oninput=inp.onchange=ev=>{const e=rec(),v=ev.target.value;e.amount=v===""?"":n(v);e.gross=periodSum(pp,calc).pay;save();if(ev.type==="change")renderWork()};
+    r.onclick=()=>openPay(addDays(r.dataset.pp,PAY_LAG)); // nhập số thật trong khung Check (cũng mở từ lịch)
   });
 }

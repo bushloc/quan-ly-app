@@ -124,3 +124,9 @@ svg.pie .pl{font-size:10px;fill:var(--muted)}svg.pie .pv{font-size:14px;font-wei
 .cd.pay:not(.w):not(.ot):not(.hol):not(.pto){background:color-mix(in srgb,#facc15 10%,var(--card))!important}
 .calk .k.w{background:#8b5cf6}.calk .k.ot{background:#dc2626}.calk .k.hol{background:#10b981}.calk .k.pto{background:#3b82f6}
 .calk .k.pay{background:linear-gradient(90deg,#f59e0b,#facc15);box-shadow:0 0 6px rgba(250,204,21,.6)}
+
+/* khung Check */
+.pci{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-bottom:12px}
+.pci>div{background:var(--soft);border-radius:10px;padding:8px 10px;min-width:0}
+.pci span{display:block;font-size:12px;color:var(--muted)}.pci b{font-size:15px;font-variant-numeric:tabular-nums}
+.plrow{cursor:pointer}.plrow .plv{white-space:nowrap;font-variant-numeric:tabular-nums}.plrow .chev{color:var(--muted)}

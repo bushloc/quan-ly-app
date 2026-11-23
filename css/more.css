@@ -198,3 +198,10 @@ svg.pie .pl{font-size:10px;fill:var(--muted)}svg.pie .pv{font-size:14px;font-wei
 .wks .ot{color:var(--tr)}
 .wks s{text-decoration:none;color:var(--muted);font-weight:600}
 .wks span{font-size:11px!important;font-weight:700!important}.wkg{padding-top:10px}
+/* tuần hiện tại: màu hồng riêng + nhãn "TUẦN NÀY"; các tuần khác mờ đi */
+#wkCal{--nw:#db2777;--nwt:#be185d}:root[data-theme="dark"] #wkCal{--nw:#f472b6;--nwt:#f9a8d4}
+#wkCal .wk.now{position:relative;margin-top:14px;background:color-mix(in srgb,var(--nw) 12%,var(--card));border:2px solid var(--nw);box-shadow:0 0 0 3px color-mix(in srgb,var(--nw) 22%,transparent),0 6px 22px color-mix(in srgb,var(--nw) 32%,transparent)}
+#wkCal .wk.now::before{content:"TUẦN NÀY";position:absolute;top:-10px;left:12px;background:var(--nw);color:#fff;font-size:10px;font-weight:900;letter-spacing:.06em;padding:2px 8px;border-radius:99px}
+#wkCal .wk.now .wkt .rg{color:var(--nwt);font-weight:700}
+#wkCal .dc.td .n{background:var(--nw)}
+#wkCal:has(.wk.now) .wk:not(.now){opacity:.5;transform:scale(.97);transition:opacity .2s}

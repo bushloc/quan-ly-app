@@ -162,9 +162,12 @@ function renderCal(){
   h+=`</div>`;
   // mỗi tuần một thẻ; tổng tuần tính cả 7 ngày (kể cả ngày thuộc tháng bên cạnh), khớp cách tính OT
   for(let w0=addDays(first,-lead);w0<=last;w0=addDays(w0,7)){
-    const we=addDays(w0,6),W={h:0,ot:0,lv:0};
-    for(let k=0;k<7;k++){const o=byD[addDays(w0,k)];if(o){W.h+=o.h;W.ot+=o.ot;W.lv+=o.hol+o.pto}}
-    h+=`<div class="wk${W.ot>0?" r":""}${w0===wk0?" now":""}"><div class="wkt"><span class="rg">${dm(w0)} – ${dm(we)}</span><span class="br"><i style="width:${Math.min(100,W.h/lim*100)}%"></i></span><b>${f1(W.h)}h</b>${W.ot>0?`<em>+${f1(W.ot)} OT</em>`:""}${W.lv?`<small>+${f1(W.lv)} nghỉ</small>`:""}</div><div class="wkg">`;
+    const we=addDays(w0,6),W={h:0,ot:0,hol:0,pto:0};
+    for(let k=0;k<7;k++){const o=byD[addDays(w0,k)];if(o){W.h+=o.h;W.ot+=o.ot;W.hol+=o.hol;W.pto+=o.pto}}
+    // đầu thẻ: tổng giờ được trả = thường + OT + Holiday + PTO; thanh chia màu, vạch ở mốc OT
+    const rg=W.h-W.ot,tot=W.h+W.hol+W.pto,sc=Math.max(lim,tot),pc=v=>(v/sc*100).toFixed(2)+"%";
+    const seg=[["rg",rg,"thường"],["ot",W.ot,"OT"],["hol",W.hol,"Holiday"],["pto",W.pto,"PTO"]].filter(x=>x[1]>0.001);
+    h+=`<div class="wk${W.ot>0?" r":""}${w0===wk0?" now":""}"><div class="wkt"><span class="rg">${dm(w0)} – ${dm(we)}</span><b>${f1(tot)}<small>h</small></b></div><div class="wkb">${seg.map(x=>`<i class="${x[0]}" style="width:${pc(x[1])}"></i>`).join("")}<u style="left:${pc(lim)}" title="${lim}h"></u></div>${seg.length?`<div class="wks">${seg.map((x,k)=>`${k?`<s>+</s>`:""}<span class="${x[0]}"><i></i>${f1(x[1])} ${x[2]}</span>`).join("")}</div>`:""}<div class="wkg">`;
     for(let k=0;k<7;k++){const ds=addDays(w0,k);
       if(ds<first||ds>last){h+=`<span></span>`;continue}
       const o=byD[ds]||{h:0,ot:0,hol:0,pto:0},tot=o.h+o.hol+o.pto,pay=pays.get(ds);

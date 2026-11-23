@@ -162,7 +162,7 @@ function renderCal(){
   for(let d=1;d<=dim;d++){
     const ds=`${mk}-${String(d).padStart(2,"0")}`,o=byD[ds],cls=["cd"];let st="",lab="",sub="";
     if(o){const tot=o.h+o.hol+o.pto;
-      if(o.ot>0){cls.push("ot");sub=`+${f1(o.ot)} OT`}
+      if(o.ot>0){cls.push("ot");sub=`OT <b>${f1(o.ot)}</b>`}
       else if(o.h>0){cls.push("w");st=`--a:${Math.round(25+Math.min(1,o.h/10)*55)}%`}
       else if(o.hol>0)cls.push("hol");else if(o.pto>0)cls.push("pto");
       if(o.h>0&&o.hol)sub=sub||"+Holiday";if(o.h>0&&o.pto)sub=sub||"+PTO";

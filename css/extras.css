@@ -43,7 +43,9 @@
 
 /* ===== Nổi bật + thao tác nhanh ===== */
 /* 2) icon tìm kiếm cạnh tiêu đề; thanh sao lưu gọn */
-h2.pg{display:flex;align-items:center;gap:8px}
+.pgrow{display:flex;align-items:center;gap:10px;margin-bottom:12px}
+.pgrow h2.pg{margin:0!important}
+@media(max-width:760px){#mod-ebay .pgrow,#mod-work .pgrow{margin-bottom:6px}}
 .gsico{border:1px solid var(--line);background:var(--card);color:var(--text);width:34px;height:34px;border-radius:50%;font-size:15px;line-height:1;display:inline-grid;place-items:center;cursor:pointer;padding:0;-webkit-text-fill-color:initial;flex:none}
 .gsico:hover{border-color:var(--accent)}
 .warnbar{padding:6px 10px 6px 12px;font-size:13px;margin-bottom:10px;position:relative;padding-right:36px}

@@ -94,7 +94,8 @@ document.addEventListener("click",e=>{if(e.target.closest("#greet"))showMod("tod
 // 2) icon 🔍 cạnh tiêu đề mỗi trang (Ctrl+K trên máy tính vẫn dùng được)
 const GSI='<button type="button" class="gsico" aria-label="Tìm kiếm" title="Tìm kiếm (Ctrl+K)">🔍</button>';
 // Tổng quan: icon nằm ở dòng lời chào (hàng tiêu đề đã có nút đổi tháng); trang khác: cạnh tiêu đề
-function addSearchIcons(){$$("h2.pg").forEach(h=>{if(h.id!=="homeTitle"&&!h.querySelector(".gsico"))h.insertAdjacentHTML("beforeend",GSI)});const g=$("#greet");if(g&&!g.querySelector(".gsico"))g.insertAdjacentHTML("beforeend",GSI)}
+// nút để NGOÀI tiêu đề (tiêu đề tô chữ gradient; trên iPhone Safari, đặt thứ khác vào trong làm mất chữ)
+function addSearchIcons(){$$("h2.pg").forEach(h=>{if(h.id==="homeTitle"||h.parentElement.classList.contains("pgrow"))return;const r=document.createElement("div");r.className="pgrow";h.before(r);r.appendChild(h);r.insertAdjacentHTML("beforeend",GSI)});const g=$("#greet");if(g&&!g.querySelector(".gsico"))g.insertAdjacentHTML("beforeend",GSI)}
 // 2) thanh "chưa sao lưu" gọn 1 dòng, bấm ✕ để ẩn 3 ngày
 {
   const ba=backupAge;

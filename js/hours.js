@@ -81,10 +81,10 @@ function renderClock(){
   if(DB.clock){
     const st=new Date(DB.clock.start),sec=Math.max(0,Math.floor((Date.now()-st)/1000));
     const hm=Math.floor(sec/3600)+":"+String(Math.floor(sec/60)%60).padStart(2,"0")+":"+String(sec%60).padStart(2,"0");
-    i.innerHTML=`<div class="st"><span class="dot"></span>ĐANG TRONG CA</div><div class="tm">${hm}</div><div class="since">${Date.now()<st?`Chưa tới giờ vào ${hhmm(st)}, đồng hồ bắt đầu chạy lúc đó`:`Vào lúc ${hhmm(st)}`} · sẽ trừ nghỉ trưa ${lunch()} phút khi Clock Out</div>`;
+    i.innerHTML=`<span class="st"><span class="dot"></span><b class="tm">${hm}</b></span><span class="since">${Date.now()<st?`chờ tới ${hhmm(st)}`:`vào ${hhmm(st)}`} · trừ nghỉ ${lunch()}′</span>`;
     b.textContent="⏹ Clock Out";b.className="btn clockbtn stop";
   }else{
-    i.innerHTML=`<div class="st"><span class="dot"></span>CHƯA VÀO CA</div><div class="since">Bấm “Clock In” để ghi giờ vào (mặc định 07:00 hôm nay).</div>`;
+    i.innerHTML=`<span class="st"><span class="dot"></span>Chưa vào ca</span>`;
     b.textContent="▶ Clock In";b.className="btn clockbtn go";
   }
 }
@@ -116,9 +116,6 @@ function openShift(id,date,kind){
   f.kind.value=isLeave(s)?s.kind:"work";f.hrs.value=isLeave(s)?n(s.hrs):8;
   shKindUI();$("#shDel").style.display=shCur?"":"none";$("#shDlg").showModal();
 }
-$("#shAdd").onclick=()=>openShift(null);
-$("#holAdd").onclick=()=>openShift(null,null,"hol");
-$("#ptoAdd").onclick=()=>openShift(null,null,"pto");
 $("#shForm").onsubmit=e=>{
   e.preventDefault();const f=e.target,k=f.kind.value;
   const v=k==="hol"||k==="pto"

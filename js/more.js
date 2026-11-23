@@ -148,34 +148,40 @@ function qParse(s){
 /* 9) Lịch tháng ở trang Giờ làm */
 let calM=null;
 function renderCal(){
-  let box=$("#wkCal");if(!box){$("#wkMonth").insertAdjacentHTML("afterend",`<div class="card wkcal" id="wkCal"></div>`);box=$("#wkCal")}
+  const box=$("#wkCal");if(!box)return;
   const mk=calM||monthOf(wkCur||today()),calc=calcShifts(),t=today(),ws=n(S().weekStart);
-  const [y,m]=mk.split("-").map(Number),first=`${mk}-01`,dim=new Date(y,m,0).getDate();
+  const [y,m]=mk.split("-").map(Number),first=`${mk}-01`,dim=new Date(y,m,0).getDate(),last=`${mk}-${String(dim).padStart(2,"0")}`;
   const lead=(parseD(first).getDay()-ws+7)%7,wkEnd=wkCur?addDays(wkCur,6):"";
-  const byD={};for(const s of DB.shifts)if(monthOf(s.date)===mk){const c=calc[s.id]||{};const o=byD[s.date]??={h:0,hol:0,pto:0};o.h+=c.h||0;o.hol+=c.hol||0;o.pto+=c.pto||0}
-  let h=`<div class="calh"><button type="button" class="btn" data-cm="-1">‹</button><b>📅 ${mLabel(mk)}</b><button type="button" class="btn" data-cm="1">›</button></div><div class="calg">`;
+  const byD={};for(const s of DB.shifts)if(monthOf(s.date)===mk){const c=calc[s.id]||{};const o=byD[s.date]??={h:0,ot:0,hol:0,pto:0};o.h+=c.h||0;o.ot+=c.ot||0;o.hol+=c.hol||0;o.pto+=c.pto||0}
+  // ngày nhận check trong tháng
+  const pays=new Set();{let k=Math.floor((dayDiff(first,payStart())-PAY_LAG)/14)-1;for(let i=0;i<5;i++,k++){const p=payPeriod(k).pay;if(p>=first&&p<=last)pays.add(p)}}
+  const f1=v=>v%1?v.toFixed(1):String(v);
+  let h=`<div class="calh"><button type="button" class="btn" data-cm="-1" aria-label="Tháng trước">‹</button><b>${mLabel(mk)}</b><button type="button" class="btn" data-cm="1" aria-label="Tháng sau">›</button></div><div class="calg">`;
   for(let k=0;k<7;k++)h+=`<span class="cdw">${DOW[(ws+k)%7]}</span>`;
   for(let k=0;k<lead;k++)h+=`<span></span>`;
   for(let d=1;d<=dim;d++){
-    const ds=`${mk}-${String(d).padStart(2,"0")}`,o=byD[ds],cls=["cd"];let st="",lab="";
+    const ds=`${mk}-${String(d).padStart(2,"0")}`,o=byD[ds],cls=["cd"];let st="",lab="",sub="";
     if(o){const tot=o.h+o.hol+o.pto;
-      if(o.h>0){cls.push("w");st=`--a:${Math.round(18+Math.min(1,o.h/10)*62)}%`}
+      if(o.ot>0){cls.push("ot");sub=`+${f1(o.ot)} OT`}
+      else if(o.h>0){cls.push("w");st=`--a:${Math.round(25+Math.min(1,o.h/10)*55)}%`}
       else if(o.hol>0)cls.push("hol");else if(o.pto>0)cls.push("pto");
-      if(o.h>0&&(o.hol||o.pto))cls.push("mix");
-      lab=(tot%1?tot.toFixed(1):tot)+"h"}
+      if(o.h>0&&o.hol)sub=sub||"+Holiday";if(o.h>0&&o.pto)sub=sub||"+PTO";
+      if(tot>0)lab=f1(tot)+"h"}
+    if(pays.has(ds))cls.push("pay");
     if(ds===t)cls.push("today");if(wkCur&&ds>=wkCur&&ds<=wkEnd)cls.push("cur");
-    h+=`<button type="button" class="${cls.join(" ")}" data-cd="${ds}" style="${st}"><span class="n">${d}</span><span class="hh">${lab}</span></button>`;
+    h+=`<button type="button" class="${cls.join(" ")}" data-cd="${ds}" style="${st}" title="${pays.has(ds)?"Ngày nhận check":""}">${pays.has(ds)?`<i class="pm">💵</i>`:""}<span class="n">${d}</span><span class="hh">${lab}</span>${sub?`<span class="ox">${sub}</span>`:""}</button>`;
   }
-  h+=`</div><div class="calk"><span><i class="k w"></i>Ca làm (đậm = nhiều giờ)</span><span><i class="k hol"></i>Holiday</span><span><i class="k pto"></i>PTO</span></div>`;
+  h+=`</div><div class="calk"><span><i class="k w"></i>Ca làm</span><span><i class="k ot"></i>Có OT</span><span><i class="k hol"></i>Holiday</span><span><i class="k pto"></i>PTO</span><span><i class="k pay"></i>💵 Nhận lương</span></div><p class="calhint muted">Bấm vào một ngày để thêm hoặc sửa ca, Holiday, PTO.</p>`;
   box.innerHTML=h;
 }
 $("#mod-work").addEventListener("click",e=>{
   const nav=e.target.closest("#wkCal [data-cm]");if(nav){calM=mShift(calM||monthOf(wkCur||today()),+nav.dataset.cm);return renderCal()}
   const c=e.target.closest("#wkCal [data-cd]");if(!c)return;
-  calM=monthOf(c.dataset.cd);wkCur=weekStartOf(c.dataset.cd);renderWork();
-  document.querySelector("#mod-work .mhead")?.scrollIntoView({behavior:"smooth",block:"start"});
+  const d=c.dataset.cd;calM=monthOf(d);wkCur=weekStartOf(d);renderWork();
+  const ss=DB.shifts.filter(s=>s.date===d).sort((a,b)=>(isLeave(a)-isLeave(b))||String(a.start).localeCompare(String(b.start)));
+  ss.length?openShift(ss[0].id):openShift(null,d);
 });
-{const rw=renderWork;renderWork=function(){const r=rw.apply(this,arguments);if(wkCur){calM=monthOf(wkCur);renderCal()}return r}}
+{const rw=renderWork;renderWork=function(){const r=rw.apply(this,arguments);if(wkCur){if(!calM||(monthOf(wkCur)!==calM&&monthOf(addDays(wkCur,6))!==calM))calM=monthOf(wkCur);renderCal()}return r}}
 {const rs=renderSpend;renderSpend=function(){const r=rs.apply(this,arguments);renderPie();return r}}
 
 /* eBay cả năm theo tháng (Tổng quan) */

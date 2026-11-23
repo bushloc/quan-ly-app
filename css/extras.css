@@ -83,3 +83,4 @@
 .fabmenu.hidden{display:none}
 .fabmenu button{border:1px solid var(--line);background:var(--solid);color:var(--text);font:600 14.5px "Segoe UI",system-ui,sans-serif;padding:10px 16px;border-radius:99px;box-shadow:0 10px 26px rgba(0,0,0,.3);cursor:pointer;animation:modin .18s ease-out}
 @media(min-width:761px){.fabmenu{display:none!important}}
+.appver{font-size:12px;opacity:.7;margin:-4px 0 10px}#gsRes .appver{margin:0}

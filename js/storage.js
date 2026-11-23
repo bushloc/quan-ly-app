@@ -1,4 +1,5 @@
 "use strict";
+const APP_VER="1.9.26";
 const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
 const n=v=>{const x=parseFloat(v);return isFinite(x)?x:0};
 const money=v=>(v<0?"-$":"$")+Math.abs(v).toLocaleString("en-US",{minimumFractionDigits:2,maximumFractionDigits:2});
@@ -35,6 +36,7 @@ const API=window.api||browserApi();
 function ask(msg,okOnly){
   return new Promise(res=>{
     const d=document.getElementById("askDlg"),back=document.activeElement;
+    if(back&&back.blur&&back!==document.body)back.blur();
     document.getElementById("askMsg").textContent=msg;
     document.getElementById("askNo").style.display=okOnly?"none":"";
     d.returnValue="";

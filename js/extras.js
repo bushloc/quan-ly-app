@@ -178,3 +178,15 @@ function fxPayAll(){
     const j=i+(dx<0?1:-1);if(j<0||j>=ORD.length)return;showMod(ORD[j]);scrollTo(0,0);
   });
 }
+
+// số phiên bản: Cài đặt + khung tìm kiếm (để biết điện thoại đã nhận bản mới chưa)
+{
+  const rs=renderSet;renderSet=function(){rs.apply(this,arguments);$("#appVer").textContent="Phiên bản "+APP_VER};
+  const r=$("#gsRes");if(r)new MutationObserver(()=>{const h=r.querySelector(".gsh");if(h&&!h.dataset.v&&/Gõ ít nhất/.test(h.textContent)){h.dataset.v=1;h.insertAdjacentHTML("beforeend",` <span class="appver">· v${APP_VER}</span>`)}}).observe(r,{childList:true});
+}
+// iPhone: bàn phím mở thì trang bị đẩy lên; dời hộp tìm kiếm / hộp hỏi theo vùng đang nhìn thấy
+if(window.visualViewport){
+  const vv=visualViewport,fix=()=>{for(const d of $$("dialog.gsdlg[open],dialog.ask[open]"))d.style.transform=vv.offsetTop>0?`translateY(${vv.offsetTop}px)`:""};
+  vv.addEventListener("resize",fix);vv.addEventListener("scroll",fix);
+  const sm=HTMLDialogElement.prototype.showModal;HTMLDialogElement.prototype.showModal=function(){sm.apply(this,arguments);fix()};
+}

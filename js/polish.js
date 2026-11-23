@@ -148,7 +148,7 @@ function delUndo(arr,obj,label,rerender){
     const k=$$("#homeTodo .tdo").length,bad=$$("#homeTodo .tdo.bad").length;
     const d=new Date(),dow=["Chủ nhật","Thứ Hai","Thứ Ba","Thứ Tư","Thứ Năm","Thứ Sáu","Thứ Bảy"][d.getDay()];
     let el=$("#greet");if(!el){$("#homeTodo").insertAdjacentHTML("beforebegin",'<div id="greet" class="greet"></div>');el=$("#greet")}
-    el.innerHTML=`<b>${g}</b><span>${dow} ${d.getDate()}/${d.getMonth()+1} · ${k?`${k} việc cần để ý${bad?`, ${bad} đã trễ`:""}`:"hôm nay không có việc gấp"}</span>`;
+    el.innerHTML=`<b>${g}</b><span>${dow} ${d.getDate()}/${d.getMonth()+1} · ${k?`${k} việc cần để ý${bad?`, ${bad} đã trễ`:""}`:"hôm nay không có việc gấp"}</span><em>Xem trang Hôm nay ›</em>`;
     let ob=$("#onboard");const empty=!DB.items.length&&!DB.expenses.length&&!DB.shifts.length;let dis=false;try{dis=localStorage.getItem("obDone")==="1"}catch(e){}
     if(empty&&!dis){
       if(!ob){el.insertAdjacentHTML("afterend",'<div id="onboard" class="card onb"><h3>Bắt đầu nhanh</h3><div class="onb-s"><button type="button" class="btn" data-go="ebay" data-act="#new"><b>1</b> Thêm món hàng đầu tiên</button><button type="button" class="btn" data-go="spend" data-focus="#spForm [name=amount]"><b>2</b> Ghi khoản chi đầu tiên</button><button type="button" class="btn" data-go="work"><b>3</b> Nhập giờ làm / Clock In</button></div><button type="button" class="btn" id="obX">Để sau</button></div>');
@@ -163,7 +163,7 @@ function delUndo(arr,obj,label,rerender){
   document.body.insertAdjacentHTML("beforeend",'<button type="button" id="clkFab" class="clkfab hidden"><i></i><span id="clkT">00:00:00</span><b>Clock Out</b></button>');
   const tick=()=>{
     const el=$("#clkFab");
-    if(!DB.clock||!$("#mod-work").classList.contains("hidden")){el.classList.add("hidden");return}
+    if(!DB.clock||!$("#mod-work").classList.contains("hidden")||($("#mod-today")&&!$("#mod-today").classList.contains("hidden"))){el.classList.add("hidden");return}
     const s=Math.max(0,Math.floor((Date.now()-DB.clock.start)/1000));
     $("#clkT").textContent=[Math.floor(s/3600),Math.floor(s/60)%60,s%60].map(x=>String(x).padStart(2,"0")).join(":");el.classList.remove("hidden");
   };

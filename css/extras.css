@@ -40,3 +40,44 @@
 .tdadd input[name=note]{grid-column:1/-1}
 .tdadd .btn{grid-column:1/-1}
 @media(min-width:761px){.tdadd{grid-template-columns:120px 1fr 1fr auto}.tdadd input[name=note],.tdadd .btn{grid-column:auto}}
+
+/* ===== Nổi bật + thao tác nhanh ===== */
+/* 2) icon tìm kiếm cạnh tiêu đề; thanh sao lưu gọn */
+h2.pg{display:flex;align-items:center;gap:8px}
+.gsico{border:1px solid var(--line);background:var(--card);color:var(--text);width:34px;height:34px;border-radius:50%;font-size:15px;line-height:1;display:inline-grid;place-items:center;cursor:pointer;padding:0;-webkit-text-fill-color:initial;flex:none}
+.gsico:hover{border-color:var(--accent)}
+.warnbar{padding:6px 10px 6px 12px;font-size:13px;margin-bottom:10px;position:relative;padding-right:36px}
+.warnbar .wx{position:absolute;right:6px;top:50%;transform:translateY(-50%);border:0;background:none;color:inherit;font-size:14px;cursor:pointer;width:26px;height:26px}
+
+/* 3) việc cần làm: 1 dòng, cắt chữ dài; quá hạn đậm hơn */
+.tdo{min-width:0}
+.tdo b{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tdo .s{flex:none}
+.tdo.bad{background:color-mix(in srgb,var(--bad) 12%,var(--card))!important;border-color:color-mix(in srgb,var(--bad) 45%,transparent)!important}
+.tdo.bad .s{color:var(--bad);font-weight:700}
+.tpay{flex:none;margin-left:6px;font-size:12px;font-weight:600;padding:3px 10px;border-radius:99px;background:var(--grad);color:var(--on-accent,#fff);cursor:pointer}
+
+/* 4) số chính nổi, số phụ nhạt */
+.hero .kv{letter-spacing:-.01em}
+.hero .sub{opacity:.8}
+.hero .lb{opacity:.85}
+#homeHero .card.main .kv{font-size:clamp(34px,9vw,46px)}
+
+/* 6) chi cố định gập: tóm tắt + Trả hết ngay trên đầu thẻ */
+#fxCard .chd{flex-wrap:wrap;gap:6px 10px;cursor:pointer}
+#fxCard.folded .chd .muted{display:none}
+.fxsum{font-size:12.5px;color:#d97706;font-weight:600;margin-left:auto}
+.fxallb{min-height:30px;padding:0 12px;font-size:12.5px}
+#fxCard.foldable .chd h3::after{content:" ▾";color:var(--muted);font-weight:400}
+#fxCard.foldable:not(.folded) .chd h3::after{content:" ▴"}
+
+.greet{position:relative;padding-right:44px}
+.greet .gsico{position:absolute;right:0;top:50%;transform:translateY(-50%)}
+
+/* 8) menu nút + */
+.fab.open{transform:rotate(45deg)}
+.fab{transition:transform .2s,opacity .2s}
+.fabmenu{position:fixed;right:16px;bottom:calc(150px + env(safe-area-inset-bottom));z-index:30;display:flex;flex-direction:column;gap:8px;align-items:flex-end}
+.fabmenu.hidden{display:none}
+.fabmenu button{border:1px solid var(--line);background:var(--solid);color:var(--text);font:600 14.5px "Segoe UI",system-ui,sans-serif;padding:10px 16px;border-radius:99px;box-shadow:0 10px 26px rgba(0,0,0,.3);cursor:pointer;animation:modin .18s ease-out}
+@media(min-width:761px){.fabmenu{display:none!important}}

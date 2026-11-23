@@ -49,11 +49,11 @@ function spChips(){
 
 // 9) tìm kiếm chung: món, đơn, người mua, tracking, chi tiêu
 {
-  document.querySelector("main").insertAdjacentHTML("afterbegin",'<button type="button" id="gsBar" class="gsbar">🔍 <span>Tìm món, đơn, tracking, chi tiêu…</span><kbd>Ctrl K</kbd></button>');
+
   document.body.insertAdjacentHTML("beforeend",'<dialog id="gsDlg" class="gsdlg"><div class="gsin"><input id="gsQ" placeholder="Tên món, serial, Order ID, người mua, tracking, ghi chú chi…" autocomplete="off"><button type="button" class="btn" data-close-dlg="gsDlg">Đóng</button></div><div id="gsRes"></div></dialog>');
   const dlg=$("#gsDlg"),qi=$("#gsQ");
   const open=()=>{dlg.showModal();qi.value="";draw();qi.focus()};
-  $("#gsBar").onclick=open;
+  document.addEventListener("click",e=>{if(e.target.closest(".gsico")){e.stopPropagation();open()}},true);
   addEventListener("keydown",e=>{if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==="k"){e.preventDefault();dlg.open?dlg.close():open()}});
   $$("[data-close-dlg=gsDlg]").forEach(b=>b.onclick=()=>dlg.close());
   const stTxt={kho:"Kho",ban:"Đã bán",tra:"Trả"};

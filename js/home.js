@@ -102,13 +102,13 @@ function renderHome(){
   const todo=[],nowM=mKey(new Date());
   const ship=ordersOf(DB.items.filter(i=>i.status!=="kho")).filter(o=>o.stage==="ship");
   if(ship.length){const w=Math.max(0,...ship.map(o=>daysAgo(o.f.saleDate)||0));todo.push([w>=2?"bad":"go","📮",`${ship.length} đơn cần ship`,w?`chờ ${w} ngày`:"hôm nay","ebay:ship"])}
-  for(const c of cards().filter(c=>c.name)){const [st,lb]=cardState(c,nowM);if(st==="late"||st==="soon")todo.push([st==="late"?"bad":"warn","💳",`Trả thẻ ${c.name}`,lb,"spend"])}
+  for(const c of cards().filter(c=>c.name)){const [st,lb]=cardState(c,nowM);if(st==="late"||st==="soon")todo.push([st==="late"?"bad":"warn","💳",`Trả thẻ ${c.name}`,lb,"spend",c.id])}
   // cùng nguồn fxRows với tab Thu & Chi: bấm Trả ở đó là hết nhắc ở đây
   const fxTodo=fxRows(nowM).filter(r=>!r.paid).length;
   if(fxTodo)todo.push(["warn","",`${fxTodo} khoản cố định chưa trả`,mLabel(nowM),"spend"]);
   if(DB.clock)todo.push(["go","⏱","Đang trong ca",`từ ${hhmm(new Date(DB.clock.start))}`,"work"]);
   const rank={bad:0,warn:1,go:2};todo.sort((a,b)=>rank[a[0]]-rank[b[0]]); // quá hạn lên đầu
-  $("#homeTodo").innerHTML=todo.length?todo.map(([cl,ic,t1,s,go])=>`<button type="button" class="tdo ${cl}" data-todo="${go}"><i class="tdot"></i><b>${esc(t1)}</b><span class="s">${esc(s)}</span></button>`).join(""):`<div class="todo-ok">✓ Không có việc gấp</div>`;
+  $("#homeTodo").innerHTML=todo.length?todo.map(([cl,ic,t1,s,go,cc])=>`<button type="button" class="tdo ${cl}" data-todo="${go}"><i class="tdot"></i><b>${esc(t1)}</b><span class="s">${esc(s)}</span>${cc?`<span class="tpay" role="button" tabindex="0" data-ccpay="${esc(cc)}">Đã trả</span>`:""}</button>`).join(""):`<div class="todo-ok">✓ Không có việc gấp</div>`;
   $$("#homeTodo [data-todo]").forEach(b=>b.onclick=()=>{const [m,tab]=b.dataset.todo.split(":");if(tab){ebTab=tab;try{localStorage.setItem("ebTab",tab)}catch(e){}}showMod(m)});
   // 2) số chính: mỗi thẻ 1 con số + nhãn ngắn + 1 dòng phụ
   const {cur,next}=checkFor(t),ck=cur&&cur.pay>=t?cur:next,ckS=ck?periodSum(ck,calc):null,ckN=ck?payNet(ck,calc,netRatio(calc)):null;
@@ -118,7 +118,7 @@ function renderHome(){
   const inc=s.ebay+s.wage+s.thu,spentPct=inc>0?s.chi/inc*100:0;
   $("#homeHero").innerHTML=
     box("main",`Còn lại · ${mLabel(mk)}`,s.net,s.net>=0?"pos":"neg",`Thu <b>${money(s.ebay+s.wage+s.thu)}</b> · Chi <b>${money(s.chi)}</b><br><span class="muted">Lương tháng: trước thuế <b>${money(s.pay)}</b> · thực nhận <b>${s.wageEst?"~":""}${money(s.wage)}</b></span>`,0,inc>0?`<div class="bar ${spentPct>100?"over":spentPct>85?"warn":"go"}" title="Đã chi so với thu nhập"><i style="width:${Math.min(100,spentPct)}%"></i></div>`:"")+
-    box("chkc",ckN&&ckN.est?"Check kế tiếp · ước tính":"Check kế tiếp",ckN?ckN.v:"—","pos",ck?`${dowl(ck.pay)} ${dmy(ck.pay)} · trước thuế ${money(ckS.pay)}`:"",1)+
+    box("chkc",ckN&&ckN.est&&ckN.v>0?"Check kế tiếp · ước tính":"Check kế tiếp",ckN&&ckN.v>0?ckN.v:"—","pos",ck?`${dowl(ck.pay)} ${dmy(ck.pay)}${ckS.pay>0?` · trước thuế ${money(ckS.pay)}`:" · chưa có ca trong kỳ"}`:"",1)+
     box("","Lãi eBay",s.ebay,s.ebay>=0?"pos":"neg",`${s.sold} món đã bán`,2);
   $("#homeHours").innerHTML=`<span class="hl">⏱ Giờ tuần này</span><b>${fh(wc.h)}<small> / ${lim}</small>${wc.hol?` <span class="lvtag hol">+${fh(wc.hol)} Holiday</span>`:""}${wc.pto?` <span class="lvtag pto">+${fh(wc.pto)} PTO</span>`:""}</b><span class="hbar bar ${hrBarCls(toOt,lim)}"><i style="width:${Math.min(100,toOt/lim*100)}%"></i></span><span class="hs">${wc.ot>0?`<b class="neg">+${fh(wc.ot)}h OT</b>`:`còn ${fh(Math.max(0,lim-toOt))}h tới OT`}</span>`;
   countUp($("#homeHero"));

@@ -56,8 +56,9 @@ function foldCard(card,key){
   const head=card.querySelector(".chd");if(!head)return;
   let body=card.querySelector(".cbody");
   if(!body){body=document.createElement("div");body.className="cbody";[...card.children].forEach(c=>{if(c!==head)body.appendChild(c)});card.appendChild(body)}
-  card.classList.toggle("foldable",all);card.classList.toggle("folded",all&&!foldOpen.has(key));
-  head.onclick=all?()=>{foldOpen.has(key)?foldOpen.delete(key):foldOpen.add(key);card.classList.toggle("folded")}:null;
+  const can=all||key==="fx";
+  card.classList.toggle("foldable",can);card.classList.toggle("folded",can&&!foldOpen.has(key));
+  head.onclick=can?e=>{if(e.target.closest("[data-fxall]"))return;foldOpen.has(key)?foldOpen.delete(key):foldOpen.add(key);card.classList.toggle("folded")}:null;
   const m=head.querySelector(".muted");if(m&&all&&!m.dataset.ok){m.dataset.ok=1;m.insertAdjacentHTML("beforeend",' <span class="okc">✓</span>')}
 }
 function renderFixed(){

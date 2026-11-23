@@ -1,7 +1,7 @@
 "use strict";
 const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
 const n=v=>{const x=parseFloat(v);return isFinite(x)?x:0};
-const money=v=>(v<0?"-$":"$")+Math.abs(v).toFixed(2);
+const money=v=>(v<0?"-$":"$")+Math.abs(v).toLocaleString("en-US",{minimumFractionDigits:2,maximumFractionDigits:2});
 const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const ns=s=>String(s||"").toUpperCase().replace(/[\s\-_.:\/]/g,"");
 const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,7);

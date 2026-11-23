@@ -47,7 +47,7 @@ function renderWork(){
   $("#wkSum").innerHTML=
     `<div class="card"><div class="lb">Tổng giờ tuần</div><div class="v">${fh(sum.h)} <span class="sub">/ ${lim} giờ</span>${sum.hol?` <span class="lvtag hol">+${fh(sum.hol)} Holiday</span>`:""}${sum.pto?` <span class="lvtag pto">+${fh(sum.pto)} PTO</span>`:""}</div><div class="bar ${hrBarCls(toOt,lim)}"><i style="width:${pct}%"></i></div><div class="sub">${left>0?`Còn ${fh(left)} giờ tới tăng ca`:"Đã vượt ngưỡng tăng ca"}${sum.hol||sum.pto?`<br>${S().leaveOt?"PTO/Holiday có tính vào mốc OT":"PTO/Holiday có lương, không tính vào mốc OT"}`:""}</div></div>`+
     `<div class="card pay"><div class="lb">Tiền công ước tính</div><div class="v">${money(sum.pay)}</div><div class="sub">Regular ${fh(sum.reg)} · OT ${fh(sum.ot)}${sum.hol?` · Holiday ${fh(sum.hol)}`:""}${sum.pto?` · PTO ${fh(sum.pto)}`:""} giờ<br>Trước thuế · ${nw} ca</div></div>`+
-    `<div class="card ${sum.ot>0?"ot1":"ot0"}"><div class="lb">Tăng ca</div><div class="v">${fh(sum.ot)} giờ</div><div class="sub">${sum.ot>0?`Tính ×${n(S().otMult)||1.5} lương`:"Chưa có tăng ca"}</div></div>`;
+    `<div class="card ${sum.ot>0?"ot1":"ot0"}"><div class="lb">Tăng ca</div><div class="v">${sum.ot>0?fh(sum.ot)+" giờ":"—"}</div><div class="sub">${sum.ot>0?`Tính ×${n(S().otMult)||1.5} lương`:"Chưa có tăng ca"}</div></div>`;
   let h="";
   for(let k=0;k<7;k++){
     const d=addDays(wkCur,k),ds=list.filter(s=>s.date===d),isT=d===t,fut=d>t;

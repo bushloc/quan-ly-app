@@ -42,12 +42,7 @@
 @media(min-width:761px){.tdadd{grid-template-columns:120px 1fr 1fr auto}.tdadd input[name=note],.tdadd .btn{grid-column:auto}}
 
 /* ===== Nổi bật + thao tác nhanh ===== */
-/* 2) icon tìm kiếm cạnh tiêu đề; thanh sao lưu gọn */
-.pgrow{display:flex;align-items:center;gap:10px;margin-bottom:12px}
-.pgrow h2.pg{margin:0!important}
-@media(max-width:760px){#mod-ebay .pgrow,#mod-work .pgrow{margin-bottom:6px}}
-.gsico{border:1px solid var(--line);background:var(--card);color:var(--text);width:34px;height:34px;border-radius:50%;font-size:15px;line-height:1;display:inline-grid;place-items:center;cursor:pointer;padding:0;-webkit-text-fill-color:initial;flex:none}
-.gsico:hover{border-color:var(--accent)}
+/* 2) thanh sao lưu gọn */
 .warnbar{padding:6px 10px 6px 12px;font-size:13px;margin-bottom:10px;position:relative;padding-right:36px}
 .warnbar .wx{position:absolute;right:6px;top:50%;transform:translateY(-50%);border:0;background:none;color:inherit;font-size:14px;cursor:pointer;width:26px;height:26px}
 
@@ -73,8 +68,6 @@
 #fxCard.foldable .chd h3::after{content:" ▾";color:var(--muted);font-weight:400}
 #fxCard.foldable:not(.folded) .chd h3::after{content:" ▴"}
 
-.greet{position:relative;padding-right:44px}
-.greet .gsico{position:absolute;right:0;top:50%;transform:translateY(-50%)}
 
 /* 8) menu nút + */
 .fab.open{transform:rotate(45deg)}
@@ -83,4 +76,8 @@
 .fabmenu.hidden{display:none}
 .fabmenu button{border:1px solid var(--line);background:var(--solid);color:var(--text);font:600 14.5px "Segoe UI",system-ui,sans-serif;padding:10px 16px;border-radius:99px;box-shadow:0 10px 26px rgba(0,0,0,.3);cursor:pointer;animation:modin .18s ease-out}
 @media(min-width:761px){.fabmenu{display:none!important}}
-.appver{font-size:12px;opacity:.7;margin:-4px 0 10px}#gsRes .appver{margin:0}
+.appver{font-size:12px;opacity:.7;margin:-4px 0 10px}
+
+/* eBay: kết quả tìm ở tab khác */
+.ebx{display:flex;flex-wrap:wrap;align-items:center;gap:6px;font-size:13px;color:var(--muted);margin:0 0 10px}
+.ebx .chip{border:1px solid var(--line);background:var(--soft);color:var(--text);border-radius:99px;padding:5px 12px;font:inherit;font-size:13px;font-weight:600;cursor:pointer}

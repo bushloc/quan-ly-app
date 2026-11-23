@@ -91,11 +91,6 @@ document.addEventListener("click",e=>{if(e.target.closest("#greet"))showMod("tod
 }
 
 /* ===== Nổi bật + thao tác nhanh ===== */
-// 2) icon 🔍 cạnh tiêu đề mỗi trang (Ctrl+K trên máy tính vẫn dùng được)
-const GSI='<button type="button" class="gsico" aria-label="Tìm kiếm" title="Tìm kiếm (Ctrl+K)">🔍</button>';
-// Tổng quan: icon nằm ở dòng lời chào (hàng tiêu đề đã có nút đổi tháng); trang khác: cạnh tiêu đề
-// nút để NGOÀI tiêu đề (tiêu đề tô chữ gradient; trên iPhone Safari, đặt thứ khác vào trong làm mất chữ)
-function addSearchIcons(){$$("h2.pg").forEach(h=>{if(h.id==="homeTitle"||h.parentElement.classList.contains("pgrow"))return;const r=document.createElement("div");r.className="pgrow";h.before(r);r.appendChild(h);r.insertAdjacentHTML("beforeend",GSI)});const g=$("#greet");if(g&&!g.querySelector(".gsico"))g.insertAdjacentHTML("beforeend",GSI)}
 // 2) thanh "chưa sao lưu" gọn 1 dòng, bấm ✕ để ẩn 3 ngày
 {
   const ba=backupAge;
@@ -154,7 +149,7 @@ function fxPayAll(){
   };
   document.addEventListener("click",e=>{if(!fm.classList.contains("hidden")&&!e.target.closest("#fabMenu,#fab")){fm.classList.add("hidden");fab.classList.remove("open")}});
 }
-// 11) nhớ tab lần trước; 2) gắn icon tìm kiếm mỗi lần đổi trang
+// 11) nhớ tab lần trước
 {
   const sm=showMod;let first=true;
   showMod=function(m){
@@ -162,9 +157,7 @@ function fxPayAll(){
       if(m==="home"&&h!=="#today"&&S().startPage!=="today"&&["ebay","spend","work","set"].includes(lm))m=lm}
     sm.call(this,m);
     if(["home","ebay","spend","work","set"].includes(m))try{localStorage.setItem("lastMod",m)}catch(e){}
-    addSearchIcons();
   };
-  const rh=renderHome;renderHome=function(){rh.apply(this,arguments);addSearchIcons()};
 }
 // 10) vuốt trái/phải ở vùng trống để đổi tab trên phone
 {
@@ -179,14 +172,13 @@ function fxPayAll(){
   });
 }
 
-// số phiên bản: Cài đặt + khung tìm kiếm (để biết điện thoại đã nhận bản mới chưa)
+// số phiên bản trong Cài đặt (để biết điện thoại đã nhận bản mới chưa)
 {
   const rs=renderSet;renderSet=function(){rs.apply(this,arguments);$("#appVer").textContent="Phiên bản "+APP_VER};
-  const r=$("#gsRes");if(r)new MutationObserver(()=>{const h=r.querySelector(".gsh");if(h&&!h.dataset.v&&/Gõ ít nhất/.test(h.textContent)){h.dataset.v=1;h.insertAdjacentHTML("beforeend",` <span class="appver">· v${APP_VER}</span>`)}}).observe(r,{childList:true});
 }
-// iPhone: bàn phím mở thì trang bị đẩy lên; dời hộp tìm kiếm / hộp hỏi theo vùng đang nhìn thấy
+// iPhone: bàn phím mở thì trang bị đẩy lên; dời hộp hỏi theo vùng đang nhìn thấy
 if(window.visualViewport){
-  const vv=visualViewport,fix=()=>{for(const d of $$("dialog.gsdlg[open],dialog.ask[open]"))d.style.transform=vv.offsetTop>0?`translateY(${vv.offsetTop}px)`:""};
+  const vv=visualViewport,fix=()=>{for(const d of $$("dialog.ask[open]"))d.style.transform=vv.offsetTop>0?`translateY(${vv.offsetTop}px)`:""};
   vv.addEventListener("resize",fix);vv.addEventListener("scroll",fix);
   const sm=HTMLDialogElement.prototype.showModal;HTMLDialogElement.prototype.showModal=function(){sm.apply(this,arguments);fix()};
 }

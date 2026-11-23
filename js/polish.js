@@ -47,44 +47,6 @@ function spChips(){
   const rs=renderSpend;renderSpend=function(){rs.apply(this,arguments);spChips()};
 }
 
-// 9) tìm kiếm chung: món, đơn, người mua, tracking, chi tiêu
-{
-
-  document.body.insertAdjacentHTML("beforeend",'<dialog id="gsDlg" class="gsdlg"><div class="gsin"><input id="gsQ" placeholder="Tên món, serial, Order ID, người mua, tracking, ghi chú chi…" autocomplete="off"><button type="button" class="btn" data-close-dlg="gsDlg">Đóng</button></div><div id="gsRes"></div></dialog>');
-  const dlg=$("#gsDlg"),qi=$("#gsQ");
-  const open=()=>{dlg.showModal();qi.value="";draw();qi.focus()};
-  document.addEventListener("click",e=>{if(e.target.closest(".gsico")){e.stopPropagation();open()}},true);
-  addEventListener("keydown",e=>{if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==="k"){e.preventDefault();dlg.open?dlg.close():open()}});
-  $$("[data-close-dlg=gsDlg]").forEach(b=>b.onclick=()=>dlg.close());
-  const stTxt={kho:"Kho",ban:"Đã bán",tra:"Trả"};
-  function draw(){
-    const q=qi.value.trim().toLowerCase(),qs=ns(q);
-    if(q.length<2){$("#gsRes").innerHTML=`<p class="muted gsh">Gõ ít nhất 2 ký tự. Tìm cả món trong kho, đơn đã bán/trả và khoản chi.</p>`;return}
-    const hit=i=>[i.name,i.serial,i.orderId,i.buyer,i.tracking].some(v=>v&&(String(v).toLowerCase().includes(q)||(qs.length>=3&&ns(v).includes(qs))));
-    const its=DB.items.filter(hit).slice(0,25);
-    const exs=DB.expenses.filter(e=>(e.type==="chi"||e.type==="thu")&&([e.note,e.cat,String(e.amount)].some(v=>v&&String(v).toLowerCase().includes(q)))).sort((a,b)=>b.date.localeCompare(a.date)).slice(0,15);
-    let h="";
-    if(its.length)h+=`<div class="gsg">📦 Món / đơn hàng</div>`+its.map(i=>`<button type="button" class="gsr" data-gi="${esc(i.id)}"><b>${esc(i.name||"(không tên)")}</b><span class="tag s-${i.status}">${stTxt[i.status]||""}</span><small>${[i.orderId&&"Đơn "+esc(i.orderId),i.buyer&&esc(i.buyer),i.serial&&esc(i.serial),i.tracking&&esc(i.tracking)].filter(Boolean).join(" · ")}</small></button>`).join("");
-    if(exs.length)h+=`<div class="gsg">💵 Thu & Chi</div>`+exs.map(e=>`<button type="button" class="gsr" data-ge="${esc(e.id)}"><b>${esc(e.note||e.cat)}</b><span class="a ${e.type==="thu"?"pos":""}">${e.type==="thu"?"+":"-"}${money(n(e.amount))}</span><small>${esc(e.cat)} · ${esc(e.date)}</small></button>`).join("");
-    $("#gsRes").innerHTML=h||`<p class="muted gsh">Không thấy kết quả nào cho “${esc(q)}”.</p>`;
-  }
-  qi.oninput=draw;
-  $("#gsRes").addEventListener("click",e=>{
-    const bi=e.target.closest("[data-gi]"),be=e.target.closest("[data-ge]");
-    if(bi){
-      const it=DB.items.find(x=>x.id===bi.dataset.gi);if(!it)return;dlg.close();showMod("ebay");$("#q").value="";
-      if(it.status==="kho"){$('#ebTabs [data-eb="kho"]').click();openItem(it.id);return}
-      const o=ordersOf(DB.items.filter(x=>x.status!=="kho")).find(o=>o.its.some(x=>x.id===it.id));if(!o)return;
-      const tab=o.stage==="go"?"done":o.stage;$(`#ebTabs [data-eb="${tab}"]`).click();
-      if(tab!=="ship"){$("#ebMonth").value=monthOf(o.date)}
-      const key=o.its.map(x=>x.id).join(",");ebOpen.add(key);render();
-      const card=$$("#list [data-ord]").find(c=>c.dataset.ord===key);if(card){card.scrollIntoView({block:"center"});card.classList.add("flash")}
-    }else if(be){
-      const ex=DB.expenses.find(x=>x.id===be.dataset.ge);if(!ex)return;dlg.close();spM=monthOf(ex.date);showMod("spend");openExpense(ex.id);
-    }
-  });
-}
-
 // 1) vuốt trái một khoản chi để xoá (hỏi lại trước khi xoá)
 {
   const L=$("#spList");let st=null;

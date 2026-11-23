@@ -115,7 +115,7 @@ function render(){
     const listed=su.reduce((a,u)=>a+n(u.f.listPrice),0);
     $("#sum").innerHTML=`<div>Trong kho<b>${su.length}</b><span style="font-size:12px">🏷️ Đang list ${nl} · Chưa list ${su.length-nl}${sk?` · ${sk} kit`:""}</span></div><div>Vốn<b>${money(stock.reduce((a,i)=>a+n(i.cost),0))}</b></div><div>Tổng giá list<b>${money(listed)}</b></div>`;
   }else{
-    const os=allOrders.filter(o=>o.stage===ebTab&&(ebTab==="ship"||!mon||monthOf(o.date)===mon)&&o.its.some(i=>hit(i,q,qs)));
+    const os=allOrders.filter(o=>o.stage===ebTab&&(ebTab==="ship"||!mon||q||monthOf(o.date)===mon)&&o.its.some(i=>hit(i,q,qs)));
     if(ebTab==="ship")os.sort((a,b)=>a.date.localeCompare(b.date)); // đơn chờ lâu nhất lên đầu
     html=os.length?(ebView==="table"&&!matchMedia("(max-width:760px)").matches?orderTable(os):os.map(orderCard).join("")):"";
     empty={ship:"🎉 Không còn đơn nào cần ship.",done:"Chưa có đơn hoàn thành"+(mon?" trong "+mLabel(mon):"")+".",ret:"Không có hàng bị trả lại"+(mon?" trong "+mLabel(mon):"")+"."}[ebTab];
@@ -124,8 +124,17 @@ function render(){
       :ebTab==="ret"?`<div>Đơn bị trả<b>${os.length}</b></div><div>Tiền đã hoàn<b class="neg">${money(S("refund"))}</b></div><div>Serial không khớp<b class="${os.some(o=>o.its.some(i=>i.retSerial&&ns(i.retSerial)!==ns(i.serial)))?"neg":""}">${os.reduce((a,o)=>a+o.its.filter(i=>i.retSerial&&ns(i.retSerial)!==ns(i.serial)).length,0)}</b></div>`
       :`<div>Đơn<b>${os.length}</b></div><div>Doanh thu<b>${money(S("price")+S("charge"))}</b></div><div>Lãi<b class="${S("profit")>=0?"pos":"neg"}">${money(S("profit"))}</b></div>`;
   }
+  // đang tìm: cho biết tab khác cũng có kết quả (tìm Order ID, người mua… không cần nhớ đơn nằm ở tab nào)
+  const mainHtml=html;
+  if(q){
+    const oc={kho:unitsOf(stock.filter(i=>hit(i,q,qs))).length,ship:0,done:0,ret:0},TN={kho:"📦 Kho",ship:"📮 Cần ship",done:"✅ Xong",ret:"↩ Trả"};
+    for(const o of allOrders)if(o.its.some(i=>hit(i,q,qs)))oc[o.stage]++;
+    const other=Object.keys(oc).filter(k=>k!==ebTab&&oc[k]);
+    if(other.length)html=`<div class="ebx">Cũng thấy ở: ${other.map(k=>`<button type="button" class="chip" data-ebgo="${k}">${TN[k]} (${oc[k]})</button>`).join("")}</div>`+html;
+  }
   $("#list").innerHTML=html;
-  $("#empty").style.display=html?"none":"block";$("#empty").innerHTML=emptyBox(empty.replace(/^🎉\s*/,""),{kho:"📦",ship:"🎉",done:"📭",ret:"↩️"}[ebTab]||"📭",ebTab==="kho"&&!stock.length?"+ Thêm hàng":"","new");
+  $$("#list [data-ebgo]").forEach(b=>b.onclick=e=>{e.stopPropagation();const k=b.dataset.ebgo;if(k!=="ship"&&k!=="kho")$("#ebMonth").value="";$(`#ebTabs [data-eb="${k}"]`).click()});
+  $("#empty").style.display=mainHtml?"none":"block";$("#empty").innerHTML=emptyBox(empty.replace(/^🎉\s*/,""),{kho:"📦",ship:"🎉",done:"📭",ret:"↩️"}[ebTab]||"📭",ebTab==="kho"&&!stock.length?"+ Thêm hàng":"","new");
 }
 // một bộ xử lý click cho cả danh sách
 $("#list").addEventListener("click",async e=>{

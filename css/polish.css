@@ -1,11 +1,11 @@
 /* ===== Giao diện thêm: badge, chip danh mục, tìm kiếm, trạng thái trống, hiệu ứng nhẹ, số/màu thống nhất ===== */
 
 /* 4) màu & chữ thống nhất: xanh = vào/ổn, đỏ = chi/trễ, vàng = sắp tới hạn; mọi con số cùng kiểu chữ */
-.kv,.num,.a,.sum b,.hl b,.tdo .s,.u-p b,.gsr .a{font-variant-numeric:tabular-nums}
+.kv,.num,.a,.sum b,.hl b,.tdo .s,.u-p b {font-variant-numeric:tabular-nums}
 .card h3{letter-spacing:.01em}
 .card,.oc,.exrow{transition:box-shadow .2s,transform .2s,border-color .2s}
-.btn,.chip,.tdo,.gsr,.pt{transition:transform .12s,background-color .15s,box-shadow .2s,border-color .15s,opacity .15s}
-.btn:active,.chip:active,.tdo:active,.pt:active,.gsr:active{transform:scale(.97)}
+.btn,.chip,.tdo,.pt{transition:transform .12s,background-color .15s,box-shadow .2s,border-color .15s,opacity .15s}
+.btn:active,.chip:active,.tdo:active,.pt:active{transform:scale(.97)}
 
 /* 6) hiệu ứng nhẹ */
 @keyframes modin{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
@@ -30,28 +30,13 @@ details[open]>*:not(summary){animation:modin .18s ease-out}
 .catchips .chip{border:1px solid var(--line);background:var(--soft);color:var(--text);border-radius:99px;padding:5px 12px;font:inherit;font-size:13px;cursor:pointer;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .catchips .chip.on{background:var(--grad);color:var(--on-accent,#fff);border-color:transparent;font-weight:600;box-shadow:var(--glow)}
 
-/* 9) tìm kiếm chung */
-.gsdlg{width:min(640px,calc(100vw - 24px));max-height:80vh;padding:0;border:1px solid var(--line);border-radius:16px;background:var(--solid);color:var(--text);overflow:hidden;margin:6vh auto auto}
-.gsdlg::backdrop{background:rgba(5,6,16,.6)}
 
-.gsin{display:flex;gap:8px;padding:12px;border-bottom:1px solid var(--line)}
-.gsin input{flex:1;min-width:0;font-size:16px;min-height:42px;margin:0;color:var(--text);background:var(--input);-webkit-appearance:none;appearance:none}
-#gsRes{overflow:auto;padding:4px 8px 12px;max-height:calc(80vh - 70px)}
-.gsg{font-size:12px;color:var(--muted);padding:10px 6px 4px}
-.gsh{padding:16px 8px;margin:0}
-.gsr{display:grid;grid-template-columns:1fr auto;gap:2px 8px;width:100%;text-align:left;border:0;background:none;color:var(--text);padding:9px 8px;border-radius:10px;cursor:pointer;font:inherit}
-.gsr:hover,.gsr:focus-visible{background:var(--soft)}
-.gsr b{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:600}
-.gsr small{grid-column:1/-1;color:var(--muted);font-size:12.5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 
 /* 5) trạng thái trống */
 .emp{display:flex;flex-direction:column;align-items:center;gap:8px;padding:28px 16px;text-align:center;color:var(--muted)}
 .emi{font-size:38px;line-height:1;filter:saturate(.9)}
 .emt{font-size:14px;max-width:30ch}
 #empty:not([style*="none"]){padding:0}
-/* khung tìm kiếm: khối thường (không flex/fit-content) để Safari iPhone hiện đúng; neo trên cùng, cao theo nội dung */
-dialog.gsdlg{position:fixed;inset:12px 0 auto 0;margin:0 auto;height:auto;max-height:none}
-@media(max-width:760px){dialog.gsdlg{inset:calc(env(safe-area-inset-top) + 56px) 0 auto 0;width:calc(100vw - 16px);max-width:none;height:auto;max-height:none;border-radius:16px}}
 
 /* PTO / Holiday cạnh tổng giờ */
 .lvtag{display:inline-block;font:600 12px/1.6 "Segoe UI",system-ui,sans-serif;padding:0 8px;border-radius:99px;vertical-align:middle;white-space:nowrap;background:var(--soft);color:var(--accent)}

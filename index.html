@@ -60,17 +60,15 @@
   <button data-tab="kho" data-eb="kho" class="on"><span class="te">📦</span> Kho <i></i></button>
   <button data-tab="kho" data-eb="ship"><span class="te">📮</span> Cần ship <i></i></button>
   <button data-tab="kho" data-eb="done"><span class="te">✅</span> Xong <i></i></button>
-  <button data-tab="kho" data-eb="ret"><span class="te">↩</span> Trả <i></i></button>
-  <button data-tab="tra" data-eb="check" title="Kiểm tra hàng bị trả về"><span class="te">🔍</span> Kiểm tra</button>
 </nav>
 
 <section id="tab-kho">
+  <div class="ebmbar" id="ebMbar"><button type="button" class="btn" data-mm="-1" aria-label="Tháng trước">‹</button><b id="ebMLbl"></b><button type="button" class="btn" data-mm="1" aria-label="Tháng sau">›</button><button type="button" class="chip" id="ebMAll">Tất cả</button><select id="ebMonth" hidden></select></div>
   <div class="card sum" id="sum"></div>
   <div class="row eb-tools">
     <input id="q" placeholder="Tìm tên, serial, Order ID, tracking…" style="flex:1;min-width:200px">
     <details class="more" id="ebMore"><summary class="btn" title="Thêm tuỳ chọn">⋯</summary>
       <div class="menu">
-        <label>Tháng<select id="ebMonth"></select></label>
         <div class="seg" id="ebView" role="group" aria-label="Kiểu hiển thị"><button data-v="card" class="on">▦ Thẻ</button><button data-v="table">☰ Bảng</button></div>
       </div>
     </details>

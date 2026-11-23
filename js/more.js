@@ -197,19 +197,19 @@ function ebYearHtml(){
   const mx=Math.max(1,...rows.map(r=>Math.abs(r.profit))),best=act.length?act.reduce((a,r)=>r.profit>a.profit?r:a):null;
   const nm=act.length?rows.filter(r=>r.mk<=now||r.items).length:0;
   const canP=yrs.some(y=>y<ebY),canN=ebY<Math.max(cy,...yrs);
-  const row=r=>`<button type="button" class="eyr${r.items||r.ret?"":" z"}" data-eym="${r.mk}"${r.items||r.ret?"":" disabled"}><span class="m">T${+r.mk.slice(5)}</span><span class="pb"><i class="${r.profit<0?"neg":""}" style="width:${Math.abs(r.profit)/mx*100}%"></i></span><b class="${r.profit>=0?"pos":"neg"}">${r.items||r.ret?money(r.profit):"—"}</b>${r.items||r.ret?`<small>${r.orders} đơn · bán ${money(r.sale)} · phí ${money(r.fees)} · ship ${money(r.ship)} · vốn ${money(r.cost)}${r.ret?` · <span class="neg">${r.ret} trả hàng${r.refund?" "+money(r.refund):""}</span>`:""}</small>`:""}</button>`;
+  const row=r=>`<button type="button" class="eyr${r.items||r.ret?"":" z"}" data-eym="${r.mk}"${r.items||r.ret?"":" disabled"}><span class="m">T${+r.mk.slice(5)}</span><span class="pb"><i class="${r.profit<0?"neg":""}" style="width:${Math.abs(r.profit)/mx*100}%"></i></span><b class="${r.profit>=0?"pos":"neg"}">${r.items||r.ret?money(r.profit):"—"}</b>${r.items||r.ret?`<small>${r.orders} đơn · bán ${money(r.sale)} · phí ${money(r.fees)} · ship ${money(r.ship)} · vốn ${money(r.cost)}</small>`:""}</button>`;
   return `<details class="ebyd"${ebYOpen?" open":""}><summary><span>📦 eBay cả năm ${ebY}</span><b class="${T.profit>=0?"pos":"neg"}">${money(T.profit)}</b><span class="chev">▾</span></summary>
   <div class="eyh"><button type="button" class="btn" data-ey="-1"${canP?"":" disabled"}>‹</button><b>${ebY}</b><button type="button" class="btn" data-ey="1"${canN?"":" disabled"}>›</button><button type="button" class="btn" id="eyCsv">⬇ Tải CSV</button></div>
   ${act.length?`<div class="eyl">${rows.map(row).join("")}</div>
   <div class="eyt"><div><span>Đơn</span><b>${T.orders}</b></div><div><span>Tiền bán</span><b>${money(T.sale)}</b></div><div><span>Phí eBay</span><b>−${money(T.fees)}</b></div><div><span>Ship bạn trả</span><b>−${money(T.ship)}</b></div><div><span>Vốn</span><b>−${money(T.cost)}</b></div><div class="big"><span>Lãi cả năm</span><b class="${T.profit>=0?"pos":"neg"}">${money(T.profit)}</b></div></div>
-  <p class="muted eyn">TB mỗi tháng <b>${money(nm?T.profit/nm:0)}</b>${best&&best.profit>0?` · cao nhất <b>T${+best.mk.slice(5)}</b> (${money(best.profit)})`:""}${T.ret?` · ${T.ret} món trả hàng${T.refund?`, hoàn ${money(T.refund)}`:""} (không tính vào lãi)`:""}<br>Bấm một tháng để xem các đơn đã bán.</p>`
+  <p class="muted eyn">TB mỗi tháng <b>${money(nm?T.profit/nm:0)}</b>${best&&best.profit>0?` · cao nhất <b>T${+best.mk.slice(5)}</b> (${money(best.profit)})`:""}<br>Bấm một tháng để xem các đơn đã bán.</p>`
   :`<p class="muted">Năm ${ebY} chưa có đơn bán.</p>`}</details>`;
 }
 function ebYearCsv(){
   const {rows,T}=ebYear(ebY),f=v=>(Math.round(v*100)/100).toFixed(2);
-  const L=[["Thang","So don","So mon","Tien ban","Phi eBay","Ship tra","Von","Lai","Tra hang","Tien hoan"].join(",")];
-  for(const r of rows)L.push([r.mk,r.orders,r.items,f(r.sale),f(r.fees),f(r.ship),f(r.cost),f(r.profit),r.ret,f(r.refund)].join(","));
-  L.push(["Tong "+ebY,T.orders,T.items,f(T.sale),f(T.fees),f(T.ship),f(T.cost),f(T.profit),T.ret,f(T.refund)].join(","));
+  const L=[["Thang","So don","So mon","Tien ban","Phi eBay","Ship tra","Von","Lai"].join(",")];
+  for(const r of rows)L.push([r.mk,r.orders,r.items,f(r.sale),f(r.fees),f(r.ship),f(r.cost),f(r.profit)].join(","));
+  L.push(["Tong "+ebY,T.orders,T.items,f(T.sale),f(T.fees),f(T.ship),f(T.cost),f(T.profit)].join(","));
   const a=document.createElement("a");a.href=URL.createObjectURL(new Blob(["﻿"+L.join("\r\n")],{type:"text/csv"}));a.download=`ebay-${ebY}.csv`;document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},1000);
 }
 (()=>{

@@ -180,7 +180,7 @@ h2.pg{font-size:24px;margin-bottom:12px}
 #ebTabs button{font-size:14.5px;font-weight:700;padding:10px 18px;border:1px solid var(--line);background:var(--soft);color:var(--text);border-radius:12px;position:relative}
 #ebTabs button.on{background:var(--grad);color:#fff;border-color:transparent;box-shadow:var(--glow)}
 @media(max-width:760px){
-  #ebTabs{display:grid!important;grid-template-columns:repeat(5,minmax(0,1fr));gap:4px;padding:4px}
+  #ebTabs{display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr));gap:4px;padding:4px}
   #ebTabs button{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;padding:6px 2px;min-height:54px;font-size:11.5px;font-weight:700;white-space:nowrap}
   #ebTabs button .te{display:block!important;font-size:19px;line-height:1.1}
   #ebTabs button i{position:absolute;top:2px;right:3px;font-size:10px;min-width:16px;padding:0 4px;line-height:16px;margin:0}

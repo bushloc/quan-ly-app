@@ -26,9 +26,11 @@ function ordersOf(list){
 const daysAgo=d=>d?Math.max(0,Math.round((parseD(today())-parseD(d))/864e5)):null;
 const hit=(i,q,qs)=>!q||[i.name,i.pn,i.serial,i.orderId,i.buyer,i.tracking,i.notes].join(" ").toLowerCase().includes(q)||(qs&&[i.serial,i.tracking,i.orderId].some(v=>ns(v).includes(qs)));
 function fillMonths(){
-  const sel=$("#ebMonth"),v=sel.value,ms=[...new Set(items.filter(i=>i.status!=="kho"&&i.saleDate).map(i=>monthOf(i.saleDate)))].sort().reverse();
+  const sel=$("#ebMonth"),now=mKey(new Date()),v=sel.dataset.init?sel.value:now,sm=items.filter(i=>i.status!=="kho"&&i.saleDate).map(i=>monthOf(i.saleDate)).sort();
+  const lo=[sm[0]||now,v||now].sort()[0],hi=[sm[sm.length-1]||now,now,v||now].sort().pop(),ms=[];
+  for(let m=hi;m>=lo&&ms.length<240;m=mShift(m,-1))ms.push(m);
   sel.innerHTML=`<option value="">Tất cả thời gian</option>`+ms.map(m=>`<option value="${m}">${mLabel(m)}</option>`).join("");
-  sel.value=ms.includes(v)?v:"";
+  sel.value=v&&ms.includes(v)?v:"";sel.dataset.init="1";
 }
 function trkLine(i){
   const t=String(i.tracking||"").trim();if(!t)return "";const k=trackLink(t);
@@ -67,7 +69,7 @@ function orderCard(o){
   const f=o.f,[lb,cl]=STG[o.stage],us=unitsOf(o.its);
   const head=`<div class="oc-h"><span class="tag ${cl}">${lb}</span><span class="muted">${f.saleDate?"bán "+fdate(f.saleDate+"T12:00:00"):""}</span><span style="flex:1"></span>${us.length>1?`<span class="muted">${us.length} món</span>`:""}<button type="button" class="mini" data-unsell title="Bấm nhầm? Đưa về kho">↶ Về kho</button></div>
   <div class="oc-kv"><div><span>Order ID</span>${f.orderId?`<b class="mono">#${esc(f.orderId)}</b>`:`<b class="muted">(không có)</b>`}</div><div><span>Người mua</span><b>${esc(f.buyer||"—")}</b></div>${o.stage==="done"?`<div class="kvt"><span>Tracking</span><div><input class="mono" data-q="tracking" data-done value="${esc(qDraft[o.its.map(i=>i.id).join(",")+"|tracking"]??(f.tracking||""))}" placeholder="Số tracking" autocomplete="off"><div class="trk-act">${f.tracking?`<button type="button" class="mini" data-copy="${esc(f.tracking)}">Copy</button><a href="${esc(trackLink(f.tracking).u)}" class="btn tbtn" data-trk="${esc(trackLink(f.tracking).u)}">Track ↗</a>`:""}</div></div></div>`:f.tracking?`<div class="kvt"><span>Tracking</span><div>${trkLine(f)}</div></div>`:""}</div>`;
-  const rows=us.map(u=>{const i=u.f,pic=(u.its.find(x=>(x.photos||[]).length)||{}).photos;return `<div class="oc-i"${o.stage==="done"?"":` data-open="${i.id}"`}>${pic?`<img loading="lazy" decoding="async" class="thumb sm" src="${ph(pic[0])}" alt="" data-zoom title="Xem ảnh lớn">`:""}<span class="oc-n" title="${esc(i.name||"")}"><b>${u.kit?`<span class="kit-tag">🔗 kit ${u.its.length} thanh</span> `:""}${esc(i.name||"(chưa đặt tên)")}</b><span class="mono muted">${esc(u.kit?u.serials:(i.serial||"thiếu serial"))}</span></span>${i.status==="tra"?`<span class="tag s-tra">trả ${u.sum("refund")?money(u.sum("refund")):""}</span>`:""}<span class="num">${money(u.sum("price"))}</span>${o.stage==="done"&&i.status==="ban"?`<button type="button" class="mini" data-ret="${i.id}" title="Ghi nhận ${u.kit?"cả kit":"món này"} bị trả lại">↩ Trả</button>`:""}${o.stage==="done"?`<button type="button" class="mini" data-rs="${i.id}" title="Restock: nhập thêm hàng giống ${u.kit?"kit":"món"} này">🔁</button>`:""}</div>`}).join("");
+  const rows=us.map(u=>{const i=u.f,pic=(u.its.find(x=>(x.photos||[]).length)||{}).photos;return `<div class="oc-i"${o.stage==="done"?"":` data-open="${i.id}"`}>${pic?`<img loading="lazy" decoding="async" class="thumb sm" src="${ph(pic[0])}" alt="" data-zoom title="Xem ảnh lớn">`:""}<span class="oc-n" title="${esc(i.name||"")}"><b>${u.kit?`<span class="kit-tag">🔗 kit ${u.its.length} thanh</span> `:""}${esc(i.name||"(chưa đặt tên)")}</b><span class="mono muted">${esc(u.kit?u.serials:(i.serial||"thiếu serial"))}</span></span>${i.status==="tra"?`<span class="tag s-tra">trả ${u.sum("refund")?money(u.sum("refund")):""}</span>`:""}<span class="num">${money(u.sum("price"))}</span>${o.stage==="done"?`<button type="button" class="mini" data-rs="${i.id}" title="Restock: nhập thêm hàng giống ${u.kit?"kit":"món"} này">🔁</button>`:""}</div>`}).join("");
   // gọn: chỉ Bán và Lãi; bấm ▸ xem chi tiết
   const tot=`<details class="oc-t"><summary><span>Bán <b>${money(o.price+o.charge)}</b></span><span>Lãi <b class="${o.profit>=0?"pos":"neg"}">${money(o.profit)}</b></span></summary>
     <div><span>Giá bán</span><b>${money(o.price)}</b></div>${o.charge?`<div><span>Ship người mua trả</span><b>+${money(o.charge)}</b></div>`:""}<div><span>Phí eBay</span><b>−${money(o.fees)}</b></div><div><span>Ship bạn trả</span><b>−${money(o.ship)}</b></div><div><span>Vốn</span><b>−${money(o.cost)}</b></div></details>`;
@@ -97,12 +99,14 @@ function render(){
   const q=$("#q").value.trim().toLowerCase(),qs=ns(q),mon=$("#ebMonth").value;
   const sold=items.filter(i=>i.status!=="kho"),stock=items.filter(i=>i.status==="kho");
   // đếm trên tab (Cần ship luôn đếm hết, không theo tháng)
-  if(!["kho","ship","done","ret"].includes(ebTab))ebTab="done";
-  const allOrders=ordersOf(sold),cnt={kho:unitsOf(stock).length,ship:0,done:0,ret:0};
+  if(!["kho","ship","done"].includes(ebTab))ebTab="done";
+  const allOrders=ordersOf(sold),cnt={kho:unitsOf(stock).length,ship:0,done:0};
+  for(const o of allOrders)if(o.stage==="ret")o.stage="done"; // không dùng trả hàng nữa: đơn cũ bị trả hiện ở Xong
   for(const o of allOrders)cnt[o.stage]++;
   $$("#ebTabs [data-eb]").forEach(b=>{const i=b.querySelector("i");if(i){const c=cnt[b.dataset.eb];i.textContent=c||"";i.className=b.dataset.eb==="ship"&&c?"hot":""}});
   $$("#ebTabs [data-eb]").forEach(b=>{if(b.dataset.eb!=="check")b.classList.toggle("on",b.dataset.eb===ebTab&&!$("#tab-kho").classList.contains("hidden"))});
-  $("#ebMonth").style.display=["kho","ship"].includes(ebTab)?"none":"";
+  $("#ebMbar").style.display=ebTab==="done"&&!q?"":"none";$("#ebMLbl").textContent=mon?mLabel(mon):"Tất cả các tháng";$("#ebMAll").classList.toggle("on",!mon);
+  {const o=[...$("#ebMonth").options].map(x=>x.value).filter(Boolean);$('#ebMbar [data-mm="1"]').disabled=!!mon&&mon>=o[0];$('#ebMbar [data-mm="-1"]').disabled=!!mon&&mon<=o[o.length-1]}
   $$("#ebView button").forEach(b=>b.classList.toggle("on",b.dataset.v===ebView));
   let html="",empty="";
   if(ebTab==="kho"){
@@ -117,24 +121,28 @@ function render(){
   }else{
     const os=allOrders.filter(o=>o.stage===ebTab&&(ebTab==="ship"||!mon||q||monthOf(o.date)===mon)&&o.its.some(i=>hit(i,q,qs)));
     if(ebTab==="ship")os.sort((a,b)=>a.date.localeCompare(b.date)); // đơn chờ lâu nhất lên đầu
-    html=os.length?(ebView==="table"&&!matchMedia("(max-width:760px)").matches?orderTable(os):os.map(orderCard).join("")):"";
-    empty={ship:"🎉 Không còn đơn nào cần ship.",done:"Chưa có đơn hoàn thành"+(mon?" trong "+mLabel(mon):"")+".",ret:"Không có hàng bị trả lại"+(mon?" trong "+mLabel(mon):"")+"."}[ebTab];
+    const tbl=ebView==="table"&&!matchMedia("(max-width:760px)").matches;
+    if(ebTab==="done"&&!mon&&!q&&!tbl&&os.length){ // Tất cả: chia theo tháng
+      const g=new Map();for(const o of os){const k=monthOf(o.date)||"";(g.get(k)||g.set(k,[]).get(k)).push(o)}
+      html=[...g].map(([k,a])=>{const p=a.reduce((x,o)=>x+o.profit,0);return `<div class="mgrp"><b>${k?mLabel(k):"Chưa có ngày bán"}</b><span>${a.length} đơn · lãi <b class="${p>=0?"pos":"neg"}">${money(p)}</b></span></div>`+a.map(orderCard).join("")}).join("");
+    }else html=os.length?(tbl?orderTable(os):os.map(orderCard).join("")):"";
+    empty={ship:"🎉 Không còn đơn nào cần ship.",done:"Chưa có đơn hoàn thành"+(mon?" trong "+mLabel(mon):"")+"."}[ebTab];
     const S=k=>os.reduce((a,o)=>a+o[k],0);
     $("#sum").innerHTML=ebTab==="ship"?`<div>Cần ship<b class="${os.length?"warn-t":""}">${os.length}</b></div><div>Tiền chờ<b>${money(S("price")+S("charge"))}</b></div><div>Chờ lâu nhất<b>${os.length?daysAgo(os[0].f.saleDate)+" ngày":"—"}</b></div>`
-      :ebTab==="ret"?`<div>Đơn bị trả<b>${os.length}</b></div><div>Tiền đã hoàn<b class="neg">${money(S("refund"))}</b></div><div>Serial không khớp<b class="${os.some(o=>o.its.some(i=>i.retSerial&&ns(i.retSerial)!==ns(i.serial)))?"neg":""}">${os.reduce((a,o)=>a+o.its.filter(i=>i.retSerial&&ns(i.retSerial)!==ns(i.serial)).length,0)}</b></div>`
-      :`<div>Đơn<b>${os.length}</b></div><div>Doanh thu<b>${money(S("price")+S("charge"))}</b></div><div>Lãi<b class="${S("profit")>=0?"pos":"neg"}">${money(S("profit"))}</b></div>`;
+      :false?`<div>Đơn bị trả<b>${os.length}</b></div><div>Tiền đã hoàn<b class="neg">${money(S("refund"))}</b></div><div>Serial không khớp<b class="${os.some(o=>o.its.some(i=>i.retSerial&&ns(i.retSerial)!==ns(i.serial)))?"neg":""}">${os.reduce((a,o)=>a+o.its.filter(i=>i.retSerial&&ns(i.retSerial)!==ns(i.serial)).length,0)}</b></div>`
+      :`<div>Đơn${mon?` · T${+mon.slice(5)}`:""}<b>${os.length}</b></div><div>Tiền bán<b>${money(S("price")+S("charge"))}</b></div><div>Lãi<b class="${S("profit")>=0?"pos":"neg"}">${money(S("profit"))}</b></div>`;
   }
   // đang tìm: cho biết tab khác cũng có kết quả (tìm Order ID, người mua… không cần nhớ đơn nằm ở tab nào)
   const mainHtml=html;
   if(q){
-    const oc={kho:unitsOf(stock.filter(i=>hit(i,q,qs))).length,ship:0,done:0,ret:0},TN={kho:"📦 Kho",ship:"📮 Cần ship",done:"✅ Xong",ret:"↩ Trả"};
+    const oc={kho:unitsOf(stock.filter(i=>hit(i,q,qs))).length,ship:0,done:0},TN={kho:"📦 Kho",ship:"📮 Cần ship",done:"✅ Xong"};
     for(const o of allOrders)if(o.its.some(i=>hit(i,q,qs)))oc[o.stage]++;
     const other=Object.keys(oc).filter(k=>k!==ebTab&&oc[k]);
     if(other.length)html=`<div class="ebx">Cũng thấy ở: ${other.map(k=>`<button type="button" class="chip" data-ebgo="${k}">${TN[k]} (${oc[k]})</button>`).join("")}</div>`+html;
   }
   $("#list").innerHTML=html;
   $$("#list [data-ebgo]").forEach(b=>b.onclick=e=>{e.stopPropagation();const k=b.dataset.ebgo;if(k!=="ship"&&k!=="kho")$("#ebMonth").value="";$(`#ebTabs [data-eb="${k}"]`).click()});
-  $("#empty").style.display=mainHtml?"none":"block";$("#empty").innerHTML=emptyBox(empty.replace(/^🎉\s*/,""),{kho:"📦",ship:"🎉",done:"📭",ret:"↩️"}[ebTab]||"📭",ebTab==="kho"&&!stock.length?"+ Thêm hàng":"","new");
+  $("#empty").style.display=mainHtml?"none":"block";$("#empty").innerHTML=emptyBox(empty.replace(/^🎉\s*/,""),{kho:"📦",ship:"🎉",done:"📭"}[ebTab]||"📭",ebTab==="kho"&&!stock.length?"+ Thêm hàng":"","new");
 }
 // một bộ xử lý click cho cả danh sách
 $("#list").addEventListener("click",async e=>{
@@ -271,6 +279,13 @@ function unitRow(u){
 }
 $$("#ebView button").forEach(b=>b.onclick=()=>{ebView=b.dataset.v;try{localStorage.setItem("ebView",ebView)}catch(e){}render()});
 $("#ebMonth").onchange=render;
+$("#ebMbar").addEventListener("click",e=>{
+  const s=$("#ebMonth"),o=[...s.options].map(x=>x.value).filter(Boolean);
+  if(e.target.closest("#ebMAll")){s.value="";return render()}
+  const b=e.target.closest("[data-mm]");if(!b)return;
+  const cur=s.value||mKey(new Date()),nx=s.value?mShift(cur,+b.dataset.mm):cur;
+  if(o.includes(nx)){s.value=nx;render()}
+});
 // menu ⋯ đóng khi bấm ra ngoài
 document.addEventListener("click",e=>{const m=$("#ebMore");if(m.open&&!m.contains(e.target))m.open=false});
 
@@ -313,7 +328,7 @@ function setStatus(st){
   $("#retBox").classList.toggle("hidden",st!=="tra");
   const b=[];
   if(st==="kho")b.push(["ban","💰 Đánh dấu đã bán"]);
-  if(st==="ban")b.push(["tra","↩ Bị trả lại"],["kho","↶ Về kho"]);
+  if(st==="ban")b.push(["kho","↶ Về kho"]);
   if(st==="tra")b.push(["kho","↶ Về kho"],["ban","Quay lại: đã bán"]);
   $("#stBtns").innerHTML=b.map(([k,l])=>`<button type="button" class="btn" data-st="${k}">${l}</button>`).join("");
   renderMates();

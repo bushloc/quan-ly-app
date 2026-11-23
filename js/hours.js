@@ -28,46 +28,28 @@ function calcShifts(){
 const Z0=()=>({h:0,reg:0,ot:0,hol:0,pto:0,pay:0,n:0});
 const addC=(a,c)=>{c=c||{};for(const k of ["h","reg","ot","hol","pto","pay"])a[k]+=c[k]||0;a.n++;return a};
 const leaveTxt=c=>(c.hol?` + <b>${fh(c.hol)} giờ Holiday</b>`:"")+(c.pto?` + <b>${fh(c.pto)} giờ PTO</b>`:"");
-let wkCur=null;
 const fh=h=>h.toFixed(2);
 const lunch=()=>{const v=parseFloat(S().lunch);return isFinite(v)&&v>=0?v:30};
 // thanh giờ tuần: xanh khi còn xa, vàng khi còn ≤5 giờ tới ngưỡng, đỏ khi tăng ca
 const hrBarCls=(tot,lim)=>tot>lim?"over":tot>=lim-5?"warn":"go";
 const dm=s=>{const d=parseD(s);return d.getDate()+"/"+(d.getMonth()+1)};
+// trang Giờ làm theo tháng đang xem trên lịch (calM); OT vẫn tính theo tuần
 function renderWork(){
   if(holdWhileTyping("work",$("#mod-work"),renderWork))return;
-  if(!wkCur)wkCur=weekStartOf(today());
-  const calc=calcShifts(),we=addDays(wkCur,6),t=today();
-  $("#wkLabel").textContent=`${DOW[parseD(wkCur).getDay()]} ${dm(wkCur)} – ${DOW[parseD(we).getDay()]} ${dm(we)}/${parseD(we).getFullYear()}`;
-  const list=DB.shifts.filter(s=>s.date>=wkCur&&s.date<=we).sort((a,b)=>(a.date+(a.start||"")).localeCompare(b.date+(b.start||"")));
-  const sum=list.reduce((a,s)=>addC(a,calc[s.id]),Z0()),nw=list.filter(s=>!isLeave(s)).length;
-  const lim=n(S().otAfter)||40,toOt=sum.h+(S().leaveOt?sum.hol+sum.pto:0),pct=Math.min(100,toOt/lim*100),left=lim-toOt;
+  const t=today();
+  const calc=calcShifts(),mk=(typeof calM!=="undefined"&&calM)||monthOf(t),lim=n(S().otAfter)||40;
+  const ms=DB.shifts.filter(s=>monthOf(s.date)===mk),m=ms.reduce((a,s)=>addC(a,calc[s.id]),Z0()),nw=ms.filter(s=>!isLeave(s)).length;
+  // dòng "Tuần này": chỉ khi lịch đang ở tháng hiện tại
+  if(mk===monthOf(t)){
+    const w0=weekStartOf(t),w1=addDays(w0,6),w=DB.shifts.filter(s=>s.date>=w0&&s.date<=w1).reduce((a,s)=>addC(a,calc[s.id]),Z0());
+    const toOt=w.h+(S().leaveOt?w.hol+w.pto:0),left=lim-toOt;
+    $("#wkLine").innerHTML=`<span>Tuần này: <b>${fh(toOt).replace(/\.00$/,"")}</b> / ${lim} giờ</span><span class="bar ${hrBarCls(toOt,lim)}"><i style="width:${Math.min(100,toOt/lim*100)}%"></i></span><span class="${left>0?"":"neg"}">${left>0?`còn ${fh(left).replace(/\.00$/,"")}h tới OT`:`+${fh(w.ot)}h OT`}</span>`;
+    $("#wkLine").style.display="";
+  }else $("#wkLine").style.display="none";
   $("#wkSum").innerHTML=
-    `<div class="card"><div class="lb">Tổng giờ tuần</div><div class="v">${fh(sum.h)} <span class="sub">/ ${lim} giờ</span>${sum.hol?` <span class="lvtag hol">+${fh(sum.hol)} Holiday</span>`:""}${sum.pto?` <span class="lvtag pto">+${fh(sum.pto)} PTO</span>`:""}</div><div class="bar ${hrBarCls(toOt,lim)}"><i style="width:${pct}%"></i></div><div class="sub">${left>0?`Còn ${fh(left)} giờ tới tăng ca`:"Đã vượt ngưỡng tăng ca"}${sum.hol||sum.pto?`<br>${S().leaveOt?"PTO/Holiday có tính vào mốc OT":"PTO/Holiday có lương, không tính vào mốc OT"}`:""}</div></div>`+
-    `<div class="card pay"><div class="lb">Tiền công ước tính</div><div class="v">${money(sum.pay)}</div><div class="sub">Regular ${fh(sum.reg)} · OT ${fh(sum.ot)}${sum.hol?` · Holiday ${fh(sum.hol)}`:""}${sum.pto?` · PTO ${fh(sum.pto)}`:""} giờ<br>Trước thuế · ${nw} ca</div></div>`+
-    `<div class="card ${sum.ot>0?"ot1":"ot0"}"><div class="lb">Tăng ca</div><div class="v">${sum.ot>0?fh(sum.ot)+" giờ":"—"}</div><div class="sub">${sum.ot>0?`Tính ×${n(S().otMult)||1.5} lương`:"Chưa có tăng ca"}</div></div>`;
-  let h="";
-  for(let k=0;k<7;k++){
-    const d=addDays(wkCur,k),ds=list.filter(s=>s.date===d),isT=d===t,fut=d>t;
-    const dc=ds.reduce((a,s)=>addC(a,calc[s.id]),Z0()),dh=dc.h+dc.hol+dc.pto,dp=dc.pay,dot=dc.ot;
-    const head=`<div class="dh2"><span>${DOW[parseD(d).getDay()]} ${dm(d)}</span>${isT?`<span class="pill">Hôm nay</span>`:ds.length?`<button class="addb" data-add="${d}" title="Thêm ca">+</button>`:""}</div>`;
-    const trow=s=>isLeave(s)
-      ?`<div class="tr lv ${s.kind}" data-sh="${s.id}" title="${esc(s.note||"Sửa")}">${LV[s.kind]} ${fh(shiftHours(s)).replace(/\.00$/,"")}h${s.note?` · ${esc(s.note)}`:""}</div>`
-      :`<div class="tr" data-sh="${s.id}" title="${esc(s.note||"Sửa ca")}">${esc(s.start)}–${esc(s.end)}${n(s.brk)?` · nghỉ ${n(s.brk)}′`:""}</div>`;
-    h+=ds.length
-      ?`<div class="day${isT?" today":""}${ds.some(isLeave)?" lvday":""}" data-day="${d}">${head}<div class="h">${fh(dh)} <small>giờ</small></div><span class="dbar${dot>0?" ot":""}"><i style="width:${Math.min(100,dh/10*100)}%"></i></span>${ds.map(trow).join("")}${dot>0?`<span class="otg">+${fh(dot)}h tăng ca</span>`:""}<div class="p">${money(dp)}</div></div>`
-      :`<div class="day empty${isT?" today":fut?" future":""}" data-day="${d}">${head}<div class="plus">${isT?"+ Thêm ca":fut?"+":"Nghỉ"}</div></div>`;
-  }
-  $("#wkDays").innerHTML=h;
-  $$("#wkDays .day").forEach(el=>el.onclick=e=>{
-    const sh=e.target.closest("[data-sh]"),add=e.target.closest("[data-add]");
-    if(add)return openShift(null,add.dataset.add);
-    if(sh)return openShift(sh.dataset.sh);
-    const first=el.querySelector("[data-sh]");first?openShift(first.dataset.sh):openShift(null,el.dataset.day);
-  });
-  const mk=monthOf(wkCur),ms=DB.shifts.filter(s=>monthOf(s.date)===mk);
-  const m=ms.reduce((a,s)=>addC(a,calc[s.id]),Z0());
-  $("#wkMonth").innerHTML=`${mLabel(mk)}: <b>${ms.filter(s=>!isLeave(s)).length}</b> ca · <b>${fh(m.h)}</b> giờ làm · tăng ca <b>${fh(m.ot)}</b> giờ${m.hol?` · Holiday <b>${fh(m.hol)}</b> giờ`:""}${m.pto?` · PTO <b>${fh(m.pto)}</b> giờ`:""} · tiền công <b class="pos">${money(m.pay)}</b>`;
+    `<div class="card"><div class="lb">Giờ làm ${mLabel(mk).toLowerCase()}</div><div class="v">${fh(m.h)} <span class="sub">giờ</span></div><div class="sub">${nw} ca${m.hol?` <span class="lvtag hol">+${fh(m.hol)} Holiday</span>`:""}${m.pto?` <span class="lvtag pto">+${fh(m.pto)} PTO</span>`:""}</div></div>`+
+    `<div class="card pay"><div class="lb">Tiền công tháng</div><div class="v">${money(m.pay)}</div><div class="sub">Thường ${fh(m.reg)} · OT ${fh(m.ot)}${m.hol?` · Holiday ${fh(m.hol)}`:""}${m.pto?` · PTO ${fh(m.pto)}`:""} giờ · trước thuế</div></div>`+
+    `<div class="card ${m.ot>0?"ot1":"ot0"}"><div class="lb">Tăng ca tháng</div><div class="v">${m.ot>0?fh(m.ot)+" giờ":"—"}</div><div class="sub">${m.ot>0?`×${n(S().otMult)||1.5} lương`:"Chưa có tăng ca"}</div></div>`;
   renderClock();
 }
 function renderClock(){
@@ -91,10 +73,8 @@ $("#clockBtn").onclick=()=>{
     DB.clock={start:st.getTime()};save();renderWork();return}
   const st=new Date(DB.clock.start),en=new Date(Math.max(Date.now(),DB.clock.start)); // Clock Out trước giờ vào thì không thành ca qua đêm
   DB.shifts.push({id:uid(),date:ymd(st),start:hhmm(st),end:hhmm(en),brk:lunch(),note:""});
-  DB.clock=null;save();wkCur=weekStartOf(ymd(st));renderWork();
+  DB.clock=null;save();calM=monthOf(ymd(st));renderWork();
 };
-$("#wkPrev").onclick=()=>{wkCur=addDays(wkCur,-7);renderWork()};
-$("#wkNext").onclick=()=>{wkCur=addDays(wkCur,7);renderWork()};
 let shCur=null;
 function shKindUI(){
   const f=$("#shForm"),k=f.kind.value,lv=k==="hol"||k==="pto";
@@ -118,6 +98,6 @@ $("#shForm").onsubmit=e=>{
     :{date:f.date.value,kind:"work",start:f.start.value,end:f.end.value,brk:n(f.brk.value),note:f.note.value.trim()};
   if(shCur)shCur=DB.shifts.find(s=>s.id===shCur.id)||(DB.shifts.push(shCur),shCur); // đồng bộ có thể đã thay object lúc đang mở
   if(shCur){Object.assign(shCur,v);if(v.kind==="work")delete shCur.hrs}else DB.shifts.push({id:uid(),...v});
-  save();$("#shDlg").close();wkCur=weekStartOf(v.date);renderWork();
+  save();$("#shDlg").close();calM=monthOf(v.date);renderWork();
 };
 $("#shDel").onclick=()=>{if(shCur){delUndo("shifts",shCur,"Đã xoá ca",renderWork);$("#shDlg").close()}};

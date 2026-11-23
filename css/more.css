@@ -147,3 +147,7 @@ svg.pie .pl{font-size:10px;fill:var(--muted)}svg.pie .pv{font-size:14px;font-wei
 .mcr .d{font-weight:700}.mcr .k{color:var(--muted);font-size:12.5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .mcr b{font-variant-numeric:tabular-nums}.mcr b.est{color:var(--muted);font-weight:600}
 .mcr.got{box-shadow:inset 3px 0 0 #facc15;padding-left:10px}
+
+/* Giờ làm theo tháng: dòng "Tuần này" */
+.wkline{display:flex;align-items:center;gap:10px;font-size:13px;color:var(--muted);margin:0 2px 10px}
+.wkline b{color:var(--text)}.wkline .bar{flex:1;min-width:60px;margin:0}.wkline>span:last-child{white-space:nowrap}

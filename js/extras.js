@@ -31,7 +31,7 @@ let yOpen=false;
   const rw=renderWork;
   renderWork=function(){
     rw.apply(this,arguments);
-    let el=$("#yPayWrap");if(!el){$("#wkMonth").insertAdjacentHTML("afterend",'<div id="yPayWrap"></div>');el=$("#yPayWrap")}
+    const el=$("#yPayWrap");if(!el)return;
     el.innerHTML=yearCard();
     $("#yPay").addEventListener("toggle",e=>{yOpen=e.target.open});
   };

@@ -149,9 +149,9 @@ function qParse(s){
 let calM=null;
 function renderCal(){
   const box=$("#wkCal");if(!box)return;
-  const mk=calM||monthOf(wkCur||today()),calc=calcShifts(),t=today(),ws=n(S().weekStart);
+  const mk=calM||monthOf(today()),calc=calcShifts(),t=today(),ws=n(S().weekStart);
   const [y,m]=mk.split("-").map(Number),first=`${mk}-01`,dim=new Date(y,m,0).getDate(),last=`${mk}-${String(dim).padStart(2,"0")}`;
-  const lead=(parseD(first).getDay()-ws+7)%7,wkEnd=wkCur?addDays(wkCur,6):"";
+  const lead=(parseD(first).getDay()-ws+7)%7,wk0=weekStartOf(t),wkEnd=addDays(wk0,6);
   const byD={};for(const s of DB.shifts)if(monthOf(s.date)===mk){const c=calc[s.id]||{};const o=byD[s.date]??={h:0,ot:0,hol:0,pto:0};o.h+=c.h||0;o.ot+=c.ot||0;o.hol+=c.hol||0;o.pto+=c.pto||0}
   // ngày nhận check trong tháng
   const pays=new Map(),ratio=netRatio(calc);{let k=Math.floor((dayDiff(first,payStart())-PAY_LAG)/14)-1;for(let i=0;i<5;i++,k++){const pp=payPeriod(k);if(pp.pay>=first&&pp.pay<=last)pays.set(pp.pay,payNet(pp,calc,ratio))}}
@@ -169,7 +169,7 @@ function renderCal(){
       if(tot>0)lab=f1(tot)+"h"}
     if(!lab){if(ds<t)cls.push("off");else if(ds===t){cls.push("tdy");lab="Hôm nay"}else{cls.push("fut");lab="+"}}
     if(pays.has(ds))cls.push("pay");
-    if(ds===t)cls.push("today");if(wkCur&&ds>=wkCur&&ds<=wkEnd)cls.push("cur");
+    if(ds===t)cls.push("today");if(ds>=wk0&&ds<=wkEnd)cls.push("cur");
     h+=`<button type="button" class="${cls.join(" ")}" data-cd="${ds}" style="${st}" title="${pays.has(ds)?`Ngày nhận check · ${pays.get(ds).est?"ước tính ":""}${money(pays.get(ds).v)}`:""}">${pays.has(ds)?`<i class="pm">💵 ${pays.get(ds).v>0?(v=>v>=1000?"$"+(v/1000).toFixed(1).replace(/\.0$/,"")+"k":"$"+Math.round(v))(pays.get(ds).v)+(pays.get(ds).est?"":" ✓"):"Lương"}</i>`:""}<span class="n">${d}</span><span class="hh">${lab}</span>${sub?`<span class="ox">${sub}</span>`:""}</button>`;
   }
   h+=`</div><div class="calk"><span><i class="k w"></i>Ca làm</span><span><i class="k ot"></i>Có OT</span><span><i class="k hol"></i>Holiday</span><span><i class="k pto"></i>PTO</span><span><i class="k pay"></i>💵 Nhận lương</span></div>`;
@@ -177,14 +177,14 @@ function renderCal(){
   renderMonthChecks(mk,calc);
 }
 $("#mod-work").addEventListener("click",e=>{
-  const nav=e.target.closest("#wkCal [data-cm]");if(nav){calM=mShift(calM||monthOf(wkCur||today()),+nav.dataset.cm);return renderCal()}
+  const nav=e.target.closest("#wkCal [data-cm]");if(nav){calM=mShift(calM||monthOf(today()),+nav.dataset.cm);return renderWork()}
   const c=e.target.closest("#wkCal [data-cd]");if(!c)return;
-  const d=c.dataset.cd;calM=monthOf(d);wkCur=weekStartOf(d);renderWork();
+  const d=c.dataset.cd;
   if(c.classList.contains("pay"))return openPay(d);
   const ss=DB.shifts.filter(s=>s.date===d).sort((a,b)=>(isLeave(a)-isLeave(b))||String(a.start).localeCompare(String(b.start)));
   ss.length?openShift(ss[0].id):openShift(null,d);
 });
-{const rw=renderWork;renderWork=function(){const r=rw.apply(this,arguments);if(wkCur){if(!calM||(monthOf(wkCur)!==calM&&monthOf(addDays(wkCur,6))!==calM))calM=monthOf(wkCur);renderCal()}return r}}
+{const rw=renderWork;renderWork=function(){if(!calM)calM=monthOf(today());const r=rw.apply(this,arguments);renderCal();return r}}
 {const rs=renderSpend;renderSpend=function(){const r=rs.apply(this,arguments);renderPie();return r}}
 
 /* eBay cả năm theo tháng (Tổng quan) */
@@ -264,6 +264,6 @@ function renderMonthChecks(mk,calc){
   let tot=0,anyEst=false;
   const body=rows.map(pp=>{const q=payNet(pp,calc,ratio);tot+=q.v;if(q.est)anyEst=true;
     return `<button type="button" class="mcr${q.est?"":" got"}" data-pay="${pp.pay}"><span class="d">${dowl(pp.pay)} ${dmy(pp.pay)}</span><span class="k">kỳ ${dmy(pp.st)}–${dmy(pp.en)}</span><b class="${q.est?"est":"pos"}">${q.est&&!q.v?"—":(q.est?"~":"")+money(q.v)+(q.est?"":" ✓")}</b></button>`}).join("");
-  box.innerHTML=`<div class="mch"><span>💵 Check ${mLabel(mk).toLowerCase()}</span><b class="pos">${rows.length?(anyEst?"~":"")+money(tot):"—"}</b></div>${body||`<p class="muted" style="margin:4px 0 0">Không có check trong tháng này.</p>`}`;
+  box.innerHTML=`<div class="mch"><span>💵 Check ${mLabel(mk).toLowerCase()}</span><b class="pos">${rows.length&&tot>0?(anyEst?"~":"")+money(tot):"—"}</b></div>${body||`<p class="muted" style="margin:4px 0 0">Không có check trong tháng này.</p>`}`;
 }
 $("#wkCheck").addEventListener("click",e=>{const r=e.target.closest("[data-pay]");if(r)openPay(r.dataset.pay)});

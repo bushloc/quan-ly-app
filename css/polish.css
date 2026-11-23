@@ -32,7 +32,7 @@ details[open]>*:not(summary){animation:modin .18s ease-out}
 
 /* 9) tìm kiếm chung */
 .gsdlg{width:min(640px,calc(100vw - 24px));max-height:80vh;padding:0;border:1px solid var(--line);border-radius:16px;background:var(--solid);color:var(--text);overflow:hidden;margin:6vh auto auto}
-.gsdlg::backdrop{background:rgba(5,6,16,.55);backdrop-filter:blur(3px)}
+.gsdlg::backdrop{background:rgba(5,6,16,.6)}
 
 .gsin{display:flex;gap:8px;padding:12px;border-bottom:1px solid var(--line)}
 .gsin input{flex:1;min-width:0;font-size:16px;min-height:42px;margin:0;color:var(--text);background:var(--input);-webkit-appearance:none;appearance:none}
@@ -51,7 +51,7 @@ details[open]>*:not(summary){animation:modin .18s ease-out}
 #empty:not([style*="none"]){padding:0}
 /* khung tìm kiếm: khối thường (không flex/fit-content) để Safari iPhone hiện đúng; neo trên cùng, cao theo nội dung */
 dialog.gsdlg{position:fixed;inset:12px 0 auto 0;margin:0 auto;height:auto;max-height:none}
-@media(max-width:760px){dialog.gsdlg{inset:8px 0 auto 0;width:calc(100vw - 16px);max-width:none;height:auto;max-height:none;border-radius:16px}}
+@media(max-width:760px){dialog.gsdlg{inset:calc(env(safe-area-inset-top) + 56px) 0 auto 0;width:calc(100vw - 16px);max-width:none;height:auto;max-height:none;border-radius:16px}}
 
 /* PTO / Holiday cạnh tổng giờ */
 .lvtag{display:inline-block;font:600 12px/1.6 "Segoe UI",system-ui,sans-serif;padding:0 8px;border-radius:99px;vertical-align:middle;white-space:nowrap;background:var(--soft);color:var(--accent)}

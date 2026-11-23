@@ -154,7 +154,7 @@ function renderCal(){
   const lead=(parseD(first).getDay()-ws+7)%7,wkEnd=wkCur?addDays(wkCur,6):"";
   const byD={};for(const s of DB.shifts)if(monthOf(s.date)===mk){const c=calc[s.id]||{};const o=byD[s.date]??={h:0,ot:0,hol:0,pto:0};o.h+=c.h||0;o.ot+=c.ot||0;o.hol+=c.hol||0;o.pto+=c.pto||0}
   // ngày nhận check trong tháng
-  const pays=new Set();{let k=Math.floor((dayDiff(first,payStart())-PAY_LAG)/14)-1;for(let i=0;i<5;i++,k++){const p=payPeriod(k).pay;if(p>=first&&p<=last)pays.add(p)}}
+  const pays=new Map(),ratio=netRatio(calc);{let k=Math.floor((dayDiff(first,payStart())-PAY_LAG)/14)-1;for(let i=0;i<5;i++,k++){const pp=payPeriod(k);if(pp.pay>=first&&pp.pay<=last)pays.set(pp.pay,payNet(pp,calc,ratio))}}
   const f1=v=>v%1?v.toFixed(1):String(v);
   let h=`<div class="calh"><button type="button" class="btn" data-cm="-1" aria-label="Tháng trước">‹</button><b>${mLabel(mk)}</b><button type="button" class="btn" data-cm="1" aria-label="Tháng sau">›</button></div><div class="calg">`;
   for(let k=0;k<7;k++)h+=`<span class="cdw">${DOW[(ws+k)%7]}</span>`;
@@ -169,7 +169,7 @@ function renderCal(){
       if(tot>0)lab=f1(tot)+"h"}
     if(pays.has(ds))cls.push("pay");
     if(ds===t)cls.push("today");if(wkCur&&ds>=wkCur&&ds<=wkEnd)cls.push("cur");
-    h+=`<button type="button" class="${cls.join(" ")}" data-cd="${ds}" style="${st}" title="${pays.has(ds)?"Ngày nhận check":""}">${pays.has(ds)?`<i class="pm">💵</i>`:""}<span class="n">${d}</span><span class="hh">${lab}</span>${sub?`<span class="ox">${sub}</span>`:""}</button>`;
+    h+=`<button type="button" class="${cls.join(" ")}" data-cd="${ds}" style="${st}" title="${pays.has(ds)?`Ngày nhận check · ${pays.get(ds).est?"ước tính ":""}${money(pays.get(ds).v)}`:""}">${pays.has(ds)?`<i class="pm">💵 ${pays.get(ds).v>0?(v=>v>=1000?"$"+(v/1000).toFixed(1).replace(/\.0$/,"")+"k":"$"+Math.round(v))(pays.get(ds).v):"Lương"}</i>`:""}<span class="n">${d}</span><span class="hh">${lab}</span>${sub?`<span class="ox">${sub}</span>`:""}</button>`;
   }
   h+=`</div><div class="calk"><span><i class="k w"></i>Ca làm</span><span><i class="k ot"></i>Có OT</span><span><i class="k hol"></i>Holiday</span><span><i class="k pto"></i>PTO</span><span><i class="k pay"></i>💵 Nhận lương</span></div><p class="calhint muted">Bấm vào một ngày để thêm hoặc sửa ca, Holiday, PTO.</p>`;
   box.innerHTML=h;

@@ -107,9 +107,20 @@ svg.pie .pl{font-size:10px;fill:var(--muted)}svg.pie .pv{font-size:14px;font-wei
 #clockCard .cin input{width:auto;min-height:36px;margin:0;padding:4px 8px;max-width:132px}
 #clockCard .clockbtn{flex:none;min-height:38px;padding:0 14px;font-size:14px;width:auto}
 @media(max-width:400px){#clockCard .cin{font-size:0;gap:0}#clockCard .cin input{font-size:14px;max-width:104px}}
-/* OT kiểu B: ô cam đậm, nhãn đen, số OT vàng sáng */
-.cd.ot{background:var(--c-ot)!important;border-color:transparent}
-.cd.ot .n,.cd.ot .hh{color:#1a0d02}
-.cd.ot .ox{background:#140a02;color:#fdba74;border-radius:99px;padding:1px 5px;font-size:8.5px;font-weight:800;line-height:1.35;box-shadow:0 1px 5px rgba(0,0,0,.35);white-space:nowrap;max-width:100%;letter-spacing:-.02em}
-.cd.ot .ox b{color:#fef08a;font-size:11.5px;font-weight:900;text-shadow:0 0 6px rgba(254,240,138,.55)}
-:root:not([data-theme="dark"]) .cd.ot{background:#fb923c!important}
+/* v1.9.34: mọi loại ngày cùng kiểu: nền tối, viền + vạch trái theo màu, dải dưới cho OT/PTO/Holiday, dải vàng trên cho ngày lương */
+.cd.w,.cd.ot,.cd.hol,.cd.pto{background:var(--card)!important;border:1px solid var(--k)!important;box-shadow:inset 4px 0 0 var(--k);overflow:hidden}
+.cd.w .hh,.cd.ot .hh,.cd.hol .hh,.cd.pto .hh{color:var(--kt)!important;font-weight:800;font-size:12px}
+.cd.w{--k:#8b5cf6;--kt:#c4b5fd}.cd.ot{--k:#dc2626;--kt:#f87171}.cd.hol{--k:#10b981;--kt:#6ee7b7}.cd.pto{--k:#3b82f6;--kt:#93c5fd}
+:root:not([data-theme="dark"]) .cd.w{--kt:#6d28d9}:root:not([data-theme="dark"]) .cd.ot{--kt:#dc2626}:root:not([data-theme="dark"]) .cd.hol{--kt:#047857}:root:not([data-theme="dark"]) .cd.pto{--kt:#1d4ed8}
+.cd.ot .n,.cd.w .n{color:var(--text)}
+.cd.ot,.cd.hol,.cd.pto{justify-content:flex-start;padding:4px 2px 20px;gap:0}
+.cd .ox{display:none}.cd.ot .ox{display:flex;position:absolute;left:0;right:0;bottom:0;height:18px;align-items:center;justify-content:center;gap:3px;background:#dc2626;color:#fee2e2;font-size:9px;font-weight:700;padding:0;border-radius:0;box-shadow:none;white-space:nowrap}
+.cd.ot .ox b{color:#fff;font-size:12px;font-weight:900}
+.cd.hol::after,.cd.pto::after{position:absolute;left:0;right:0;bottom:0;height:18px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:9.5px;font-weight:800}
+.cd.hol::after{content:"Holiday";background:#10b981}.cd.pto::after{content:"PTO";background:#3b82f6}
+/* ngày lương: dải vàng trên đầu ghi số tiền, viền vàng, phát sáng */
+.cd.pay{border:1.5px solid #facc15!important;box-shadow:inset 4px 0 0 var(--k,transparent),0 0 0 1px rgba(250,204,21,.35),0 0 14px rgba(250,204,21,.45)!important;padding-top:19px!important;overflow:hidden}
+.cd.pay .pm{position:absolute;top:0;left:0;right:0;height:16px;display:flex;align-items:center;justify-content:center;background:linear-gradient(90deg,#f59e0b,#facc15,#f59e0b);color:#1a1202;font-style:normal;font-size:9.5px;font-weight:900;letter-spacing:-.02em;white-space:nowrap;overflow:hidden}
+.cd.pay:not(.w):not(.ot):not(.hol):not(.pto){background:color-mix(in srgb,#facc15 10%,var(--card))!important}
+.calk .k.w{background:#8b5cf6}.calk .k.ot{background:#dc2626}.calk .k.hol{background:#10b981}.calk .k.pto{background:#3b82f6}
+.calk .k.pay{background:linear-gradient(90deg,#f59e0b,#facc15);box-shadow:0 0 6px rgba(250,204,21,.6)}

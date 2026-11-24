@@ -305,3 +305,79 @@ $("#wkCheck").addEventListener("click",e=>{const r=e.target.closest("[data-pay]"
   const rs=renderSet;renderSet=function(){const r=rs.apply(this,arguments);sums();return r};
   sums();
 })();
+
+/* Tổng kết tháng: 10 ngày đầu tháng mới hiện thẻ tổng kết tháng trước ở Tổng quan; bấm ✕ để ẩn */
+function recapHtml(mk){
+  const calc=calcShifts(),s=monthStats(mk,calc),p=monthStats(mShift(mk,-1),calc),pm=mShift(mk,-1);
+  const inc=x=>x.ebay+x.wage+x.thu,cmp=(a,b,good)=>{if(!b)return "";const d=Math.round((a-b)/Math.abs(b)*100);if(!d)return `<small class="rc">=</small>`;const up=d>0,ok=good?up:!up;return `<small class="rc ${ok?"up":"dn"}">${up?"▲":"▼"}${Math.abs(d)}%</small>`};
+  // chi theo danh mục (top 3)
+  const by=new Map();for(const e of DB.expenses)if(isChi(e)&&monthOf(e.date)===mk){const k=e.type==="co"?"Chi cố định":(e.cat||"Khác");by.set(k,(by.get(k)||0)+n(e.amount))}
+  const top=[...by].sort((a,b)=>b[1]-a[1]).slice(0,3);
+  // món lãi nhất
+  const best=DB.items.filter(i=>i.status==="ban"&&monthOf(i.saleDate)===mk).sort((a,b)=>profit(b)-profit(a))[0];
+  const ot=DB.shifts.filter(x=>monthOf(x.date)===mk).reduce((a,x)=>a+((calc[x.id]||{}).ot||0),0);
+  const save=s.net,rate=inc(s)>0?Math.round(save/inc(s)*100):0;
+  const row=(l,v,c,sub="")=>`<div class="rr"><span>${l}${sub?`<small>${sub}</small>`:""}</span><b class="${v<0?"neg":""}">${money(v)}</b>${c}</div>`;
+  return `<div class="card recap" id="homeRecap"><button type="button" class="rx" data-rx aria-label="Ẩn">✕</button>
+    <div class="rh">Tổng kết ${mLabel(mk).toLowerCase()}</div>
+    <div class="rbig"><span>Để dành được</span><b class="${save>=0?"pos":"neg"}">${money(save)}</b>${cmp(save,p.net,true)}<em>${inc(s)>0?`${rate}% thu nhập`:""}</em></div>
+    <div class="rrows">
+      ${row("Lương thực nhận",s.wage,cmp(s.wage,p.wage,true),s.hrs?`${+s.hrs.toFixed(1)} giờ${ot?` · ${+ot.toFixed(1)} giờ OT`:""}`:"")}
+      ${row("Lãi eBay",s.ebay,cmp(s.ebay,p.ebay,true),s.sold?`${s.sold} món`:"")}
+      ${s.thu?row("Thu khác",s.thu,cmp(s.thu,p.thu,true)):""}
+      ${row("Chi tiêu",-s.chi,cmp(s.chi,p.chi,false))}
+    </div>
+    ${top.length?`<div class="rtop"><div class="rl">Chi nhiều nhất</div>${top.map(([k,v])=>`<div><span>${esc(k)}</span><b>${money(v)}</b></div>`).join("")}</div>`:""}
+    ${best&&profit(best)>0?`<div class="rbest">Món lãi nhất: <b>${esc(best.name||"")}</b> <span class="pos">+${money(profit(best))}</span></div>`:""}
+    <div class="rfoot">so với ${mLabel(pm).toLowerCase()}</div></div>`;
+}
+{
+  const rh=renderHome;renderHome=function(){const r=rh.apply(this,arguments);
+    const old=$("#homeRecap");if(old)old.remove();
+    const t=today(),pm=mShift(monthOf(t),-1),day=+t.slice(8);
+    const show=window.RECAP_FORCE||(day<=10&&S().recapSeen!==pm);
+    if(show)$("#homeTodo").insertAdjacentHTML("beforebegin",recapHtml(pm));
+    return r};
+  document.addEventListener("click",e=>{if(e.target.closest("[data-rx]")){S().recapSeen=mShift(monthOf(today()),-1);save();const c=$("#homeRecap");c&&c.remove()}});
+}
+
+/* Giao diện: thanh tab nổi kiểu iOS (viên trượt theo tab), chuyển tab trượt theo hướng, số tiền đếm lên khi mở tab */
+{
+  const still=()=>matchMedia("(prefers-reduced-motion: reduce)").matches,mob=()=>matchMedia("(max-width:760px)").matches;
+  const side=$("#side"),pill=document.createElement("i");pill.className="tpill";side.appendChild(pill);
+  const MODS=["home","ebay","spend","work","set"],cur=()=>(($$("#side button.on")[0]||{}).dataset||{}).mod||"home";
+  let pillOn=false;
+  function movePill(){const b=$("#side button.on");if(!b||!mob()){pill.style.opacity=0;return}
+    if(!pillOn){pill.style.transition="none";requestAnimationFrame(()=>pill.style.transition="")}pillOn=true;
+    pill.style.opacity=1;pill.style.width=b.offsetWidth+"px";pill.style.transform=`translateX(${b.offsetLeft}px)`}
+  addEventListener("resize",movePill);
+  // số tiền đếm lên (chỉ khi vừa mở tab, không chạy lúc đang gõ)
+  const RX=/^(-?)\$([\d,]+\.\d{2})$/;
+  window.countMoney=function(root){
+    if(still()||!root)return;const els=[];
+    for(const el of root.querySelectorAll("b,.v,strong,.big,.amt")){
+      if(els.length>=40)break;if(el.children.length||el.closest("[data-count],input,.emp"))continue;
+      const t=el.textContent.trim(),m=t.match(RX);if(!m)continue;const v=+m[2].replace(/,/g,"");if(!v)continue;
+      const r=el.getBoundingClientRect();if(!r.width||r.top>innerHeight)continue;els.push([el,t,v*(m[1]?-1:1)]);
+    }
+    if(!els.length)return;const t0=performance.now(),D=650;
+    const step=t=>{const p=Math.min(1,Math.max(0,(t-t0)/D)),e=1-Math.pow(1-p,3);
+      for(const [el,t,v] of els)if(el.isConnected)el.textContent=p<1?money(v*e):t;
+      if(p<1)requestAnimationFrame(step)};
+    requestAnimationFrame(step);
+  };
+  const slide=(el,dir)=>{if(!el||still()||!dir)return;el.style.animation="none";
+    el.animate([{opacity:0,transform:`translateX(${dir*28}px)`},{opacity:1,transform:"none"}],{duration:280,easing:"cubic-bezier(.2,.8,.2,1)"})};
+  const sm=showMod;showMod=function(m){
+    const from=cur(),r=sm.apply(this,arguments);movePill();
+    if(from!==m){const d=Math.sign(MODS.indexOf(m)-MODS.indexOf(from)),el=$("#mod-"+m);slide(el,d);setTimeout(()=>countMoney($("#mod-"+m)),30)}
+    return r};
+  $$("#side button").forEach(b=>b.onclick=()=>showMod(b.dataset.mod));
+  // tab con của eBay: trượt theo hướng + đếm số
+  const EB=["kho","ship","go","done"];
+  $$("#ebTabs [data-eb]").forEach(b=>b.addEventListener("click",()=>{
+    const d=Math.sign(EB.indexOf(b.dataset.eb)-EB.indexOf(window.__ebPrev||ebTab));window.__ebPrev=b.dataset.eb;
+    if(d){slide($("#sum"),d);slide($("#list"),d);slide($("#empty"),d);setTimeout(()=>countMoney($("#sum")),30)}
+  },true));
+  requestAnimationFrame(movePill);setTimeout(movePill,300);
+}

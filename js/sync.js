@@ -134,6 +134,7 @@ async function cloudSync(){
     ch+=await pullAll(c);
     ch+=await photoSync(c);
     cloudErr="";cloudAt=Date.now();
+    bakWeekly();
   }catch(e){cloudErr=navigator.onLine===false?"Mất mạng, sẽ thử lại":(e&&e.message)||String(e)}
   if(ch){
     for(const k of COLLS)if(!Array.isArray(DB[k]))DB[k]=[];
@@ -202,3 +203,53 @@ function cloudStart(){
   document.addEventListener("visibilitychange",()=>{if(document.hidden)saveNow();cloudSync()});
   window.addEventListener("online",()=>cloudSync());
 }
+
+/* Bản dự phòng tuần: đúng 1 file <user>/_saoluu/du-phong.json trong kho "photos", mỗi tuần ghi đè 1 lần.
+   Không nằm trong bảng records nên đồng bộ không đụng tới; lỡ xoá nhầm thì khôi phục từ đây. */
+const BAK_PATH=()=>sbUser.id+"/_saoluu/du-phong.json";
+async function bakUpload(){
+  const body=new Blob([JSON.stringify({app:"quan-ly-ca-nhan",ver:typeof APP_VER!=="undefined"?APP_VER:"",at:new Date().toISOString(),db:DB})]);
+  let r=await sb.storage.from("photos").upload(BAK_PATH(),body,{upsert:true,contentType:"application/json"});
+  if(r.error)r=await sb.storage.from("photos").upload(BAK_PATH(),body,{upsert:true,contentType:"image/png"}); // kho chỉ nhận ảnh: vẫn lưu được
+  if(r.error)throw r.error;
+  const c=cget();c.bakAt=Date.now();cset(c);return c.bakAt;
+}
+async function bakInfo(){
+  try{const {data,error}=await sb.storage.from("photos").list(sbUser.id+"/_saoluu");if(error)return null;const f=(data||[]).find(x=>x.name==="du-phong.json");return f?Date.parse(f.updated_at||f.created_at):null}catch(e){return null}
+}
+async function bakWeekly(){
+  const c=cget();if(!c.on||!sbUser)return;
+  if(c.bakAt&&Date.now()-c.bakAt<7*864e5)return;
+  const at=await bakInfo();if(at&&Date.now()-at<7*864e5){c.bakAt=at;cset(c);return} // máy khác vừa lưu
+  try{await bakUpload()}catch(e){}
+}
+async function bakRestore(){
+  const {data,error}=await sb.storage.from("photos").download(BAK_PATH());
+  if(error)throw error;
+  const o=JSON.parse(await data.text());if(!o||!o.db||!Array.isArray(o.db.items))throw new Error("File dự phòng không đọc được");
+  return o;
+}
+
+// Cài đặt → Sao lưu: hiện ngày bản dự phòng, lưu ngay, khôi phục
+async function bakUi(){
+  const box=$("#bakCloud");if(!box)return;
+  const on=cget().on&&sbUser;box.classList.toggle("hidden",!on);if(!on)return;
+  if(!API.info.electron){$("#bkText").innerHTML="Dữ liệu tự đồng bộ lên cloud. App giữ thêm <b>1 bản dự phòng</b> ở trên, mỗi tuần tự ghi đè, để lấy lại khi lỡ xoá nhầm. Các nút dưới chỉ cần khi muốn có file riêng.";$("#lastbk").textContent=""}
+  const at=await bakInfo(),el=$("#bakAt");
+  el.textContent=at?`Lưu lúc ${new Date(at).toLocaleDateString("vi-VN")} · tự ghi đè mỗi tuần`:"Chưa có · app sẽ tự lưu";
+  $("#bakRes").disabled=!at;
+  const c=[...document.querySelectorAll("#mod-set .acc")].find(x=>/Sao lưu/.test((x.querySelector("h3")||{}).textContent||""));
+  if(c&&c.querySelector(".accs"))c.querySelector(".accs").textContent=at?"Dự phòng "+new Date(at).toLocaleDateString("vi-VN",{day:"numeric",month:"numeric"}):"";
+}
+$("#bakNow")&&($("#bakNow").onclick=async()=>{const b=$("#bakNow");b.disabled=true;b.textContent="Đang lưu…";try{await bakUpload();await bakUi();b.textContent="Đã lưu ✓"}catch(e){b.textContent="Lỗi";await say("Không lưu được: "+(e.message||e))}setTimeout(()=>{b.disabled=false;b.textContent="Lưu ngay"},1500)});
+$("#bakRes")&&($("#bakRes").onclick=async()=>{
+  try{
+    const o=await bakRestore(),d=new Date(o.at).toLocaleString("vi-VN");
+    if(!await ask(`Khôi phục dữ liệu về bản dự phòng lúc ${d}?\nMọi thay đổi sau thời điểm đó sẽ mất (trên cả iPhone và máy tính).`))return;
+    for(const k of COLLS)DB[k]=Array.isArray(o.db[k])?o.db[k]:[];
+    for(const k of DOCS)if(k in o.db)DB[k]=o.db[k];
+    if(DB.meta&&DB.meta.pct)PCT=DB.meta.pct;
+    await API.save(DB);await reload();cloudSoon();await say("Đã khôi phục bản dự phòng lúc "+d+".");
+  }catch(e){await say("Không khôi phục được: "+(e.message||e))}
+});
+{const rs=renderSet;renderSet=function(){const r=rs.apply(this,arguments);bakUi();return r}}

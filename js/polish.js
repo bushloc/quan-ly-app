@@ -2,12 +2,16 @@
 /* ===== Giao diện thêm: trạng thái trống, badge thanh bên, chip danh mục, tìm kiếm chung, vuốt xoá, màu nhấn ===== */
 
 // 5) trạng thái trống: biểu tượng + câu + nút gợi ý (act = tên hành động xử lý ở dưới)
-function emptyBox(msg,icon,btn,act){
-  return `<div class="emp"><div class="emi">${icon}</div><div class="emt">${esc(msg)}</div>${btn?`<button type="button" class="btn primary" data-emp="${act}">${esc(btn)}</button>`:""}</div>`;
+function emptyBox(msg,icon,btn,act,sub){
+  return `<div class="emp"><div class="emi"><span>${icon}</span></div><div class="emt">${esc(msg)}</div>${sub?`<div class="ems">${esc(sub)}</div>`:""}${btn?`<button type="button" class="btn ${act==="clrq"||act==="eball"?"":"primary"}" data-emp="${act}">${esc(btn)}</button>`:""}</div>`;
 }
 document.addEventListener("click",e=>{
   const b=e.target.closest("[data-emp]");if(!b)return;
   if(b.dataset.emp==="new")$("#new").click();
+  else if(b.dataset.emp==="clrq"){const q=$("#q");q.value="";q.dispatchEvent(new Event("input",{bubbles:true}));render()}
+  else if(b.dataset.emp==="eball")$("#ebMAll").click();
+  else if(b.dataset.emp==="fx"||b.dataset.emp==="cc"){showMod("set");setTimeout(()=>{openSet(b.dataset.emp==="fx"?"fxSet":"cardSet");$("#"+(b.dataset.emp==="fx"?"fxSet":"cardSet")).scrollIntoView({block:"start"})},0)}
+  else if(b.dataset.emp==="bud"){showMod("spend");setTimeout(()=>{const x=[...$$("#mod-spend button")].find(x=>/Chỉnh ngân sách/.test(x.textContent));x&&x.click()},50)}
   else if(b.dataset.emp==="spend"){const f=$("#spForm");f.scrollIntoView({behavior:"smooth",block:"center"});setTimeout(()=>f.amount.focus(),300)}
 });
 

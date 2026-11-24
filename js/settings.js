@@ -4,7 +4,7 @@ function renderSet(){
   if(holdWhileTyping("set",$("#mod-set"),renderSet))return;
   $("#stWage").value=S().wage;$("#stOtAfter").value=S().otAfter;$("#stOtMult").value=S().otMult;$("#stWeek").value=S().weekStart;$("#stLunch").value=lunch();$("#stLeaveOt").checked=!!S().leaveOt;$("#stPay").value=payStart();$("#stTax").value=taxPct();$("#stTheme").value=S().theme||"dark";
   $("#bkText").innerHTML=API.info.electron
-    ?`Dữ liệu lưu thành file trong thư mục <b class="mono">${esc(API.info.dir)}</b> (ảnh nằm trong thư mục con <span class="mono">photos</span>). App tự sao lưu mỗi ngày vào thư mục <span class="mono">backup</span>. Nếu để thư mục này trong OneDrive thì có thêm bản dự phòng trên mạng.`
+    ?`Dữ liệu lưu thành file trong thư mục <b class="mono">${esc(API.info.dir)}</b> (ảnh nằm trong thư mục con <span class="mono">photos</span>). App tự lưu <b>1 bản dự phòng</b> vào <span class="mono">backup\\db-saoluu.json</span>, mỗi tuần ghi đè 1 lần. Nếu để thư mục này trong OneDrive thì có thêm bản dự phòng trên mạng.`
     :`Dữ liệu lưu trong trình duyệt này. Hãy tải file sao lưu thường xuyên và cất vào C:\\Dev\\Online hoặc OneDrive.`;
   $("#elBtns").classList.toggle("hidden",!API.info.electron);
   renderFixedSet();renderCardSet();

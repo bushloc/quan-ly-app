@@ -206,7 +206,7 @@ $("#csv").onclick=()=>{
 };
 async function backupAge(){
   const m=await mget("last"),last=m?m.value:0,w=$("#warn");
-  $("#lastbk").textContent=API.info.electron?"":(last?`Sao lưu gần nhất: ${new Date(last).toLocaleString("vi-VN")}`:"Chưa sao lưu lần nào.");
+  $("#lastbk").textContent=API.info.electron||cget().on?"":(last?`Sao lưu gần nhất: ${new Date(last).toLocaleString("vi-VN")}`:"Chưa sao lưu lần nào.");
   const d=(Date.now()-last)/864e5;
   if(!API.info.electron&&!cget().on&&items.length&&d>7){w.style.display="block";w.innerHTML=(last?`Đã ${Math.floor(d)} ngày chưa sao lưu.`:"Bạn chưa sao lưu lần nào.")+` <a href="#" id="gb">Sao lưu ngay</a>`;$("#gb").onclick=e=>{e.preventDefault();showMod("set")}}else w.style.display="none";
 }

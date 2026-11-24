@@ -134,7 +134,7 @@ function renderHome(){
   $("#homeDonut").innerHTML=donut(mk,s.ebay+s.wage+s.thu);
   $("#homeYear").innerHTML=yearSummary(yr,mks,stats,mk);
   $("#homeBudgetTitle").textContent="Ngân sách · "+mLabel(mk);
-  $("#homeBudget").innerHTML=budgetBars(mk)||`<span class="muted">Chưa đặt ngân sách. Vào “Thu & Chi” để đặt.</span>`;
+  $("#homeBudget").innerHTML=budgetBars(mk)||emptyBox("Chưa đặt ngân sách","🎯","Đặt ngân sách","bud","Đặt mức chi cho từng danh mục, app báo khi gần chạm mức.").replace('class="emp"','class="emp sm"');
 }
 $("#homeYear").addEventListener("toggle",e=>{if(e.target.matches("details.ydet"))yrOpen=e.target.open},true);
 $("#homeChart").addEventListener("click",e=>{const h=e.target.closest("[data-m]");if(h){homeM=h.dataset.m;renderHome()}});

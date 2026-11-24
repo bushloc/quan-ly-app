@@ -137,7 +137,7 @@ function render(){
     const ua=unitsOf(fs2),nlc=ua.filter(u=>n(u.f.listPrice)).length,us2=ua.filter(u=>ebKf==="all"||(ebKf==="on")===!!n(u.f.listPrice));
     const chips=ua.length?`<div class="ebkf">${[["all","Tất cả",ua.length],["off","Chưa list",ua.length-nlc],["on","Đang list",nlc]].map(([k,l,c])=>`<button type="button" class="chip${ebKf===k?" on":""}" data-kf="${k}">${l} <i>${c}</i></button>`).join("")}</div>`:"";
     html=chips+(us2.length?`<div class="urows">${us2.map(unitRow).join("")}</div>`:ua.length?`<p class="muted ebkf0">Không có món nào ${ebKf==="on"?"đang list":"chưa list"}.</p>`:"");
-    empty=stock.length?"Không có món nào khớp ô tìm.":"Kho đang trống. Bấm “+ Thêm hàng” để nhập hàng.";
+    empty=stock.length?"Không tìm thấy":"Kho đang trống";
     const su=unitsOf(stock),sk=su.filter(u=>u.kit).length,nl=su.filter(u=>n(u.f.listPrice)).length;
     const listed=su.reduce((a,u)=>a+n(u.f.listPrice),0);
     $("#sum").innerHTML=`<div>Trong kho<b>${su.length}</b><span style="font-size:12px">🏷️ Đang list ${nl} · Chưa list ${su.length-nl}${sk?` · ${sk} kit`:""}</span></div><div>Vốn<b>${money(stock.reduce((a,i)=>a+n(i.cost),0))}</b></div><div>Tổng giá list<b>${money(listed)}</b></div>`;
@@ -156,7 +156,7 @@ function render(){
       const g=new Map();for(const o of os){const k=lab(o.date);(g.get(k)||g.set(k,[]).get(k)).push(o)}
       html=[...g].map(([k,a])=>{const p=a.reduce((x,o)=>x+o.profit,0);return `<div class="mgrp dgrp"><b>${k}</b><span>${a.length} đơn · lãi <b class="${p>=0?"pos":"neg"}">${money(p)}</b></span></div>`+a.map(orderCard).join("")}).join("");
     }else html=os.length?(tbl?orderTable(os):os.map(orderCard).join("")):"";
-    empty={ship:"🎉 Không còn đơn nào cần ship.",go:"Không có đơn nào đang giao.",done:"Chưa có đơn đã giao"+(mon?" trong "+mLabel(mon):"")+"."}[ebTab];
+    empty=q?"Không tìm thấy":{ship:"Không còn đơn cần ship",go:"Không có đơn đang giao",done:"Chưa có đơn đã giao"+(mon?" trong "+mLabel(mon).toLowerCase():"")}[ebTab];
     const S=k=>os0.reduce((a,o)=>a+o[k],0);
     // so với tháng trước (chỉ khi xem 1 tháng, không tìm)
     const pm=mon&&!q?mShift(mon,-1):"",pv=pm?allOrders.filter(o=>(o.stage==="done"||o.stage==="go")&&monthOf(o.date)===pm):[];
@@ -176,7 +176,9 @@ function render(){
   }
   $("#list").innerHTML=html;
   $$("#list [data-ebgo]").forEach(b=>b.onclick=e=>{e.stopPropagation();const k=b.dataset.ebgo;if(k!=="ship"&&k!=="kho")$("#ebMonth").value="";$(`#ebTabs [data-eb="${k}"]`).click()});
-  $("#empty").style.display=mainHtml?"none":"block";$("#empty").innerHTML=emptyBox(empty.replace(/^🎉\s*/,""),{kho:"📦",ship:"🎉",go:"🚚",done:"📭"}[ebTab]||"📭",ebTab==="kho"&&!stock.length?"+ Thêm hàng":"","new");
+  $("#empty").style.display=mainHtml?"none":"block";{const nf=empty==="Không tìm thấy",E=nf?["🔍",`Không có ${ebTab==="kho"?"món":"đơn"} nào khớp “${q}” ở tab này.`,"Xoá ô tìm","clrq"]
+    :{kho:["📦","Thêm món đầu tiên để theo dõi vốn, giá list và lãi.","+ Thêm hàng","new"],ship:["🎉","Đơn mới bán sẽ hiện ở đây, kèm hạn ship 3 ngày làm việc."],go:["🚚","Đơn đã ship nằm ở đây cho tới khi giao xong."],done:["📭",mon?"Xem tháng khác, hoặc xem tất cả các tháng.":"Đơn giao xong sẽ nằm ở đây.",mon?"Xem tất cả":"",mon?"eball":""]}[ebTab]||["📭"];
+    $("#empty").innerHTML=emptyBox(empty,E[0],E[2]||"",E[3]||"",E[1])}
 }
 // một bộ xử lý click cho cả danh sách
 $("#list").addEventListener("click",async e=>{

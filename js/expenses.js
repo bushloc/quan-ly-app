@@ -65,7 +65,7 @@ function renderFixed(){
   const rows=fxRows(spM),tot=rows.reduce((a,r)=>a+n(r.amt),0),paidN=rows.filter(r=>r.paid).length;
   $("#fxCard").innerHTML=`<div class="chd"><h3>Chi cố định</h3><span class="muted">${rows.length?`Đã trả ${paidN}/${rows.length} · `:""}<b>${money(tot)}</b></span></div>`+
     (rows.length?`<div class="bar thin"><i style="width:${paidN/rows.length*100}%"></i></div>`+rows.map((r,k)=>`<div class="lrow fxrow${r.paid?" paid":""}" data-fx="${k}" style="--g:${FXM[r.cat].c}"><span class="fxN" title="${FXM[r.cat].l}"><i class="gdot"></i>${esc(r.name)}</span><input class="fxAmt" type="number" step="0.01" min="0" inputmode="decimal" value="${esc(r.amt)}" placeholder="${r.sug!==""?n(r.sug).toFixed(2):"0.00"}" aria-label="Số tiền ${esc(r.name)}"><button type="button" class="pt${r.paid?" on":""}" data-fxpaid aria-pressed="${r.paid}">${r.paid?"Đã trả":"Trả"}</button></div>`).join("")
-      :`<p class="muted" style="margin:6px 0">Chưa có khoản nào.</p>`)+
+      :emptyBox("Chưa có khoản cố định","🏠","+ Thêm khoản","fx","Tiền nhà, điện nước, bảo hiểm… mỗi tháng bấm Trả là xong.").replace('class="emp"','class="emp sm"'))+
     `<p class="hint">Số mờ là gợi ý theo tháng trước, bấm Trả là lấy số đó. Thêm, đổi tên, đổi nhóm ở <a href="#" id="fxGo">Cài đặt</a>.</p>`;
   $$("#fxCard [data-fx]").forEach(el=>{
     const row=rows[+el.dataset.fx],inp=el.querySelector(".fxAmt");
@@ -116,7 +116,7 @@ function renderCards(){
           :`<span class="ccdue">Due ${fdate(due+"T12:00:00")} · ${lb}</span>`)+`</span></div>`+
         `<button type="button" class="pt${p.paid?" on":""}" data-ccpaid aria-pressed="${!!p.paid}">${p.paid?"Đã trả":"Trả"}</button></div>`}).join("")
       +`<p class="hint">Chỉ nhắc ngày Due, không tính vào chi/thu. Sửa tên, 4 số cuối, due ở <a href="#" id="ccGo">Cài đặt</a>.</p>`
-      :`<p class="muted" style="margin:6px 0">Chưa có thẻ. Thêm ở <a href="#" id="ccGo">Cài đặt → Thẻ tín dụng</a>.</p>`);
+      :emptyBox("Chưa có thẻ tín dụng","💳","+ Thêm thẻ","cc","Thêm thẻ để app nhắc ngày Due mỗi tháng.").replace('class="emp"','class="emp sm"'));
   if($("#ccGo"))$("#ccGo").onclick=e=>{e.preventDefault();showMod("set");$("#cardSet").scrollIntoView({block:"start"})};
   $$("#ccCard [data-cc]").forEach(r=>{
     const c=cs.find(x=>x.id===r.dataset.cc);
@@ -182,14 +182,14 @@ function renderSpend(){
   const f=$("#spForm");
   if(!f.date.value)f.date.value=today();
   fillCats(f.cat,f.cat.value);
-  $("#spBars").innerHTML=budgetBars(spM)||`<span class="muted">Chưa đặt ngân sách. Bấm “Chỉnh ngân sách”.</span>`;
+  $("#spBars").innerHTML=budgetBars(spM)||emptyBox("Chưa đặt ngân sách","🎯","","","Bấm “Chỉnh ngân sách” để đặt mức chi mỗi danh mục.").replace('class="emp"','class="emp sm"');
   const byDay={};for(const e of list)(byDay[e.date]??=[]).push(e);
   const days=Object.keys(byDay).sort().reverse();
   $("#spList").innerHTML=days.length?days.map(d=>{
     const arr=byDay[d],dt=arr.filter(e=>e.type==="chi").reduce((a,e)=>a+n(e.amount),0);
     return `<div class="daygrp"><span>${DOW[parseD(d).getDay()]} ${d}</span><span>${dt?"chi "+money(dt):""}</span></div>`+
       arr.map(e=>`<div class="exrow" data-ex="${e.id}"><span class="tag s-kho">${esc(e.cat)}</span><span>${esc(e.note||"")}</span><span class="a ${e.type==="thu"?"pos":""}">${e.type==="thu"?"+":"-"}${money(n(e.amount))}</span></div>`).join("");
-  }).join(""):emptyBox("Tháng này chưa có khoản nào.","🧾","+ Ghi khoản đầu tiên","spend");
+  }).join(""):emptyBox("Tháng này chưa có khoản nào","🧾","+ Ghi khoản đầu tiên","spend","Ghi chi tiêu hoặc tiền thu để biết cuối tháng còn lại bao nhiêu.");
   $$("#spList [data-ex]").forEach(r=>r.onclick=()=>openExpense(r.dataset.ex));
 }
 $("#spPrev").onclick=()=>{spM=mShift(spM,-1);renderSpend()};

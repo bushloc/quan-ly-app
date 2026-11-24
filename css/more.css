@@ -239,3 +239,13 @@ svg.pie .pl{font-size:10px;fill:var(--muted)}svg.pie .pv{font-size:14px;font-wei
 .ebkf .chip.on{background:var(--grad,var(--accent));color:#fff;border-color:transparent}
 .oc-fold .oc-meta{flex-wrap:nowrap;gap:6px}.oc-fold .oc-meta .tn{margin-right:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}
 .oc-fold .oc-meta .mini{flex:none;min-height:26px;padding:0 9px}
+
+/* giao hàng */
+.dlv{display:block;font-size:11.5px;font-weight:700;margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.dlv.go{color:var(--accent)}.dlv.go.slow{color:#d97706}
+.dlv.ok{color:var(--muted)}.dlv.safe{color:var(--ok)}
+:root[data-theme="dark"] .dlv.go.slow{color:#fbbf24}
+.oc-meta .dlvb{background:var(--ok)!important;color:#fff!important;border-color:transparent!important;font-weight:700}
+.gohd span{color:var(--muted)}
+.oc-dl{display:flex;align-items:flex-end;gap:10px;padding:4px 14px 8px}
+.oc-dl label{margin:0;flex:1;max-width:220px}.oc-dl .mini{min-height:36px}

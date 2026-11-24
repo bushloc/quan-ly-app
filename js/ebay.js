@@ -8,6 +8,20 @@ function stageOf(i){
   if(i.status==="tra")return "ret";
   return shipped(i)?"done":"ship";
 }
+// giao hàng: đã bấm "Đã giao" → ngày giao thật; chưa bấm mà ship quá 14 ngày → coi như đã giao (ước tính +5 ngày)
+const RET_DAYS=30;
+function dlvOf(o){
+  const d=o.its.map(i=>i.deliveredAt).filter(Boolean).sort().pop(),sd=o.its.map(i=>i.shipDate).filter(Boolean).sort().pop()||o.f.saleDate||"";
+  if(d)return {go:false,d,est:false,sd};
+  if(sd&&daysAgo(sd)>14)return {go:false,d:addDays(sd,5),est:true,sd};
+  return {go:true,n:sd?daysAgo(sd):0,sd};
+}
+function dlvLine(o){
+  const v=dlvOf(o);
+  if(v.go)return `<small class="dlv go${v.n>7?" slow":""}">Đang giao · ${v.n?`đã đi ${v.n} ngày`:"ship hôm nay"}</small>`;
+  const left=RET_DAYS-daysAgo(v.d);
+  return left>0?`<small class="dlv ok">Đã giao · còn ${left} ngày trả</small>`:`<small class="dlv safe">Đã giao · hết hạn trả hàng</small>`;
+}
 const STG={ship:["📮 Cần ship","st-ship"],go:["🚚 Đang giao","st-go"],done:["✅ Hoàn thành","st-done"],ret:["↩ Trả hàng","st-ret"]};
 // gom món đã bán theo Order ID (món không có Order ID là một đơn riêng)
 function ordersOf(list){
@@ -89,11 +103,12 @@ function orderCard(o){
   // tracking hiện ngay dưới tiêu đề thẻ (dễ thấy), kit dùng chung 1 tracking
   const trkRow="";
   if(o.stage==="ret")foot=`<div class="oc-f muted" style="font-size:12.5px">${us.filter(u=>u.f.status==="tra").map(u=>{const rs=u.its.map(i=>i.retSerial).filter(Boolean),ok=rs.every(r=>u.its.some(i=>ns(i.serial)===ns(r)));return `${esc(u.serials)}: hoàn ${money(u.sum("refund"))}${rs.length?` · serial nhận về <span class="mono">${rs.map(esc).join(" + ")}</span> ${ok?"<b class='pos'>khớp</b>":"<b class='neg'>KHÔNG khớp</b>"}`:""}`}).join("<br>")}</div>`;
-  const okey=o.its.map(i=>i.id).join(","),inner=`${head}${trkRow}<div class="oc-b"><div class="oc-items">${rows}</div>${tot}</div>${foot}`;
+  const dv=o.stage==="done"&&f.tracking?dlvOf(o):null,dlvRow=dv&&!dv.go&&!dv.est?`<div class="oc-dl"><button type="button" class="mini" data-undlv>↶ Chuyển lại Đang giao</button></div>`:"";
+  const okey=o.its.map(i=>i.id).join(","),inner=`${head}${dlvRow}${trkRow}<div class="oc-b"><div class="oc-items">${rows}</div>${tot}</div>${foot}`;
   if(o.stage==="done"){const open=ebOpen.has(okey);
     const pr=o.profit,pct=o.price?Math.round(pr/o.price*100):0;
     const pic=(o.its.find(i=>(i.photos||[]).length)||{}).photos,nm=(us[0].f.name||"(chưa đặt tên)")+(us.length>1?` +${us.length-1} món`:"");
-    return `<div class="oc oc-fold ${STG[o.stage][1]}${open?" open":""}${pr<0?" loss":""}" data-ord="${esc(okey)}"><div class="oc-sh" data-toggle role="button" tabindex="0"><span class="u-ph">${pic?`<img loading="lazy" decoding="async" class="thumb" src="${ph(pic[0])}" alt="">`:`<span class="lot-ic">📦</span>`}</span><span class="oc-sn"><b>${us[0].kit?"🔗 ":""}${esc(nm)}</b><small class="od">${f.saleDate?"bán "+fdate(f.saleDate+"T12:00:00"):""}${f.orderId?` · #${esc(f.orderId)}`:""}</small><span class="oc-meta">${f.tracking?`<span class="tn mono">${esc(String(f.tracking).length>12?String(f.tracking).slice(0,4)+"…"+String(f.tracking).slice(-4):f.tracking)}</span><button type="button" class="mini" data-copy="${esc(f.tracking)}">Copy</button><a href="${esc(trackLink(f.tracking).u)}" class="mini trk" data-trk="${esc(trackLink(f.tracking).u)}">${trackLink(f.tracking).c} ↗</a>`:`<span class="muted">chưa có tracking</span>`}</span></span><span class="oc-pf ${pr>=0?"pos":"neg"}"><b>${pr>=0?"+":"−"}${money(Math.abs(pr)).replace("-","")}</b><small>${pct}% lãi</small></span><span class="chev">▾</span></div>${open?`<div class="oc-ex">${inner}</div>`:""}</div>`}
+    return `<div class="oc oc-fold ${STG[o.stage][1]}${open?" open":""}${pr<0?" loss":""}" data-ord="${esc(okey)}"><div class="oc-sh" data-toggle role="button" tabindex="0"><span class="u-ph">${pic?`<img loading="lazy" decoding="async" class="thumb" src="${ph(pic[0])}" alt="">`:`<span class="lot-ic">📦</span>`}</span><span class="oc-sn"><b>${us[0].kit?"🔗 ":""}${esc(nm)}</b><small class="od">${f.saleDate?"bán "+fdate(f.saleDate+"T12:00:00"):""}${f.orderId?` · #${esc(f.orderId)}`:""}</small>${f.tracking?dlvLine(o):""}<span class="oc-meta">${f.tracking?`<span class="tn mono">${esc(String(f.tracking).length>12?String(f.tracking).slice(0,4)+"…"+String(f.tracking).slice(-4):f.tracking)}</span><button type="button" class="mini" data-copy="${esc(f.tracking)}">Copy</button><a href="${esc(trackLink(f.tracking).u)}" class="mini trk" data-trk="${esc(trackLink(f.tracking).u)}">${trackLink(f.tracking).c} ↗</a>${dlvOf(o).go?`<button type="button" class="mini dlvb" data-dlv>Đã giao</button>`:""}`:`<span class="muted">chưa có tracking</span>`}</span></span><span class="oc-pf ${pr>=0?"pos":"neg"}"><b>${pr>=0?"+":"−"}${money(Math.abs(pr)).replace("-","")}</b><small>${pct}% lãi</small></span><span class="chev">▾</span></div>${open?`<div class="oc-ex">${inner}</div>`:""}</div>`}
   return `<div class="oc ${STG[o.stage][1]}" data-ord="${esc(okey)}">${inner}</div>`;
 }
 function orderTable(os){
@@ -129,6 +144,14 @@ function render(){
     const os=allOrders.filter(o=>o.stage===ebTab&&(ebTab==="ship"||!mon||q||monthOf(o.date)===mon)&&o.its.some(i=>hit(i,q,qs)));
     if(ebTab==="ship")os.sort((a,b)=>a.date.localeCompare(b.date)); // đơn chờ lâu nhất lên đầu
     const tbl=ebView==="table"&&!matchMedia("(max-width:760px)").matches;
+    // Đang giao (mọi tháng) đứng riêng ở đầu tab Xong
+    let goHtml="";const os0=os.slice();
+    if(ebTab==="done"&&!q&&!tbl){
+      const gos=allOrders.filter(o=>o.stage==="done"&&o.f.tracking&&dlvOf(o).go).sort((a,b)=>dlvOf(b).n-dlvOf(a).n);
+      if(gos.length)goHtml=`<div class="mgrp dgrp gohd"><b>Đang giao</b><span>${gos.length} đơn chưa tới tay người mua</span></div>`+gos.map(orderCard).join("");
+      const gk=new Set(gos);for(let k=os.length-1;k>=0;k--)if(gk.has(os[k]))os.splice(k,1);
+      if(goHtml)goHtml+=`<div class="mgrp dgrp"><b>Đã giao</b><span></span></div>`;
+    }
     if(ebTab==="done"&&!mon&&!q&&!tbl&&os.length){ // Tất cả: chia theo tháng
       const g=new Map();for(const o of os){const k=monthOf(o.date)||"";(g.get(k)||g.set(k,[]).get(k)).push(o)}
       html=[...g].map(([k,a])=>{const p=a.reduce((x,o)=>x+o.profit,0);return `<div class="mgrp"><b>${k?mLabel(k):"Chưa có ngày bán"}</b><span>${a.length} đơn · lãi <b class="${p>=0?"pos":"neg"}">${money(p)}</b></span></div>`+a.map(orderCard).join("")}).join("");
@@ -137,14 +160,15 @@ function render(){
       const g=new Map();for(const o of os){const k=lab(o.date);(g.get(k)||g.set(k,[]).get(k)).push(o)}
       html=[...g].map(([k,a])=>{const p=a.reduce((x,o)=>x+o.profit,0);return `<div class="mgrp dgrp"><b>${k}</b><span>${a.length} đơn · lãi <b class="${p>=0?"pos":"neg"}">${money(p)}</b></span></div>`+a.map(orderCard).join("")}).join("");
     }else html=os.length?(tbl?orderTable(os):os.map(orderCard).join("")):"";
+    if(goHtml)html=goHtml+(html.replace(/^<div class="mgrp dgrp"><b>/,'<div class="mgrp dgrp sub"><b>')||`<p class="muted ebkf0">Chưa có đơn đã giao${mon?" trong "+mLabel(mon):""}.</p>`);
     empty={ship:"🎉 Không còn đơn nào cần ship.",done:"Chưa có đơn hoàn thành"+(mon?" trong "+mLabel(mon):"")+"."}[ebTab];
-    const S=k=>os.reduce((a,o)=>a+o[k],0);
+    const S=k=>os0.reduce((a,o)=>a+o[k],0);
     // so với tháng trước (chỉ khi xem 1 tháng, không tìm)
     const pm=mon&&!q?mShift(mon,-1):"",pv=pm?allOrders.filter(o=>o.stage==="done"&&monthOf(o.date)===pm):[];
     const cmp=(a,b)=>{if(!pm)return "";if(!b)return `<small class="cmp">T${+pm.slice(5)}: —</small>`;const d=Math.round((a-b)/Math.abs(b)*100);if(!d)return `<small class="cmp">= T${+pm.slice(5)}</small>`;return `<small class="cmp ${d>=0?"up":"dn"}">${d>=0?"▲":"▼"}${Math.abs(d)}% so T${+pm.slice(5)}</small>`};
     $("#sum").innerHTML=ebTab==="ship"?`<div>Cần ship<b class="${os.length?"warn-t":""}">${os.length}</b></div><div>Tiền chờ<b>${money(S("price")+S("charge"))}</b></div><div>Chờ lâu nhất<b>${os.length?daysAgo(os[0].f.saleDate)+" ngày":"—"}</b></div>`
       :false?`<div>Đơn bị trả<b>${os.length}</b></div><div>Tiền đã hoàn<b class="neg">${money(S("refund"))}</b></div><div>Serial không khớp<b class="${os.some(o=>o.its.some(i=>i.retSerial&&ns(i.retSerial)!==ns(i.serial)))?"neg":""}">${os.reduce((a,o)=>a+o.its.filter(i=>i.retSerial&&ns(i.retSerial)!==ns(i.serial)).length,0)}</b></div>`
-      :`<div>Đơn${mon?` · T${+mon.slice(5)}`:""}<b>${os.length}</b>${cmp(os.length,pv.length)}</div><div>Tiền bán<b>${money(S("price")+S("charge"))}</b>${cmp(S("price")+S("charge"),pv.reduce((a,o)=>a+o.price+o.charge,0))}</div><div>Lãi<b class="${S("profit")>=0?"pos":"neg"}">${money(S("profit"))}</b>${cmp(S("profit"),pv.reduce((a,o)=>a+o.profit,0))}</div>`;
+      :`<div>Đơn${mon?` · T${+mon.slice(5)}`:""}<b>${os0.length}</b>${cmp(os0.length,pv.length)}</div><div>Tiền bán<b>${money(S("price")+S("charge"))}</b>${cmp(S("price")+S("charge"),pv.reduce((a,o)=>a+o.price+o.charge,0))}</div><div>Lãi<b class="${S("profit")>=0?"pos":"neg"}">${money(S("profit"))}</b>${cmp(S("profit"),pv.reduce((a,o)=>a+o.profit,0))}</div>`;
   }
   // đang tìm: cho biết tab khác cũng có kết quả (tìm Order ID, người mua… không cần nhớ đơn nằm ở tab nào)
   const mainHtml=html;
@@ -202,7 +226,7 @@ function saveQuick(ord,keys){
   const its=key.split(",").map(id=>DB.items.find(i=>i.id===id)).filter(i=>i&&i.status==="ban"),now=Date.now();
   for(const k of keys){
     const v=g(k),fsplit=k==="fees"&&v!==""?splitC(v,its.length):null;
-    its.forEach((i,j)=>{if(k==="orderId")i.orderId=v;if(k==="buyer")i.buyer=v;if(k==="tracking")i.tracking=v;if(fsplit)i.fees=fsplit[j];if(k==="ship"){i.shipTotal=v;i.shipN=its.length}i.updatedAt=now});
+    its.forEach((i,j)=>{if(k==="orderId")i.orderId=v;if(k==="buyer")i.buyer=v;if(k==="tracking"){i.tracking=v;if(v&&!i.shipDate)i.shipDate=today()}if(fsplit)i.fees=fsplit[j];if(k==="ship"){i.shipTotal=v;i.shipN=its.length}i.updatedAt=now});
     delete qDraft[key+"|"+k];
   }
   save();
@@ -297,6 +321,17 @@ function unitRow(u){
 }
 
 $("#ebMonth").onchange=render;
+// Đã giao: bấm nút (không mở/đóng thẻ), sửa ngày ở phần mở rộng
+$("#list").addEventListener("click",async e=>{
+  const b=e.target.closest("[data-dlv],[data-undlv]");if(!b)return;e.stopPropagation();e.preventDefault();
+  const ids=b.closest("[data-ord]").dataset.ord.split(","),its=ids.map(id=>DB.items.find(i=>i.id===id)).filter(Boolean),now=Date.now();
+  its.forEach(i=>{if(b.hasAttribute("data-dlv"))i.deliveredAt=today();else delete i.deliveredAt;i.updatedAt=now});save();await reload();
+},true);
+$("#list").addEventListener("change",async e=>{
+  const x=e.target;if(!x.matches("[data-dlvd]"))return;
+  const its=x.closest("[data-ord]").dataset.ord.split(",").map(id=>DB.items.find(i=>i.id===id)).filter(Boolean),now=Date.now();
+  its.forEach(i=>{if(x.value)i.deliveredAt=x.value;else delete i.deliveredAt;i.updatedAt=now});x.blur();save();await reload();
+});
 $("#list").addEventListener("click",e=>{const b=e.target.closest("[data-kf]");if(b){ebKf=b.dataset.kf;render()}});
 $("#ebMbar").addEventListener("click",e=>{
   const s=$("#ebMonth"),o=[...s.options].map(x=>x.value).filter(Boolean);

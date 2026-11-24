@@ -325,3 +325,6 @@ svg.pie .pl{font-size:10px;fill:var(--muted)}svg.pie .pv{font-size:14px;font-wei
 .emp.sm .emt:has(+.ems){align-self:flex-start;margin-top:3px}
 #list:empty{padding-bottom:0}
 @media(prefers-reduced-motion:reduce){.emi span{animation:none}}
+
+/* Không phóng to khi lỡ chạm 2 lần (iPhone) */
+html,body,*{touch-action:manipulation}

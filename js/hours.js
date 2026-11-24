@@ -66,14 +66,22 @@ function renderClock(){
   }
 }
 setInterval(()=>{if(DB.clock&&!$("#mod-work").classList.contains("hidden"))renderClock()},1000);
+// mỗi ngày chỉ 1 ca làm: ca mới (Clock Out hoặc thêm tay) đè lên ca cũ cùng ngày; Holiday/PTO giữ nguyên
+function putWork(v,cur){
+  const same=DB.shifts.filter(s=>s.date===v.date&&!isLeave(s)&&s!==cur);
+  const t=cur||same.shift(),rep=cur?same.length>0:!!t;
+  if(t){Object.assign(t,v);delete t.hrs}else DB.shifts.push({id:uid(),note:"",...v});
+  for(const s of same){const i=DB.shifts.indexOf(s);if(i>=0)DB.shifts.splice(i,1)}
+  return rep;
+}
 $("#clockBtn").onclick=()=>{
   if(!DB.clock){
     // giờ vào lấy từ ô "Giờ vào" (mặc định 07:00) của hôm nay, không phải giờ bấm
     const [hh,mm]=($("#clockAt").value||"07:00").split(":").map(Number),st=new Date();st.setHours(hh,mm,0,0);
     DB.clock={start:st.getTime()};save();renderWork();return}
   const st=new Date(DB.clock.start),en=new Date(Math.max(Date.now(),DB.clock.start)); // Clock Out trước giờ vào thì không thành ca qua đêm
-  DB.shifts.push({id:uid(),date:ymd(st),start:hhmm(st),end:hhmm(en),brk:lunch(),note:""});
-  DB.clock=null;save();calM=monthOf(ymd(st));renderWork();
+  const rep=putWork({date:ymd(st),kind:"work",start:hhmm(st),end:hhmm(en),brk:lunch()});
+  DB.clock=null;save();calM=monthOf(ymd(st));renderWork();if(rep)toast("Đã thay ca cũ trong ngày bằng ca mới");
 };
 let shCur=null;
 function shKindUI(){
@@ -97,7 +105,9 @@ $("#shForm").onsubmit=e=>{
     ?{date:f.date.value,kind:k,hrs:Math.min(24,Math.max(0,n(f.hrs.value))),start:"",end:"",brk:0,note:f.note.value.trim()}
     :{date:f.date.value,kind:"work",start:f.start.value,end:f.end.value,brk:n(f.brk.value),note:f.note.value.trim()};
   if(shCur)shCur=DB.shifts.find(s=>s.id===shCur.id)||(DB.shifts.push(shCur),shCur); // đồng bộ có thể đã thay object lúc đang mở
-  if(shCur){Object.assign(shCur,v);if(v.kind==="work")delete shCur.hrs}else DB.shifts.push({id:uid(),...v});
-  save();$("#shDlg").close();calM=monthOf(v.date);renderWork();
+  let rep=false;
+  if(v.kind==="work")rep=putWork(v,shCur);
+  else if(shCur)Object.assign(shCur,v);else DB.shifts.push({id:uid(),...v});
+  save();if(rep)toast("Đã thay ca cũ trong ngày bằng ca này");$("#shDlg").close();calM=monthOf(v.date);renderWork();
 };
 $("#shDel").onclick=()=>{if(shCur){delUndo("shifts",shCur,"Đã xoá ca",renderWork);$("#shDlg").close()}};

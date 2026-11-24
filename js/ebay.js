@@ -1,7 +1,7 @@
 "use strict";
 /* ===== Bán hàng eBay: tab theo bước, thẻ theo đơn, kho theo lô ===== */
 let ebTab="kho",ebView="card";
-try{ebTab=localStorage.getItem("ebTab")||"kho";ebView=localStorage.getItem("ebView")||"card"}catch(e){}
+try{ebTab=localStorage.getItem("ebTab")||"kho"}catch(e){}
 // có tracking = đã ship = Hoàn thành (trạng thái hãng chỉ hiện thêm trên thẻ)
 function stageOf(i){
   if(i.status==="kho")return "kho";
@@ -34,7 +34,7 @@ function fillMonths(){
 }
 function trkLine(i){
   const t=String(i.tracking||"").trim();if(!t)return "";const k=trackLink(t);
-  return `<div class="tpill" title="Số tracking"><span class="ti">🚚</span><span class="no">${esc(t)}</span><button type="button" class="mini" data-copy="${esc(t)}">Copy</button><a href="${esc(k.u)}" class="btn tbtn" data-trk="${esc(k.u)}" title="Mở 17track trong trình duyệt">Track ↗</a></div>`;
+  return `<div class="tpill" title="Số tracking"><span class="ti">🚚</span><span class="no">${esc(t)}</span><button type="button" class="mini" data-copy="${esc(t)}">Copy</button><a href="${esc(k.u)}" class="btn tbtn" data-trk="${esc(k.u)}" title="Mở trang track của ${k.c}">${k.c} ↗</a></div>`;
 }
 // gom theo listing: mỗi kit là 1 đơn vị (giữ thứ tự), món lẻ là 1 đơn vị
 function unitsOf(its){
@@ -87,7 +87,7 @@ function orderCard(o){
   const okey=o.its.map(i=>i.id).join(","),inner=`${head}${trkRow}<div class="oc-b"><div class="oc-items">${rows}</div>${tot}</div>${foot}`;
   if(o.stage==="done"){const open=ebOpen.has(okey);
     const pr=o.profit,pct=o.price?Math.round(pr/o.price*100):0;
-    return `<div class="oc oc-fold ${STG[o.stage][1]}${open?" open":""}${pr<0?" loss":""}" data-ord="${esc(okey)}"><div class="oc-sh" data-toggle role="button" tabindex="0"><span class="oc-sn"><b class="mono">${f.orderId?"#"+esc(f.orderId):"(không có Order ID)"}</b><span class="oc-meta">${f.buyer?`<span class="bu">${esc(f.buyer)}</span>`:""}${f.tracking?`<span class="tn mono">${esc(String(f.tracking).length>12?String(f.tracking).slice(0,4)+"…"+String(f.tracking).slice(-4):f.tracking)}</span><button type="button" class="mini" data-copy="${esc(f.tracking)}">Copy</button><a href="${esc(trackLink(f.tracking).u)}" class="mini trk" data-trk="${esc(trackLink(f.tracking).u)}">Track ↗</a>`:`<span class="muted">chưa có tracking</span>`}</span></span><span class="oc-pf ${pr>=0?"pos":"neg"}"><b>${pr>=0?"+":"−"}${money(Math.abs(pr)).replace("-","")}</b><small>${pct}%</small></span><span class="chev">▾</span></div>${open?`<div class="oc-ex">${inner}</div>`:""}</div>`}
+    return `<div class="oc oc-fold ${STG[o.stage][1]}${open?" open":""}${pr<0?" loss":""}" data-ord="${esc(okey)}"><div class="oc-sh" data-toggle role="button" tabindex="0"><span class="oc-sn"><b class="mono">${f.orderId?"#"+esc(f.orderId):"(không có Order ID)"}</b><span class="oc-meta">${f.buyer?`<span class="bu">${esc(f.buyer)}</span>`:""}${f.tracking?`<span class="tn mono">${esc(String(f.tracking).length>12?String(f.tracking).slice(0,4)+"…"+String(f.tracking).slice(-4):f.tracking)}</span><button type="button" class="mini" data-copy="${esc(f.tracking)}">Copy</button><a href="${esc(trackLink(f.tracking).u)}" class="mini trk" data-trk="${esc(trackLink(f.tracking).u)}">${trackLink(f.tracking).c} ↗</a>`:`<span class="muted">chưa có tracking</span>`}</span></span><span class="oc-pf ${pr>=0?"pos":"neg"}"><b>${pr>=0?"+":"−"}${money(Math.abs(pr)).replace("-","")}</b><small>${pct}%</small></span><span class="chev">▾</span></div>${open?`<div class="oc-ex">${inner}</div>`:""}</div>`}
   return `<div class="oc ${STG[o.stage][1]}" data-ord="${esc(okey)}">${inner}</div>`;
 }
 function orderTable(os){
@@ -277,7 +277,7 @@ function unitRow(u){
     <div class="row ib">${lp?"":`<input class="mono" data-qprice type="number" step="0.01" min="0" inputmode="decimal" placeholder="Giá bán $">`}<button type="button" class="btn" data-open="${f.id}" title="Sửa">✏️</button><button type="button" class="btn primary" data-qsell title="Bán: chuyển vào Cần ship">💰 Bán</button></div>
   </div>`;
 }
-$$("#ebView button").forEach(b=>b.onclick=()=>{ebView=b.dataset.v;try{localStorage.setItem("ebView",ebView)}catch(e){}render()});
+
 $("#ebMonth").onchange=render;
 $("#ebMbar").addEventListener("click",e=>{
   const s=$("#ebMonth"),o=[...s.options].map(x=>x.value).filter(Boolean);
@@ -287,7 +287,7 @@ $("#ebMbar").addEventListener("click",e=>{
   if(o.includes(nx)){s.value=nx;render()}
 });
 // menu ⋯ đóng khi bấm ra ngoài
-document.addEventListener("click",e=>{const m=$("#ebMore");if(m.open&&!m.contains(e.target))m.open=false});
+
 
 const F=k=>$("#form").elements[k];
 const FLD=["name","pn","serial","cost","test","notes","price","orderId","buyer","tracking","fees","shipTotal","refund","retSerial","listPrice","shipMode","shipCharge"];

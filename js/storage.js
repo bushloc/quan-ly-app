@@ -1,5 +1,5 @@
 "use strict";
-const APP_VER="1.9.41";
+const APP_VER="1.9.42";
 const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
 const n=v=>{const x=parseFloat(v);return isFinite(x)?x:0};
 const money=v=>(v<0?"-$":"$")+Math.abs(v).toLocaleString("en-US",{minimumFractionDigits:2,maximumFractionDigits:2});
@@ -116,10 +116,17 @@ async function reload(){items=(await all()).sort((a,b)=>b.createdAt-a.createdAt)
 $("#q").oninput=()=>render();$("#new").onclick=()=>openItem(null);
 /* Tracking: có số tracking = đã ship = HOÀN THÀNH */
 const shipped=i=>i.status==="ban"&&!!String(i.tracking||"").trim();
-// mọi hãng đều tra trên 17track (tự nhận hãng)
+// mở thẳng web của hãng ship, đoán hãng theo dạng số tracking (không rõ thì USPS – hãng phổ biến nhất trên eBay)
+function trackCarrier(s){
+  if(/^1Z[0-9A-Z]{16}$/.test(s))return "UPS";
+  if(/^(\d{12}|\d{15}|96\d{20}|0?\d{19}6\d{2})$/.test(s)&&!/^9[2-5]/.test(s))return "FedEx";
+  if(/^\d{10}$/.test(s)||/^(JD|JJD|GM|LX|RX)[0-9A-Z]+$/.test(s))return "DHL";
+  return "USPS";
+}
 function trackLink(t){
-  const s=String(t||"").replace(/[\s-]/g,"").toUpperCase();
-  return {c:"Track trên 17track",u:"https://t.17track.net/en#nums="+encodeURIComponent(s)};
+  const s=String(t||"").replace(/[\s-]/g,"").toUpperCase(),c=trackCarrier(s),e=encodeURIComponent(s);
+  const u={UPS:"https://www.ups.com/track?tracknum="+e,FedEx:"https://www.fedex.com/fedextrack/?trknbr="+e,DHL:"https://www.dhl.com/us-en/home/tracking.html?tracking-id="+e+"&submit=1",USPS:"https://tools.usps.com/go/TrackConfirmAction?tLabels="+e}[c];
+  return {c,u};
 }
 const fdate=s=>{const d=new Date(s);return isNaN(d)?"":d.getDate()+"/"+(d.getMonth()+1)};
  // tự cập nhật: mỗi số tối đa 1 lần/3 giờ; bấm tay: tối đa 1 lần/10 phút

@@ -67,11 +67,6 @@
   <div class="card sum" id="sum"></div>
   <div class="row eb-tools">
     <input id="q" placeholder="Tìm tên, serial, Order ID, tracking…" style="flex:1;min-width:200px">
-    <details class="more" id="ebMore"><summary class="btn" title="Thêm tuỳ chọn">⋯</summary>
-      <div class="menu">
-        <div class="seg" id="ebView" role="group" aria-label="Kiểu hiển thị"><button data-v="card" class="on">▦ Thẻ</button><button data-v="table">☰ Bảng</button></div>
-      </div>
-    </details>
     <button class="btn primary" id="new">+ Thêm</button>
   </div>
   <div id="undoBar" class="undo-bar hidden" role="status"></div>
@@ -243,7 +238,7 @@
           <label>Tracking<input name="tracking" class="mono"></label>
         </div>
         <div class="f2">
-          <div class="row" style="align-self:center;gap:8px"><button type="button" class="btn" id="trkOpen" title="Mở 17track">Track ↗</button></div>
+          <div class="row" style="align-self:center;gap:8px"><button type="button" class="btn" id="trkOpen" title="Mở trang track của hãng ship">Track ↗</button></div>
         </div>
         <div id="mates" class="hidden" style="margin-bottom:10px"></div>
         <div class="f2">

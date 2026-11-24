@@ -51,8 +51,10 @@ function shipCard(o){
   const qv=(k,v)=>esc(qDraft[key+"|"+k]??v);
   const pic=(o.its.find(i=>(i.photos||[]).length)||{}).photos;
   const nm=(f.name||"(chưa đặt tên)")+(us.length>1?` +${us.length-1} món`:"");
-  // hạn ship = ngày bán + số ngày xử lý (Cài đặt, mặc định 1)
-  const due=f.saleDate?addDays(f.saleDate,n(S().ebHandle)||1):"",left=due?dayDiff(due,today()):null;
+  // hạn ship = ngày bán + số ngày xử lý
+  // eBay tính handling theo ngày làm việc (bỏ T7, CN); mặc định 3
+  const bizAdd=(d,k)=>{while(k>0){d=addDays(d,1);const w=parseD(d).getDay();if(w&&w<6)k--}return d};
+  const due=f.saleDate?bizAdd(f.saleDate,n(S().ebHandle)||3):"",left=due?dayDiff(due,today()):null;
   const dl=left==null?"":left<0?`<span class="due late">⚠ trễ ${-left} ngày</span>`:left===0?`<span class="due today">⏰ hạn hôm nay</span>`:left===1?`<span class="due soon">hạn mai</span>`:`<span class="due">còn ${left} ngày</span>`;
   const sub=[esc(f.buyer||""),f.saleDate?"bán "+fdate(f.saleDate+"T12:00:00"):""].filter(Boolean).join(" · ");
   const form=open?`<div class="oc-sf">

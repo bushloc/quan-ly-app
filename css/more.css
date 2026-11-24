@@ -250,3 +250,17 @@ svg.pie .pl{font-size:10px;fill:var(--muted)}svg.pie .pv{font-size:14px;font-wei
 .oc-dl{display:flex;align-items:flex-end;gap:10px;padding:4px 14px 8px}
 .oc-dl label{margin:0;flex:1;max-width:220px}.oc-dl .mini{min-height:36px}
 @media(max-width:760px){#ebTabs button{font-size:11px;letter-spacing:-.01em}}
+
+/* Cài đặt dạng thu gọn */
+.setgrp{font-size:12px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin:18px 6px 6px}
+.setgrp:first-of-type{margin-top:8px}
+#mod-set .card.acc{padding:0;margin-bottom:8px;overflow:hidden;scroll-margin-top:calc(env(safe-area-inset-top) + 64px)}
+#mod-set .card.acc.open{padding-bottom:14px}
+#mod-set .card.acc.open>*:not(.acch){margin-left:16px;margin-right:16px}
+#mod-set .acch{display:flex;align-items:center;gap:10px;margin:0!important;padding:14px 16px;cursor:pointer;font-size:15.5px;user-select:none;-webkit-tap-highlight-color:transparent}
+#mod-set .acch .accs{margin-left:auto;font-size:13px;font-weight:500;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+#mod-set .acch .accv{flex:none;font-size:20px;color:var(--muted);transition:transform .2s;line-height:1}
+#mod-set .acc.open .acch .accv{transform:rotate(90deg)}
+#mod-set .acc.open .acch{border-bottom:1px solid var(--line);margin-bottom:12px!important}
+#mod-set .appver{text-align:center;margin-top:18px}
+#mod-set .card.acc:not(.open)>*:not(.acch){display:none!important}

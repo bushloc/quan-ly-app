@@ -270,3 +270,38 @@ function renderMonthChecks(mk,calc){
   box.innerHTML=`<div class="mch"><span>💵 Check ${mLabel(mk).toLowerCase()}</span><b class="pos">${rows.length&&tot>0?(anyEst?"~":"")+money(tot):"—"}</b></div>${body||`<p class="muted" style="margin:4px 0 0">Không có check trong tháng này.</p>`}`;
 }
 $("#wkCheck").addEventListener("click",e=>{const r=e.target.closest("[data-pay]");if(r)openPay(r.dataset.pay)});
+
+/* Cài đặt: chia nhóm, mỗi mục thu gọn, bấm tiêu đề mới mở (mở 1 mục 1 lúc) */
+(()=>{
+  const box=$("#mod-set");if(!box)return;
+  const cards=[...box.querySelectorAll(":scope>.card")],ttl=c=>(c.querySelector("h3")||{}).textContent||"";
+  const G=[["Lương & chi tiêu",["Lương","Chi cố định","Thẻ tín dụng"]],["eBay",["Phí eBay"]],["Dữ liệu",["Đồng bộ","Sao lưu"]],["Ứng dụng",["Giao diện","Số trên biểu tượng"]]];
+  const used=new Set(),anchor=$("#appVer");
+  for(const [g,ks] of G){
+    const hd=document.createElement("div");hd.className="setgrp";hd.textContent=g;
+    box.insertBefore(hd,anchor);
+    for(const k of ks){const c=cards.find(x=>!used.has(x)&&ttl(x).includes(k));if(c){used.add(c);box.insertBefore(c,anchor)}}
+  }
+  for(const c of cards)if(!used.has(c))box.insertBefore(c,anchor); // mục khác (nếu có) cuối nhóm Ứng dụng
+  for(const c of cards){const h=c.querySelector("h3");if(!h)continue;c.classList.add("acc");h.classList.add("acch");h.setAttribute("role","button");h.tabIndex=0;h.insertAdjacentHTML("beforeend",'<span class="accs"></span><span class="accv">›</span>')}
+  const tog=c=>{const o=!c.classList.contains("open");cards.forEach(x=>x.classList.remove("open"));if(o){c.classList.add("open");setTimeout(()=>c.scrollIntoView({block:"start",behavior:"smooth"}),30)}};
+  box.addEventListener("click",e=>{const h=e.target.closest(".acch");if(h)tog(h.closest(".acc"))});
+  box.addEventListener("keydown",e=>{const h=e.target.closest(".acch");if(h&&(e.key==="Enter"||e.key===" ")){e.preventDefault();tog(h.closest(".acc"))}});
+  // nút "đi tới cài đặt" ở trang khác: mở luôn mục đó
+  window.openSet=id=>{const c=$("#"+id);if(c&&!c.classList.contains("open"))tog(c)};
+  document.addEventListener("click",e=>{const b=e.target.closest("#fxGo,#ccGo");if(b)setTimeout(()=>openSet(b.id==="fxGo"?"fxSet":"cardSet"),0)});
+  // tóm tắt giá trị hiện tại cạnh tiêu đề
+  const sums=()=>{
+    const put=(k,t)=>{const c=cards.find(x=>ttl(x).includes(k));if(c){const s=c.querySelector(".accs");if(s)s.textContent=t||""}};
+    try{put("Lương",`$${n(S().wage)}/h · OT sau ${n(S().otAfter)||40}h`)}catch(e){}
+    try{put("Chi cố định",`${fxTpl().length} khoản`)}catch(e){}
+    try{put("Thẻ tín dụng",`${cards_().length} thẻ`)}catch(e){}
+    try{const t=($("#cloudSt")||{}).textContent||"";put("Đồng bộ",/Đã kết nối/.test(t)?"Đã kết nối":"Chưa kết nối")}catch(e){}
+    try{put("Phí eBay",$("#pct")&&$("#pct").value?$("#pct").value+"%":"")}catch(e){}
+    try{put("Giao diện",S().theme==="light"?"Sáng":S().theme==="dark"?"Tối":"Tự động")}catch(e){}
+    try{put("Số trên biểu tượng",S().appBadge?"Bật":"Tắt")}catch(e){}
+  };
+  const cards_=()=>Array.isArray(S().cards)?S().cards:[];
+  const rs=renderSet;renderSet=function(){const r=rs.apply(this,arguments);sums();return r};
+  sums();
+})();

@@ -1,5 +1,5 @@
 "use strict";
-const APP_VER="1.9.50";
+const APP_VER="1.9.51";
 const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
 const n=v=>{const x=parseFloat(v);return isFinite(x)?x:0};
 const money=v=>(v<0?"-$":"$")+Math.abs(v).toLocaleString("en-US",{minimumFractionDigits:2,maximumFractionDigits:2});

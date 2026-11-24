@@ -46,10 +46,12 @@ function renderWork(){
     $("#wkLine").innerHTML=`<span>Tuần này: <b>${fh(toOt).replace(/\.00$/,"")}</b> / ${lim} giờ</span><span class="bar ${hrBarCls(toOt,lim)}"><i style="width:${Math.min(100,toOt/lim*100)}%"></i></span><span class="${left>0?"":"neg"}">${left>0?`còn ${fh(left).replace(/\.00$/,"")}h tới OT`:`+${fh(w.ot)}h OT`}</span>`;
     $("#wkLine").style.display="";
   }else $("#wkLine").style.display="none";
-  $("#wkSum").innerHTML=
-    `<div class="card"><div class="lb">Giờ làm ${mLabel(mk).toLowerCase()}</div><div class="v">${fh(m.h)} <span class="sub">giờ</span></div><div class="sub">${nw} ca${m.hol?` <span class="lvtag hol">+${fh(m.hol)} Holiday</span>`:""}${m.pto?` <span class="lvtag pto">+${fh(m.pto)} PTO</span>`:""}</div></div>`+
-    `<div class="card pay"><div class="lb">Tiền công tháng</div><div class="v">${money(m.pay)}</div><div class="sub">Thường ${fh(m.reg)} · OT ${fh(m.ot)}${m.hol?` · Holiday ${fh(m.hol)}`:""}${m.pto?` · PTO ${fh(m.pto)}`:""} giờ · trước thuế</div></div>`+
-    `<div class="card ${m.ot>0?"ot1":"ot0"}"><div class="lb">Tăng ca tháng</div><div class="v">${m.ot>0?fh(m.ot)+" giờ":"—"}</div><div class="sub">${m.ot>0?`×${n(S().otMult)||1.5} lương`:"Chưa có tăng ca"}</div></div>`;
+  // tổng kết giờ tháng: tách Regular / OT / PTO-Holiday, mỗi phần có giờ + tiền
+  {const w=n(S().wage),mult=n(S().otMult)||1.5,lv=m.hol+m.pto,tot=m.h+lv,pc=x=>tot?(x/tot*100).toFixed(2)+"%":"0",
+    col=(c,l,h,pay,sub)=>`<div class="ms-c ${c}"><span><i></i>${l}</span><b>${fh(h).replace(/\.00$/,"")}<small> giờ</small></b><em>${money(pay)}</em>${sub?`<small>${sub}</small>`:""}</div>`;
+   $("#wkSum").innerHTML=`<div class="card msum"><div class="ms-h"><div><div class="lb">Giờ làm ${mLabel(mk).toLowerCase()}</div><div class="v">${fh(tot).replace(/\.00$/,"")} <span class="sub">giờ · ${nw} ca</span></div></div><div class="ms-p"><div class="lb">Tiền công</div><b>${money(m.pay)}</b><span class="sub">trước thuế</span></div></div>
+    <div class="ms-bar">${m.reg?`<i class="brg" style="width:${pc(m.reg)}"></i>`:""}${m.ot?`<i class="bot" style="width:${pc(m.ot)}"></i>`:""}${m.hol?`<i class="bhl" style="width:${pc(m.hol)}"></i>`:""}${m.pto?`<i class="bpt" style="width:${pc(m.pto)}"></i>`:""}</div>
+    <div class="ms-cols">${col("rg","Regular",m.reg,m.reg*w)}${col("ot","OT",m.ot,m.ot*w*mult,`×${mult}`)}${col("lv","PTO/Holiday",lv,lv*w,lv?[m.pto?`PTO ${fh(m.pto).replace(/\.00$/,"")}`:"",m.hol?`Holiday ${fh(m.hol).replace(/\.00$/,"")}`:""].filter(Boolean).join(" · "):"")}</div></div>`;}
   renderClock();
 }
 function renderClock(){

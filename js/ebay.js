@@ -87,8 +87,8 @@ function orderCard(o){
   if(o.stage==="ship")return shipCard(o);
   const f=o.f,[lb,cl]=STG[o.stage],us=unitsOf(o.its);
   const head=`<div class="oc-h"><span class="tag ${cl}">${lb}</span><span class="muted">${f.saleDate?"bán "+fdate(f.saleDate+"T12:00:00"):""}</span><span style="flex:1"></span>${us.length>1?`<span class="muted">${us.length} món</span>`:""}<button type="button" class="mini" data-unsell title="Bấm nhầm? Đưa về kho">↶ Về kho</button></div>
-  <div class="oc-kv"><div><span>Order ID</span>${f.orderId?`<b class="mono">#${esc(f.orderId)}</b>`:`<b class="muted">(không có)</b>`}</div><div><span>Người mua</span><b>${esc(f.buyer||"—")}</b></div>${o.stage==="done"?`<div class="kvt"><span>Tracking</span><div><input class="mono" data-q="tracking" data-done value="${esc(qDraft[o.its.map(i=>i.id).join(",")+"|tracking"]??(f.tracking||""))}" placeholder="Số tracking" autocomplete="off"><div class="trk-act">${f.tracking?`<button type="button" class="mini" data-copy="${esc(f.tracking)}">Copy</button><a href="${esc(trackLink(f.tracking).u)}" class="btn tbtn" data-trk="${esc(trackLink(f.tracking).u)}">Track ↗</a>`:""}</div></div></div>`:f.tracking?`<div class="kvt"><span>Tracking</span><div>${trkLine(f)}</div></div>`:""}</div>`;
-  const rows=us.map(u=>{const i=u.f,pic=(u.its.find(x=>(x.photos||[]).length)||{}).photos;return `<div class="oc-i"${o.stage==="done"?"":` data-open="${i.id}"`}>${pic?`<img loading="lazy" decoding="async" class="thumb sm" src="${ph(pic[0])}" alt="" data-zoom title="Xem ảnh lớn">`:""}<span class="oc-n" title="${esc(i.name||"")}"><b>${u.kit?`<span class="kit-tag">🔗 kit ${u.its.length} thanh</span> `:""}${esc(i.name||"(chưa đặt tên)")}</b><span class="mono muted">${esc(u.kit?u.serials:(i.serial||"thiếu serial"))}</span></span>${i.status==="tra"?`<span class="tag s-tra">trả ${u.sum("refund")?money(u.sum("refund")):""}</span>`:""}<span class="num">${money(u.sum("price"))}</span>${o.stage==="done"?`<button type="button" class="mini" data-rs="${i.id}" title="Restock: nhập thêm hàng giống ${u.kit?"kit":"món"} này">🔁</button>`:""}</div>`}).join("");
+  <div class="oc-kv"><div><span>Order ID</span>${f.orderId?`<b class="mono">#${esc(f.orderId)}</b>`:`<b class="muted">(không có)</b>`}</div><div><span>Người mua</span><b>${esc(f.buyer||"—")}</b></div>${(o.stage==="done"||o.stage==="go")?`<div class="kvt"><span>Tracking</span><div><input class="mono" data-q="tracking" data-done value="${esc(qDraft[o.its.map(i=>i.id).join(",")+"|tracking"]??(f.tracking||""))}" placeholder="Số tracking" autocomplete="off"><div class="trk-act">${f.tracking?`<button type="button" class="mini" data-copy="${esc(f.tracking)}">Copy</button><a href="${esc(trackLink(f.tracking).u)}" class="btn tbtn" data-trk="${esc(trackLink(f.tracking).u)}">Track ↗</a>`:""}</div></div></div>`:f.tracking?`<div class="kvt"><span>Tracking</span><div>${trkLine(f)}</div></div>`:""}</div>`;
+  const rows=us.map(u=>{const i=u.f,pic=(u.its.find(x=>(x.photos||[]).length)||{}).photos;return `<div class="oc-i"${(o.stage==="done"||o.stage==="go")?"":` data-open="${i.id}"`}>${pic?`<img loading="lazy" decoding="async" class="thumb sm" src="${ph(pic[0])}" alt="" data-zoom title="Xem ảnh lớn">`:""}<span class="oc-n" title="${esc(i.name||"")}"><b>${u.kit?`<span class="kit-tag">🔗 kit ${u.its.length} thanh</span> `:""}${esc(i.name||"(chưa đặt tên)")}</b><span class="mono muted">${esc(u.kit?u.serials:(i.serial||"thiếu serial"))}</span></span>${i.status==="tra"?`<span class="tag s-tra">trả ${u.sum("refund")?money(u.sum("refund")):""}</span>`:""}<span class="num">${money(u.sum("price"))}</span>${(o.stage==="done"||o.stage==="go")?`<button type="button" class="mini" data-rs="${i.id}" title="Restock: nhập thêm hàng giống ${u.kit?"kit":"món"} này">🔁</button>`:""}</div>`}).join("");
   // gọn: chỉ Bán và Lãi; bấm ▸ xem chi tiết
   const tot=`<details class="oc-t"><summary><span>Bán <b>${money(o.price+o.charge)}</b></span><span>Lãi <b class="${o.profit>=0?"pos":"neg"}">${money(o.profit)}</b></span></summary>
     <div><span>Giá bán</span><b>${money(o.price)}</b></div>${o.charge?`<div><span>Ship người mua trả</span><b>+${money(o.charge)}</b></div>`:""}<div><span>Phí eBay</span><b>−${money(o.fees)}</b></div><div><span>Ship bạn trả</span><b>−${money(o.ship)}</b></div><div><span>Vốn</span><b>−${money(o.cost)}</b></div></details>`;
@@ -103,9 +103,9 @@ function orderCard(o){
   // tracking hiện ngay dưới tiêu đề thẻ (dễ thấy), kit dùng chung 1 tracking
   const trkRow="";
   if(o.stage==="ret")foot=`<div class="oc-f muted" style="font-size:12.5px">${us.filter(u=>u.f.status==="tra").map(u=>{const rs=u.its.map(i=>i.retSerial).filter(Boolean),ok=rs.every(r=>u.its.some(i=>ns(i.serial)===ns(r)));return `${esc(u.serials)}: hoàn ${money(u.sum("refund"))}${rs.length?` · serial nhận về <span class="mono">${rs.map(esc).join(" + ")}</span> ${ok?"<b class='pos'>khớp</b>":"<b class='neg'>KHÔNG khớp</b>"}`:""}`}).join("<br>")}</div>`;
-  const dv=o.stage==="done"&&f.tracking?dlvOf(o):null,dlvRow=dv&&!dv.go&&!dv.est?`<div class="oc-dl"><button type="button" class="mini" data-undlv>↶ Chuyển lại Đang giao</button></div>`:"";
+  const dv=(o.stage==="done"||o.stage==="go")&&f.tracking?dlvOf(o):null,dlvRow=dv&&!dv.go&&!dv.est?`<div class="oc-dl"><button type="button" class="mini" data-undlv>↶ Chuyển lại Đang giao</button></div>`:"";
   const okey=o.its.map(i=>i.id).join(","),inner=`${head}${dlvRow}${trkRow}<div class="oc-b"><div class="oc-items">${rows}</div>${tot}</div>${foot}`;
-  if(o.stage==="done"){const open=ebOpen.has(okey);
+  if((o.stage==="done"||o.stage==="go")){const open=ebOpen.has(okey);
     const pr=o.profit,pct=o.price?Math.round(pr/o.price*100):0;
     const pic=(o.its.find(i=>(i.photos||[]).length)||{}).photos,nm=(us[0].f.name||"(chưa đặt tên)")+(us.length>1?` +${us.length-1} món`:"");
     return `<div class="oc oc-fold ${STG[o.stage][1]}${open?" open":""}${pr<0?" loss":""}" data-ord="${esc(okey)}"><div class="oc-sh" data-toggle role="button" tabindex="0"><span class="u-ph">${pic?`<img loading="lazy" decoding="async" class="thumb" src="${ph(pic[0])}" alt="">`:`<span class="lot-ic">📦</span>`}</span><span class="oc-sn"><b>${us[0].kit?"🔗 ":""}${esc(nm)}</b><small class="od">${f.saleDate?"bán "+fdate(f.saleDate+"T12:00:00"):""}${f.orderId?` · #${esc(f.orderId)}`:""}</small>${f.tracking?dlvLine(o):""}<span class="oc-meta">${f.tracking?`<span class="tn mono">${esc(String(f.tracking).length>12?String(f.tracking).slice(0,4)+"…"+String(f.tracking).slice(-4):f.tracking)}</span><button type="button" class="mini" data-copy="${esc(f.tracking)}">Copy</button><a href="${esc(trackLink(f.tracking).u)}" class="mini trk" data-trk="${esc(trackLink(f.tracking).u)}">${trackLink(f.tracking).c} ↗</a>${dlvOf(o).go?`<button type="button" class="mini dlvb" data-dlv>Đã giao</button>`:""}`:`<span class="muted">chưa có tracking</span>`}</span></span><span class="oc-pf ${pr>=0?"pos":"neg"}"><b>${pr>=0?"+":"−"}${money(Math.abs(pr)).replace("-","")}</b><small>${pct}% lãi</small></span><span class="chev">▾</span></div>${open?`<div class="oc-ex">${inner}</div>`:""}</div>`}
@@ -120,9 +120,10 @@ function render(){
   const q=$("#q").value.trim().toLowerCase(),qs=ns(q),mon=$("#ebMonth").value;
   const sold=items.filter(i=>i.status!=="kho"),stock=items.filter(i=>i.status==="kho");
   // đếm trên tab (Cần ship luôn đếm hết, không theo tháng)
-  if(!["kho","ship","done"].includes(ebTab))ebTab="done";
-  const allOrders=ordersOf(sold),cnt={kho:unitsOf(stock).length,ship:0,done:0};
+  if(!["kho","ship","go","done"].includes(ebTab))ebTab="done";
+  const allOrders=ordersOf(sold),cnt={kho:unitsOf(stock).length,ship:0,go:0,done:0};
   for(const o of allOrders)if(o.stage==="ret")o.stage="done"; // không dùng trả hàng nữa: đơn cũ bị trả hiện ở Xong
+  for(const o of allOrders)if(o.stage==="done"&&o.f.tracking&&dlvOf(o).go)o.stage="go"; // đã ship, chưa giao
   for(const o of allOrders)cnt[o.stage]++;
   $$("#ebTabs [data-eb]").forEach(b=>{const i=b.querySelector("i");if(i){const c=cnt[b.dataset.eb];i.textContent=c||"";i.className=b.dataset.eb==="ship"&&c?"hot":""}});
   $$("#ebTabs [data-eb]").forEach(b=>{if(b.dataset.eb!=="check")b.classList.toggle("on",b.dataset.eb===ebTab&&!$("#tab-kho").classList.contains("hidden"))});
@@ -141,17 +142,12 @@ function render(){
     const listed=su.reduce((a,u)=>a+n(u.f.listPrice),0);
     $("#sum").innerHTML=`<div>Trong kho<b>${su.length}</b><span style="font-size:12px">🏷️ Đang list ${nl} · Chưa list ${su.length-nl}${sk?` · ${sk} kit`:""}</span></div><div>Vốn<b>${money(stock.reduce((a,i)=>a+n(i.cost),0))}</b></div><div>Tổng giá list<b>${money(listed)}</b></div>`;
   }else{
-    const os=allOrders.filter(o=>o.stage===ebTab&&(ebTab==="ship"||!mon||q||monthOf(o.date)===mon)&&o.its.some(i=>hit(i,q,qs)));
+    const os=allOrders.filter(o=>o.stage===ebTab&&(ebTab!=="done"||!mon||q||monthOf(o.date)===mon)&&o.its.some(i=>hit(i,q,qs)));
     if(ebTab==="ship")os.sort((a,b)=>a.date.localeCompare(b.date)); // đơn chờ lâu nhất lên đầu
     const tbl=ebView==="table"&&!matchMedia("(max-width:760px)").matches;
-    // Đang giao (mọi tháng) đứng riêng ở đầu tab Xong
-    let goHtml="";const os0=os.slice();
-    if(ebTab==="done"&&!q&&!tbl){
-      const gos=allOrders.filter(o=>o.stage==="done"&&o.f.tracking&&dlvOf(o).go).sort((a,b)=>dlvOf(b).n-dlvOf(a).n);
-      if(gos.length)goHtml=`<div class="mgrp dgrp gohd"><b>Đang giao</b><span>${gos.length} đơn chưa tới tay người mua</span></div>`+gos.map(orderCard).join("");
-      const gk=new Set(gos);for(let k=os.length-1;k>=0;k--)if(gk.has(os[k]))os.splice(k,1);
-      if(goHtml)goHtml+=`<div class="mgrp dgrp"><b>Đã giao</b><span></span></div>`;
-    }
+    if(ebTab==="go")os.sort((a,b)=>dlvOf(b).n-dlvOf(a).n); // đi lâu nhất lên đầu
+    // tổng tháng ở Đã giao tính cả đơn đang giao (tiền đã bán)
+    const os0=ebTab==="done"?allOrders.filter(o=>(o.stage==="done"||o.stage==="go")&&(!mon||q||monthOf(o.date)===mon)&&o.its.some(i=>hit(i,q,qs))):os;
     if(ebTab==="done"&&!mon&&!q&&!tbl&&os.length){ // Tất cả: chia theo tháng
       const g=new Map();for(const o of os){const k=monthOf(o.date)||"";(g.get(k)||g.set(k,[]).get(k)).push(o)}
       html=[...g].map(([k,a])=>{const p=a.reduce((x,o)=>x+o.profit,0);return `<div class="mgrp"><b>${k?mLabel(k):"Chưa có ngày bán"}</b><span>${a.length} đơn · lãi <b class="${p>=0?"pos":"neg"}">${money(p)}</b></span></div>`+a.map(orderCard).join("")}).join("");
@@ -160,27 +156,27 @@ function render(){
       const g=new Map();for(const o of os){const k=lab(o.date);(g.get(k)||g.set(k,[]).get(k)).push(o)}
       html=[...g].map(([k,a])=>{const p=a.reduce((x,o)=>x+o.profit,0);return `<div class="mgrp dgrp"><b>${k}</b><span>${a.length} đơn · lãi <b class="${p>=0?"pos":"neg"}">${money(p)}</b></span></div>`+a.map(orderCard).join("")}).join("");
     }else html=os.length?(tbl?orderTable(os):os.map(orderCard).join("")):"";
-    if(goHtml)html=goHtml+(html.replace(/^<div class="mgrp dgrp"><b>/,'<div class="mgrp dgrp sub"><b>')||`<p class="muted ebkf0">Chưa có đơn đã giao${mon?" trong "+mLabel(mon):""}.</p>`);
-    empty={ship:"🎉 Không còn đơn nào cần ship.",done:"Chưa có đơn hoàn thành"+(mon?" trong "+mLabel(mon):"")+"."}[ebTab];
+    empty={ship:"🎉 Không còn đơn nào cần ship.",go:"Không có đơn nào đang giao.",done:"Chưa có đơn đã giao"+(mon?" trong "+mLabel(mon):"")+"."}[ebTab];
     const S=k=>os0.reduce((a,o)=>a+o[k],0);
     // so với tháng trước (chỉ khi xem 1 tháng, không tìm)
-    const pm=mon&&!q?mShift(mon,-1):"",pv=pm?allOrders.filter(o=>o.stage==="done"&&monthOf(o.date)===pm):[];
+    const pm=mon&&!q?mShift(mon,-1):"",pv=pm?allOrders.filter(o=>(o.stage==="done"||o.stage==="go")&&monthOf(o.date)===pm):[];
     const cmp=(a,b)=>{if(!pm)return "";if(!b)return `<small class="cmp">T${+pm.slice(5)}: —</small>`;const d=Math.round((a-b)/Math.abs(b)*100);if(!d)return `<small class="cmp">= T${+pm.slice(5)}</small>`;return `<small class="cmp ${d>=0?"up":"dn"}">${d>=0?"▲":"▼"}${Math.abs(d)}% so T${+pm.slice(5)}</small>`};
-    $("#sum").innerHTML=ebTab==="ship"?`<div>Cần ship<b class="${os.length?"warn-t":""}">${os.length}</b></div><div>Tiền chờ<b>${money(S("price")+S("charge"))}</b></div><div>Chờ lâu nhất<b>${os.length?daysAgo(os[0].f.saleDate)+" ngày":"—"}</b></div>`
+    $("#sum").innerHTML=ebTab==="go"?`<div>Đang giao<b>${os.length}</b></div><div>Tiền bán<b>${money(S("price")+S("charge"))}</b></div><div>Đi lâu nhất<b class="${os.length&&dlvOf(os[0]).n>7?"warn-t":""}">${os.length?dlvOf(os[0]).n+" ngày":"—"}</b></div>`
+      :ebTab==="ship"?`<div>Cần ship<b class="${os.length?"warn-t":""}">${os.length}</b></div><div>Tiền chờ<b>${money(S("price")+S("charge"))}</b></div><div>Chờ lâu nhất<b>${os.length?daysAgo(os[0].f.saleDate)+" ngày":"—"}</b></div>`
       :false?`<div>Đơn bị trả<b>${os.length}</b></div><div>Tiền đã hoàn<b class="neg">${money(S("refund"))}</b></div><div>Serial không khớp<b class="${os.some(o=>o.its.some(i=>i.retSerial&&ns(i.retSerial)!==ns(i.serial)))?"neg":""}">${os.reduce((a,o)=>a+o.its.filter(i=>i.retSerial&&ns(i.retSerial)!==ns(i.serial)).length,0)}</b></div>`
       :`<div>Đơn${mon?` · T${+mon.slice(5)}`:""}<b>${os0.length}</b>${cmp(os0.length,pv.length)}</div><div>Tiền bán<b>${money(S("price")+S("charge"))}</b>${cmp(S("price")+S("charge"),pv.reduce((a,o)=>a+o.price+o.charge,0))}</div><div>Lãi<b class="${S("profit")>=0?"pos":"neg"}">${money(S("profit"))}</b>${cmp(S("profit"),pv.reduce((a,o)=>a+o.profit,0))}</div>`;
   }
   // đang tìm: cho biết tab khác cũng có kết quả (tìm Order ID, người mua… không cần nhớ đơn nằm ở tab nào)
   const mainHtml=html;
   if(q){
-    const oc={kho:unitsOf(stock.filter(i=>hit(i,q,qs))).length,ship:0,done:0},TN={kho:"📦 Kho",ship:"📮 Cần ship",done:"✅ Xong"};
+    const oc={kho:unitsOf(stock.filter(i=>hit(i,q,qs))).length,ship:0,go:0,done:0},TN={kho:"📦 Kho",ship:"📮 Cần ship",go:"🚚 Đang giao",done:"✅ Đã giao"};
     for(const o of allOrders)if(o.its.some(i=>hit(i,q,qs)))oc[o.stage]++;
     const other=Object.keys(oc).filter(k=>k!==ebTab&&oc[k]);
     if(other.length)html=`<div class="ebx">Cũng thấy ở: ${other.map(k=>`<button type="button" class="chip" data-ebgo="${k}">${TN[k]} (${oc[k]})</button>`).join("")}</div>`+html;
   }
   $("#list").innerHTML=html;
   $$("#list [data-ebgo]").forEach(b=>b.onclick=e=>{e.stopPropagation();const k=b.dataset.ebgo;if(k!=="ship"&&k!=="kho")$("#ebMonth").value="";$(`#ebTabs [data-eb="${k}"]`).click()});
-  $("#empty").style.display=mainHtml?"none":"block";$("#empty").innerHTML=emptyBox(empty.replace(/^🎉\s*/,""),{kho:"📦",ship:"🎉",done:"📭"}[ebTab]||"📭",ebTab==="kho"&&!stock.length?"+ Thêm hàng":"","new");
+  $("#empty").style.display=mainHtml?"none":"block";$("#empty").innerHTML=emptyBox(empty.replace(/^🎉\s*/,""),{kho:"📦",ship:"🎉",go:"🚚",done:"📭"}[ebTab]||"📭",ebTab==="kho"&&!stock.length?"+ Thêm hàng":"","new");
 }
 // một bộ xử lý click cho cả danh sách
 $("#list").addEventListener("click",async e=>{

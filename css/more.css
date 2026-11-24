@@ -249,3 +249,4 @@ svg.pie .pl{font-size:10px;fill:var(--muted)}svg.pie .pv{font-size:14px;font-wei
 .gohd span{color:var(--muted)}
 .oc-dl{display:flex;align-items:flex-end;gap:10px;padding:4px 14px 8px}
 .oc-dl label{margin:0;flex:1;max-width:220px}.oc-dl .mini{min-height:36px}
+@media(max-width:760px){#ebTabs button{font-size:11px;letter-spacing:-.01em}}

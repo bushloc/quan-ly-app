@@ -1,5 +1,5 @@
 "use strict";
-const APP_VER="1.9.53";
+const APP_VER="1.9.54";
 const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
 const n=v=>{const x=parseFloat(v);return isFinite(x)?x:0};
 const money=v=>(v<0?"-$":"$")+Math.abs(v).toLocaleString("en-US",{minimumFractionDigits:2,maximumFractionDigits:2});
@@ -18,18 +18,21 @@ const DOW=["CN","T2","T3","T4","T5","T6","T7"];
 const ST={kho:"Trong kho",ban:"Đã bán",tra:"Bị trả lại"};
 
 /* ===== Lưu trữ: DB nằm trong bộ nhớ, ghi ra file qua API (Electron) hoặc localStorage (trình duyệt) ===== */
+// nhật ký trên máy (150 dòng gần nhất) để tìm nguyên nhân khi có chuyện
+function qlog(m){try{const a=JSON.parse(localStorage.getItem("ql-log")||"[]");a.push(new Date().toISOString().slice(0,19).replace("T"," ")+" v"+(typeof APP_VER!=="undefined"?APP_VER:"")+" · "+m);while(a.length>150)a.shift();localStorage.setItem("ql-log",JSON.stringify(a))}catch(e){}}
+const recTxt=d=>d?`${(d.items||[]).length} món, ${(d.expenses||[]).length} khoản, ${(d.shifts||[]).length} ca`:"không có";
 // trước khi ghi đè dữ liệu có món/khoản/ca bằng dữ liệu trống: cất bản cũ sang khoá "-cuu" để lấy lại được
 const recN=d=>d?["items","expenses","shifts"].reduce((a,k)=>a+((d[k]||[]).length),0):0;
 function guardSave(K,d){
   try{const j=JSON.stringify(d);
-    if(!recN(d)){const old=localStorage.getItem(K);if(old&&old.length>200){let o=null;try{o=JSON.parse(old)}catch(e){}if(recN(o)>2)localStorage.setItem(K+"-cuu",old)}}
-    localStorage.setItem(K,j)}catch(e){}
+    if(!recN(d)){const old=localStorage.getItem(K);if(old&&old.length>200){let o=null;try{o=JSON.parse(old)}catch(e){}if(recN(o)>2){localStorage.setItem(K+"-cuu",old);localStorage.setItem(K+"-cuu-at",String(Date.now()));qlog("CHẶN: sắp ghi dữ liệu trống đè "+recTxt(o)+" → đã cất bản cứu")}}}
+    localStorage.setItem(K,j)}catch(e){if(!guardSave.w){guardSave.w=1;qlog("LỖI lưu trên máy: "+(e&&e.name||e));typeof toast==="function"&&toast("⚠ Không lưu được trên máy (bộ nhớ đầy?)")}}
 }
 function browserApi(){
   const K="quan-ly-ca-nhan-db";
   return {
     info:{electron:false,dir:""},
-    load:async()=>{let raw=null;try{raw=localStorage.getItem(K);return JSON.parse(raw)}catch(e){try{if(raw)localStorage.setItem(K+"-hong",raw)}catch(e2){}return null}}, // đọc lỗi: giữ nguyên bản gốc để cứu
+    load:async()=>{let raw=null;try{raw=localStorage.getItem(K);const d=JSON.parse(raw);qlog("Mở app: "+(raw==null?"KHÔNG có dữ liệu trên máy":recTxt(d)+" · "+Math.round(raw.length/1024)+" KB"));return d}catch(e){qlog("Mở app: dữ liệu ĐỌC LỖI ("+(e&&e.message)+")");try{if(raw)localStorage.setItem(K+"-hong",raw)}catch(e2){}return null}}, // đọc lỗi: giữ nguyên bản gốc để cứu
     save:async d=>{guardSave(K,d);return true},
     saveSync:d=>{guardSave(K,d);return true},
     savePhoto:async d=>d, readPhoto:async n=>n, photoUrl:n=>n,

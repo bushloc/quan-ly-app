@@ -24,10 +24,11 @@ const splitK=k=>{const i=k.indexOf("/");return [k.slice(0,i),k.slice(i+1)]};
 async function pushAll(c){
   const sh=c.shadow||(c.shadow={}),now=recs(),rows=[];
   for(const [k,v] of now){const j=JSON.stringify(v);if(sh[k]!==j){const [coll,id]=splitK(k);rows.push({k,j,r:{user_id:sbUser.id,coll,id,data:v,deleted:false}})}}
-  for(const k in sh)if(!now.has(k)){const [coll,id]=splitK(k);rows.push({k,r:{user_id:sbUser.id,coll,id,data:null,deleted:true}})}
+  for(const k in sh)if(!now.has(k)){const [coll,id]=splitK(k);let old=null;try{old=JSON.parse(sh[k])}catch(e){}rows.push({k,r:{user_id:sbUser.id,coll,id,data:old,deleted:true}})} // giữ nội dung cũ trên cloud để cứu được
   // chặn xoá hàng loạt: máy này lỡ mất dữ liệu thì không được xoá theo trên cloud
   {const dn=rows.filter(x=>x.r.deleted&&x.r.coll!=="doc").length,tot=Object.keys(sh).filter(k=>!k.startsWith("doc/")).length;
-   if(dn>=10&&dn>tot*0.3)throw new Error(`Đã chặn: máy này định xoá ${dn}/${tot} dòng trên cloud. Dữ liệu cloud được giữ nguyên.`)}
+   if(dn)qlog("Đồng bộ: xoá "+dn+"/"+tot+" dòng trên cloud");
+   if(dn>=10&&dn>tot*0.3){qlog("CHẶN đồng bộ xoá hàng loạt "+dn+"/"+tot);throw new Error(`Đã chặn: máy này định xoá ${dn}/${tot} dòng trên cloud. Dữ liệu cloud được giữ nguyên.`)}}
   for(let i=0;i<rows.length;i+=200){
     const b=rows.slice(i,i+200);
     const {error}=await sb.from("records").upsert(b.map(x=>x.r),{onConflict:"user_id,coll,id"});
@@ -133,7 +134,7 @@ async function cloudSync(){
     if(!session)throw new Error(NEED_LOGIN);
     sbUser=session.user;
     // dữ liệu trên máy trống mà cloud từng có: lấy lại toàn bộ từ cloud thay vì xoá cloud
-    if(c.lastPull&&!COLLS.some(k=>(DB[k]||[]).length)&&Object.keys(c.shadow||{}).some(k=>!k.startsWith("doc/"))){c.shadow={};c.lastPull="";c.keep=false;cset(c)}
+    if(c.lastPull&&!COLLS.some(k=>(DB[k]||[]).length)&&Object.keys(c.shadow||{}).some(k=>!k.startsWith("doc/"))){qlog("Máy trống nhưng cloud có dữ liệu → kéo lại toàn bộ từ cloud");c.shadow={};c.lastPull="";c.keep=false;cset(c)}
     if(!c.lastPull)ch+=await pullAll(c); // lần đầu trên thiết bị này: lấy cloud trước rồi mới gửi
     await pushAll(c);
     ch+=await pullAll(c);
@@ -209,52 +210,79 @@ function cloudStart(){
   window.addEventListener("online",()=>cloudSync());
 }
 
-/* Bản dự phòng tuần: đúng 1 file <user>/_saoluu/du-phong.json trong kho "photos", mỗi tuần ghi đè 1 lần.
-   Không nằm trong bảng records nên đồng bộ không đụng tới; lỡ xoá nhầm thì khôi phục từ đây. */
-const BAK_PATH=()=>sbUser.id+"/_saoluu/du-phong.json";
-async function bakUpload(){
-  const body=new Blob([JSON.stringify({app:"quan-ly-ca-nhan",ver:typeof APP_VER!=="undefined"?APP_VER:"",at:new Date().toISOString(),db:DB})]);
-  let r=await sb.storage.from("photos").upload(BAK_PATH(),body,{upsert:true,contentType:"application/json"});
-  if(r.error)r=await sb.storage.from("photos").upload(BAK_PATH(),body,{upsert:true,contentType:"image/png"}); // kho chỉ nhận ảnh: vẫn lưu được
+/* Bản dự phòng trên cloud (kho "photos", thư mục <user>/_saoluu, không nằm trong bảng records nên đồng bộ không đụng tới):
+   - du-phong-ngay.json: bản gần nhất, tự ghi đè tối đa mỗi 6 giờ
+   - du-phong.json: bản tuần, tự ghi đè mỗi 7 ngày
+   Không bao giờ tự lưu khi dữ liệu trống hoặc tụt mạnh so với bản trước (tránh đè bản tốt bằng bản hỏng). */
+const BAKS={ngay:{f:"du-phong-ngay.json",ms:6*36e5,l:"Bản gần nhất",h:"tự lưu mỗi 6 giờ"},tuan:{f:"du-phong.json",ms:7*864e5,l:"Bản tuần",h:"tự lưu mỗi tuần"}};
+const BAK_PATH=(k="tuan")=>sbUser.id+"/_saoluu/"+BAKS[k].f;
+async function bakUpload(k="tuan"){
+  const body=new Blob([JSON.stringify({app:"quan-ly-ca-nhan",ver:typeof APP_VER!=="undefined"?APP_VER:"",at:new Date().toISOString(),n:recN(DB),db:DB})]);
+  let r=await sb.storage.from("photos").upload(BAK_PATH(k),body,{upsert:true,contentType:"application/json"});
+  if(r.error)r=await sb.storage.from("photos").upload(BAK_PATH(k),body,{upsert:true,contentType:"image/png"}); // kho chỉ nhận ảnh: vẫn lưu được
   if(r.error)throw r.error;
-  const c=cget();c.bakAt=Date.now();cset(c);return c.bakAt;
+  const c=cget();(c.bak||(c.bak={}))[k]={at:Date.now(),n:recN(DB)};if(k==="tuan")c.bakAt=Date.now();cset(c);qlog("Lưu "+BAKS[k].l.toLowerCase()+": "+recTxt(DB));return Date.now();
 }
 async function bakInfo(){
-  try{const {data,error}=await sb.storage.from("photos").list(sbUser.id+"/_saoluu");if(error)return null;const f=(data||[]).find(x=>x.name==="du-phong.json");return f?Date.parse(f.updated_at||f.created_at):null}catch(e){return null}
+  try{const {data,error}=await sb.storage.from("photos").list(sbUser.id+"/_saoluu");if(error)return {};const o={};
+    for(const k in BAKS){const f=(data||[]).find(x=>x.name===BAKS[k].f);if(f)o[k]=Date.parse(f.updated_at||f.created_at)}return o}catch(e){return {}}
 }
 async function bakWeekly(){
   const c=cget();if(!c.on||!sbUser)return;
-  if(c.bakAt&&Date.now()-c.bakAt<7*864e5)return;
-  const at=await bakInfo();if(at&&Date.now()-at<7*864e5){c.bakAt=at;cset(c);return} // máy khác vừa lưu
-  try{await bakUpload()}catch(e){}
+  const n=recN(DB);if(!n)return; // trống: không lưu
+  const bk=c.bak||(c.bak={});if(c.bakAt&&!bk.tuan)bk.tuan={at:c.bakAt,n:0};
+  let info=null;
+  for(const k of ["ngay","tuan"]){
+    const b=bk[k]||{};if(b.at&&Date.now()-b.at<BAKS[k].ms)continue;
+    info=info||await bakInfo();if(info[k]&&Date.now()-info[k]<BAKS[k].ms){bk[k]={at:info[k],n:b.n||0};cset(c);continue} // máy khác vừa lưu
+    if(b.n&&n<b.n*0.5){qlog("KHÔNG tự lưu "+BAKS[k].l.toLowerCase()+": dữ liệu tụt từ "+b.n+" còn "+n+" dòng");continue}
+    try{await bakUpload(k)}catch(e){}
+  }
 }
-async function bakRestore(){
-  const {data,error}=await sb.storage.from("photos").download(BAK_PATH());
+async function bakRestore(k="tuan"){
+  const {data,error}=await sb.storage.from("photos").download(BAK_PATH(k));
   if(error)throw error;
   const o=JSON.parse(await data.text());if(!o||!o.db||!Array.isArray(o.db.items))throw new Error("File dự phòng không đọc được");
   return o;
 }
+function applyBackup(db){
+  for(const k of COLLS)DB[k]=Array.isArray(db[k])?db[k]:[];
+  for(const k of DOCS)if(k in db)DB[k]=db[k];
+  if(DB.meta&&DB.meta.pct)PCT=DB.meta.pct;
+}
 
-// Cài đặt → Sao lưu: hiện ngày bản dự phòng, lưu ngay, khôi phục
+// Cài đặt → Sao lưu: 2 bản dự phòng (gần nhất / tuần), lưu ngay, khôi phục, nhật ký
 async function bakUi(){
   const box=$("#bakCloud");if(!box)return;
   const on=cget().on&&sbUser;box.classList.toggle("hidden",!on);if(!on)return;
-  if(!API.info.electron){$("#bkText").innerHTML="Dữ liệu tự đồng bộ lên cloud. App giữ thêm <b>1 bản dự phòng</b> ở trên, mỗi tuần tự ghi đè, để lấy lại khi lỡ xoá nhầm. Các nút dưới chỉ cần khi muốn có file riêng.";$("#lastbk").textContent=""}
-  const at=await bakInfo(),el=$("#bakAt");
-  el.textContent=at?`Lưu lúc ${new Date(at).toLocaleDateString("vi-VN")} · tự ghi đè mỗi tuần`:"Chưa có · app sẽ tự lưu";
-  $("#bakRes").disabled=!at;
+  if(!API.info.electron){$("#bkText").innerHTML="Dữ liệu tự đồng bộ lên cloud. App giữ thêm <b>2 bản dự phòng</b> ở trên (bản gần nhất và bản tuần, tự ghi đè), để lấy lại khi lỡ mất hay xoá nhầm. Các nút dưới chỉ cần khi muốn có file riêng.";$("#lastbk").textContent=""}
+  const info=await bakInfo();
+  $("#bakRows").innerHTML=Object.keys(BAKS).map(k=>{const at=info[k];return `<div class="bakr"><div><b>${BAKS[k].l}</b><span>${at?`${new Date(at).toLocaleString("vi-VN",{hour:"2-digit",minute:"2-digit",day:"numeric",month:"numeric",year:"numeric"})} · ${BAKS[k].h}`:"Chưa có · app sẽ tự lưu"}</span></div><button type="button" class="btn" data-bakres="${k}"${at?"":" disabled"}>Khôi phục</button></div>`}).join("");
+  const last=Math.max(0,...Object.values(info).filter(Boolean));
   const c=[...document.querySelectorAll("#mod-set .acc")].find(x=>/Sao lưu/.test((x.querySelector("h3")||{}).textContent||""));
-  if(c&&c.querySelector(".accs"))c.querySelector(".accs").textContent=at?"Dự phòng "+new Date(at).toLocaleDateString("vi-VN",{day:"numeric",month:"numeric"}):"";
+  if(c&&c.querySelector(".accs"))c.querySelector(".accs").textContent=last?"Dự phòng "+new Date(last).toLocaleDateString("vi-VN",{day:"numeric",month:"numeric"}):"";
 }
-$("#bakNow")&&($("#bakNow").onclick=async()=>{const b=$("#bakNow");b.disabled=true;b.textContent="Đang lưu…";try{await bakUpload();await bakUi();b.textContent="Đã lưu ✓"}catch(e){b.textContent="Lỗi";await say("Không lưu được: "+(e.message||e))}setTimeout(()=>{b.disabled=false;b.textContent="Lưu ngay"},1500)});
-$("#bakRes")&&($("#bakRes").onclick=async()=>{
+$("#bakNow")&&($("#bakNow").onclick=async()=>{const b=$("#bakNow");
+  if(!recN(DB)){await say("Dữ liệu trên máy đang trống nên không lưu, để giữ bản dự phòng cũ.");return}
+  b.disabled=true;b.textContent="Đang lưu…";try{await bakUpload("ngay");await bakUi();b.textContent="Đã lưu ✓"}catch(e){b.textContent="Lỗi";await say("Không lưu được: "+(e.message||e))}setTimeout(()=>{b.disabled=false;b.textContent="Lưu ngay"},1500)});
+document.addEventListener("click",async e=>{const btn=e.target.closest("[data-bakres]");if(!btn)return;const k=btn.dataset.bakres;
   try{
-    const o=await bakRestore(),d=new Date(o.at).toLocaleString("vi-VN");
-    if(!await ask(`Khôi phục dữ liệu về bản dự phòng lúc ${d}?\nMọi thay đổi sau thời điểm đó sẽ mất (trên cả iPhone và máy tính).`))return;
-    for(const k of COLLS)DB[k]=Array.isArray(o.db[k])?o.db[k]:[];
-    for(const k of DOCS)if(k in o.db)DB[k]=o.db[k];
-    if(DB.meta&&DB.meta.pct)PCT=DB.meta.pct;
+    const o=await bakRestore(k),d=new Date(o.at).toLocaleString("vi-VN");
+    if(!await ask(`Khôi phục về ${BAKS[k].l.toLowerCase()} lúc ${d}?\nBản này có ${recTxt(o.db)}. Hiện trên máy có ${recTxt(DB)}.\nMọi thay đổi sau thời điểm đó sẽ mất (trên cả iPhone và máy tính).`))return;
+    applyBackup(o.db);qlog("Khôi phục "+BAKS[k].l.toLowerCase()+" lúc "+d+": "+recTxt(o.db));
     await API.save(DB);await reload();cloudSoon();await say("Đã khôi phục bản dự phòng lúc "+d+".");
   }catch(e){await say("Không khôi phục được: "+(e.message||e))}
 });
+$("#bakLog")&&($("#bakLog").onclick=()=>{let a=[];try{a=JSON.parse(localStorage.getItem("ql-log")||"[]")}catch(e){}say(a.length?a.slice(-40).reverse().join("\n"):"Chưa có gì.")});
 {const rs=renderSet;renderSet=function(){const r=rs.apply(this,arguments);bakUi();return r}}
+
+/* Mở app mà máy trống nhưng còn bản cứu trên máy: hỏi lấy lại */
+async function rescueLocal(){
+  if(recN(DB))return;let raw=null,o=null,at=0;
+  try{raw=localStorage.getItem("quan-ly-ca-nhan-db-cuu");at=+localStorage.getItem("quan-ly-ca-nhan-db-cuu-at")||0;o=JSON.parse(raw)}catch(e){}
+  if(!o||!recN(o))return;
+  qlog("Máy trống, còn bản cứu "+recTxt(o));
+  if(!await ask(`Dữ liệu trên máy đang trống, nhưng app còn cất 1 bản${at?" lúc "+new Date(at).toLocaleString("vi-VN"):""} (${recTxt(o)}).\nLấy lại bản này?`))return;
+  applyBackup(o);for(const k of ["clock"])if(k in o)DB[k]=o[k];
+  await API.save(DB);await reload();qlog("Đã lấy lại bản cứu trên máy");cloudSoon();
+}

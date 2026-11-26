@@ -4,6 +4,8 @@
   await loadDb();applyTheme();
   const p=await mget("pct");if(p)PCT=p.value;$("#pct").value=PCT;
   await reload();
-  showMod("home");cloudStart();
+  showMod("home");
+  try{await rescueLocal()}catch(e){}
+  cloudStart();
   if("serviceWorker" in navigator&&location.protocol==="https:")navigator.serviceWorker.register("sw.js").catch(()=>{});
 })();

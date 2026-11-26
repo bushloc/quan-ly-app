@@ -1,5 +1,5 @@
 "use strict";
-const APP_VER="1.9.52";
+const APP_VER="1.9.53";
 const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
 const n=v=>{const x=parseFloat(v);return isFinite(x)?x:0};
 const money=v=>(v<0?"-$":"$")+Math.abs(v).toLocaleString("en-US",{minimumFractionDigits:2,maximumFractionDigits:2});
@@ -18,13 +18,20 @@ const DOW=["CN","T2","T3","T4","T5","T6","T7"];
 const ST={kho:"Trong kho",ban:"Đã bán",tra:"Bị trả lại"};
 
 /* ===== Lưu trữ: DB nằm trong bộ nhớ, ghi ra file qua API (Electron) hoặc localStorage (trình duyệt) ===== */
+// trước khi ghi đè dữ liệu có món/khoản/ca bằng dữ liệu trống: cất bản cũ sang khoá "-cuu" để lấy lại được
+const recN=d=>d?["items","expenses","shifts"].reduce((a,k)=>a+((d[k]||[]).length),0):0;
+function guardSave(K,d){
+  try{const j=JSON.stringify(d);
+    if(!recN(d)){const old=localStorage.getItem(K);if(old&&old.length>200){let o=null;try{o=JSON.parse(old)}catch(e){}if(recN(o)>2)localStorage.setItem(K+"-cuu",old)}}
+    localStorage.setItem(K,j)}catch(e){}
+}
 function browserApi(){
   const K="quan-ly-ca-nhan-db";
   return {
     info:{electron:false,dir:""},
-    load:async()=>{try{return JSON.parse(localStorage.getItem(K))}catch(e){return null}},
-    save:async d=>{try{localStorage.setItem(K,JSON.stringify(d))}catch(e){}return true},
-    saveSync:d=>{try{localStorage.setItem(K,JSON.stringify(d))}catch(e){}return true},
+    load:async()=>{let raw=null;try{raw=localStorage.getItem(K);return JSON.parse(raw)}catch(e){try{if(raw)localStorage.setItem(K+"-hong",raw)}catch(e2){}return null}}, // đọc lỗi: giữ nguyên bản gốc để cứu
+    save:async d=>{guardSave(K,d);return true},
+    saveSync:d=>{guardSave(K,d);return true},
     savePhoto:async d=>d, readPhoto:async n=>n, photoUrl:n=>n,
     openDir:async()=>{}, backupNow:async()=>"", openUrl:async u=>{window.open(u,"_blank","noopener")}
   };
@@ -55,7 +62,7 @@ let DB={
   settings:{wage:23.5,otAfter:40,otMult:1.5,weekStart:0,lunch:30,payStart:"2026-11-01",theme:"dark"}
 };
 let saveT=null;
-function save(){clearTimeout(saveT);saveT=setTimeout(()=>{API.save(DB).catch(()=>{});cloudSoon()},300)}
+function save(){if(!dbReady)return;clearTimeout(saveT);saveT=setTimeout(()=>{API.save(DB).catch(()=>{});cloudSoon()},300)}
 /* Đang gõ thì không vẽ lại vùng đó: vẽ lại dựng lại ô nhập nên mất focus (phone tụt bàn phím) và mất số đang gõ.
    Hoãn tới khi rời hẳn vùng đó (đồng bộ cloud, tải ảnh, lưu ô bên cạnh… đều đi qua đây) */
 const isField=a=>!!(a&&a.matches&&a.matches("input:not([type=checkbox]):not([type=radio]):not([type=file]):not([type=button]),textarea,select"));
@@ -71,7 +78,7 @@ for(const ev of ["pointerup","pointercancel"])document.addEventListener(ev,()=>s
 document.addEventListener("focusout",()=>setTimeout(()=>{if(!ptrDown)flushHeld()},0));
 // gửi form bằng Enter: rời ô trước để danh sách vẽ lại ngay
 document.addEventListener("submit",()=>{const a=document.activeElement;if(isField(a))a.blur()},true);
-function saveNow(){clearTimeout(saveT);try{API.saveSync(DB)}catch(e){}}
+function saveNow(){if(!dbReady)return;clearTimeout(saveT);try{API.saveSync(DB)}catch(e){}}
 window.addEventListener("beforeunload",saveNow);
 const S=()=>DB.settings;
 const photoCache=new Map();
@@ -90,8 +97,9 @@ const rm=async k=>{DB.items=DB.items.filter(i=>i.id!==k);save()};
 const clr=async()=>{DB.items=[];save()};
 const mget=async k=>DB.meta[k]!==undefined?{value:DB.meta[k]}:undefined;
 const mput=async(k,v)=>{DB.meta[k]=v;save()};
+var dbReady=false; // chưa đọc xong dữ liệu thì không được ghi (tránh ghi đè bằng dữ liệu trống khi app bị tắt lúc đang mở)
 async function loadDb(){
-  const d=await API.load();
+  const d=await API.load();dbReady=true;
   if(d&&typeof d==="object"){
     DB={...DB,...d,settings:{...DB.settings,...(d.settings||{})}};
     for(const k of ["items","expenses","shifts","cats"])if(!Array.isArray(DB[k]))DB[k]=[];

@@ -25,6 +25,9 @@ async function pushAll(c){
   const sh=c.shadow||(c.shadow={}),now=recs(),rows=[];
   for(const [k,v] of now){const j=JSON.stringify(v);if(sh[k]!==j){const [coll,id]=splitK(k);rows.push({k,j,r:{user_id:sbUser.id,coll,id,data:v,deleted:false}})}}
   for(const k in sh)if(!now.has(k)){const [coll,id]=splitK(k);rows.push({k,r:{user_id:sbUser.id,coll,id,data:null,deleted:true}})}
+  // chặn xoá hàng loạt: máy này lỡ mất dữ liệu thì không được xoá theo trên cloud
+  {const dn=rows.filter(x=>x.r.deleted&&x.r.coll!=="doc").length,tot=Object.keys(sh).filter(k=>!k.startsWith("doc/")).length;
+   if(dn>=10&&dn>tot*0.3)throw new Error(`Đã chặn: máy này định xoá ${dn}/${tot} dòng trên cloud. Dữ liệu cloud được giữ nguyên.`)}
   for(let i=0;i<rows.length;i+=200){
     const b=rows.slice(i,i+200);
     const {error}=await sb.from("records").upsert(b.map(x=>x.r),{onConflict:"user_id,coll,id"});
@@ -129,6 +132,8 @@ async function cloudSync(){
     const {data:{session}}=await sb.auth.getSession();
     if(!session)throw new Error(NEED_LOGIN);
     sbUser=session.user;
+    // dữ liệu trên máy trống mà cloud từng có: lấy lại toàn bộ từ cloud thay vì xoá cloud
+    if(c.lastPull&&!COLLS.some(k=>(DB[k]||[]).length)&&Object.keys(c.shadow||{}).some(k=>!k.startsWith("doc/"))){c.shadow={};c.lastPull="";c.keep=false;cset(c)}
     if(!c.lastPull)ch+=await pullAll(c); // lần đầu trên thiết bị này: lấy cloud trước rồi mới gửi
     await pushAll(c);
     ch+=await pullAll(c);

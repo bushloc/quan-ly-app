@@ -486,3 +486,18 @@ document.addEventListener("click",e=>{const b=e.target.closest("[data-qt]");if(!
     toast(`Đã thêm ${e.type==="thu"?"+":""}${money(n(e.amount))} · ${e.cat}${e.note?" · "+e.note:""}`,()=>{const i=DB.expenses.findIndex(y=>y.id===e.id);if(i>=0){DB.expenses.splice(i,1);save();renderSpend()}})},0)});
   const rs=renderSpend;renderSpend=function(){const r=rs.apply(this,arguments);qaShort();return r};
 }
+
+/* eBay: tổng kết tháng luôn nằm trên cùng (mọi tab). Tính mọi đơn bán trong tháng (cả chưa ship / đang giao). */
+function ebTopRender(){
+  const box=$("#ebTop");if(!box)return;
+  const sel=$("#ebMonth")&&$("#ebMonth").value,mk=ebTab==="done"&&sel?sel:monthOf(today()),pm=mShift(mk,-1);
+  const os=ordersOf(items.filter(i=>i.status!=="kho"));
+  const st=k=>{const a=os.filter(o=>monthOf(o.date)===k);return {n:a.length,rev:a.reduce((x,o)=>x+o.price+o.charge,0),pf:a.reduce((x,o)=>x+o.profit,0)}};
+  const c=st(mk),p=st(pm);
+  const cmp=(a,b)=>{if(!b)return `<small class="cmp">T${+pm.slice(5)}: —</small>`;const d=Math.round((a-b)/Math.abs(b)*100);return d?`<small class="cmp ${d>0?"up":"dn"}">${d>0?"▲":"▼"}${Math.abs(d)}%</small>`:`<small class="cmp">=</small>`};
+  box.innerHTML=`<div class="ebt-h"><b>${mLabel(mk)}</b><span>so với T${+pm.slice(5)} ›</span></div>
+   <div class="ebt-g"><div><span>Đơn bán</span><b>${c.n}</b>${cmp(c.n,p.n)}</div><div><span>Tiền bán</span><b>${money(c.rev)}</b>${cmp(c.rev,p.rev)}</div><div class="pf"><span>Lãi</span><b class="${c.pf>=0?"pos":"neg"}">${money(c.pf)}</b>${cmp(c.pf,p.pf)}</div></div>`;
+  $("#sum").classList.toggle("hidden",ebTab==="done");
+}
+{const r0=render;render=function(){const r=r0.apply(this,arguments);try{ebTopRender()}catch(e){}return r}}
+$("#ebTop").addEventListener("click",()=>{if(ebTab!=="done"){$("#ebMonth").value=monthOf(today());$('#ebTabs [data-eb="done"]').click()}});

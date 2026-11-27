@@ -408,3 +408,15 @@ html.qa-lock,html.qa-lock body{overflow:hidden}
 .toast{width:max-content;max-width:calc(100vw - 24px)}.toast>span{min-width:0}
 .qas-kp button{min-height:43px;font-size:21px}.qas-kp{gap:5px}.qas-amt b{font-size:40px}.qas-amt{padding:0}
 .qas-cats button{padding:6px 2px 5px}.qas-cats button span{font-size:20px}.qas-days>*{padding:7px 4px}.qas-note input{min-height:40px}
+
+/* eBay: tổng kết tháng trên cùng */
+.ebtop{margin:10px 0 0;padding:12px 14px;cursor:pointer;background:linear-gradient(135deg,color-mix(in srgb,#8b5cf6 16%,var(--card)),color-mix(in srgb,#06b6d4 12%,var(--card)))}
+.ebt-h{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:8px}.ebt-h b{font-size:13px;letter-spacing:.04em;text-transform:uppercase;color:var(--muted)}.ebt-h span{font-size:12px;color:var(--muted)}
+.ebt-g{display:grid;grid-template-columns:.8fr 1.2fr 1.2fr;gap:8px}
+.ebt-g>div{display:flex;flex-direction:column;gap:1px;min-width:0}
+.ebt-g span{font-size:12px;color:var(--muted)}
+.ebt-g b{font-size:20px;font-weight:800;font-variant-numeric:tabular-nums;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ebt-g .pf b{font-size:22px}
+#sum.hidden{display:none}
+@media(max-width:360px){.ebt-g b{font-size:17px}.ebt-g .pf b{font-size:18px}}
+#sum.sum.hidden{display:none!important}

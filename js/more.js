@@ -381,3 +381,108 @@ function recapHtml(mk){
   },true));
   requestAnimationFrame(movePill);setTimeout(movePill,300);
 }
+
+/* ===== Ghi khoản nhanh: bảng trượt lên (bàn phím số riêng, danh mục có icon, Chi/Thu, ngày),
+   gợi ý nơi mua, mẫu 1 chạm, lặp lại khoản trước, hoàn tác ===== */
+const CATIC=[["an uong","🍜"],["an","🍜"],["cho","🛒"],["grocer","🛒"],["xang","⛽"],["di lai","🚗"],["hoa don","🧾"],["nha","🏠"],["thue","🏠"],["mua sam","🛍️"],["suc khoe","💊"],["giai tri","🎬"],["con","🧸"],["gia dinh","👪"],["qua","🎁"],["luong","💵"],["thu","💵"],["khac","📦"]];
+function catIc(c){const u=unacc(c);for(const [k,i] of CATIC)if(u.startsWith(k)||u.includes(" "+k))return i;return "🏷️"}
+function catOrder(type){const since=addDays(today(),-90),cnt={};
+  for(const e of DB.expenses)if(e.type===type&&e.date>=since)cnt[e.cat]=(cnt[e.cat]||0)+1;
+  return [...new Set([...Object.keys(cnt).filter(c=>DB.cats.includes(c)).sort((a,b)=>cnt[b]-cnt[a]),...DB.cats])]}
+// nơi mua / ghi chú đã dùng: gom theo chữ không dấu, nhớ danh mục hay đi kèm
+function noteBook(){const m=new Map();
+  for(const e of DB.expenses){const t=(e.note||"").trim();if(!t)continue;const k=unacc(t);const o=m.get(k)||{note:t,n:0,cats:{},last:""};
+    o.n++;o.cats[e.cat]=(o.cats[e.cat]||0)+1;if(e.date>=o.last){o.last=e.date;o.note=t;o.type=e.type}m.set(k,o)}
+  return [...m.values()].map(o=>({...o,cat:Object.keys(o.cats).sort((a,b)=>o.cats[b]-o.cats[a])[0]}));}
+function noteSug(q,type){const u=unacc(q.trim());let a=noteBook().filter(o=>(o.type||"chi")===type);
+  if(u)a=a.filter(o=>{const k=unacc(o.note);return k!==u&&(k.startsWith(u)||k.includes(" "+u))});
+  return a.sort((x,y)=>y.n-x.n||y.last.localeCompare(x.last)).slice(0,5)}
+// mẫu: cùng danh mục + số tiền + nơi mua, ghi ≥2 lần trong 120 ngày
+function qaTemplates(){const since=addDays(today(),-120),m=new Map();
+  for(const e of DB.expenses){if(e.type!=="chi"||e.date<since)continue;const k=e.cat+"|"+n(e.amount)+"|"+unacc(e.note||"");const o=m.get(k)||{cat:e.cat,amount:n(e.amount),note:(e.note||"").trim(),n:0,last:""};o.n++;if(e.date>=o.last)o.last=e.date;m.set(k,o)}
+  return [...m.values()].filter(o=>o.n>=2).sort((a,b)=>b.n-a.n||b.last.localeCompare(a.last)).slice(0,4)}
+function addExpense(x,label){
+  const e={id:uid(),date:x.date||today(),type:x.type||"chi",amount:n(x.amount),cat:x.cat,note:(x.note||"").trim()};
+  DB.expenses.push(e);save();if(typeof spM!=="undefined")spM=monthOf(e.date);
+  const re=()=>{const m=curMod();if(m==="spend")renderSpend();else if(m==="home")renderHome();else if(typeof renderToday==="function"&&m==="today")renderToday()};re();
+  toast(`${label||"Đã thêm"} ${e.type==="thu"?"+":""}${money(e.amount)} · ${e.cat}${e.note?" · "+e.note:""}`,()=>{const i=DB.expenses.findIndex(y=>y.id===e.id);if(i>=0){DB.expenses.splice(i,1);save();re()}});
+  return e}
+function qaShort(){const box=$("#qaShort");if(!box)return;
+  const t=qaTemplates(),last=DB.expenses[DB.expenses.length-1];
+  const chip=(o,k,lab)=>`<button type="button" class="qsc" data-qt="${k}"><span>${catIc(o.cat)}</span><b>${money(o.amount)}</b><em>${esc(lab||o.note||o.cat)}</em></button>`;
+  box.innerHTML=(last?chip(last,"last","↻ "+(last.note||last.cat)):"")+t.filter(o=>!last||!(o.cat===last.cat&&o.amount===n(last.amount)&&unacc(o.note)===unacc(last.note||""))).map((o,i)=>chip(o,i)).join("");
+  box.classList.toggle("hidden",!box.innerHTML);box._t=t;box._last=last}
+document.addEventListener("click",e=>{const b=e.target.closest("[data-qt]");if(!b)return;const box=b.closest(".qashort");
+  const k=b.dataset.qt,o=k==="last"?box._last:box._t[+k];if(!o)return;
+  addExpense({type:k==="last"?o.type:"chi",amount:o.amount,cat:o.cat,note:o.note,date:today()},k==="last"?"Đã ghi lại":"Đã thêm");
+  if(box.id==="qaSheetShort")qaClose()});
+
+{
+  document.body.insertAdjacentHTML("beforeend",`<div id="qaSheet" class="qas hidden" aria-hidden="true"><div class="qas-bd" data-qax></div>
+  <div class="qas-p" role="dialog" aria-label="Ghi khoản">
+    <div class="qas-g"></div>
+    <div class="qas-top"><div class="qas-seg"><button type="button" data-qty="chi" class="on">Chi</button><button type="button" data-qty="thu">Thu</button></div><button type="button" class="qas-x" data-qax aria-label="Đóng">✕</button></div>
+    <div class="qas-amt" id="qaAmt"><span>$</span><b>0</b></div>
+    <div class="qas-note"><input id="qaNote" placeholder="Nơi mua / ghi chú (tuỳ chọn)" autocomplete="off" enterkeyhint="done"><div class="qas-sug" id="qaSug"></div></div>
+    <div class="qashort qas-short" id="qaSheetShort"></div>
+    <div class="qas-cats" id="qaCats"></div>
+    <div class="qas-days" id="qaDays"><button type="button" data-qd="0" class="on">Hôm nay</button><button type="button" data-qd="-1">Hôm qua</button><label class="qas-dp"><span id="qaDpL">📅 Ngày khác</span><input type="date" id="qaDate"></label></div>
+    <div class="qas-kp" id="qaKp">${["1","2","3","4","5","6","7","8","9",".","0","⌫"].map(k=>`<button type="button" data-qk="${k}">${k}</button>`).join("")}</div>
+    <button type="button" class="btn primary qas-save" id="qaSave" disabled>Lưu</button>
+  </div></div>`);
+  const sh=$("#qaSheet"),st={type:"chi",amt:"",cat:"",date:today(),catHand:false};
+  const amtV=()=>parseFloat(st.amt||"0")||0;
+  function paint(){
+    $$("#qaSheet [data-qty]").forEach(b=>b.classList.toggle("on",b.dataset.qty===st.type));
+    sh.classList.toggle("thu",st.type==="thu");
+    const a=st.amt||"0",[i,d]=a.split(".");$("#qaAmt b").textContent=(+i).toLocaleString("en-US")+(d!==undefined?"."+d:"");
+    const cats=catOrder(st.type);if(!st.cat||!DB.cats.includes(st.cat))st.cat=cats[0]||"Khác";
+    $("#qaCats").innerHTML=cats.map(c=>`<button type="button" data-qc="${esc(c)}" class="${c===st.cat?"on":""}"><span>${catIc(c)}</span><em>${esc(c)}</em></button>`).join("");
+    const t=today(),y=addDays(t,-1);$$("#qaDays [data-qd]").forEach(b=>b.classList.toggle("on",addDays(t,+b.dataset.qd)===st.date));
+    const other=st.date!==t&&st.date!==y;$(".qas-dp").classList.toggle("on",other);$("#qaDpL").textContent=other?"📅 "+dm(st.date):"📅 Ngày khác";
+    const v=amtV();$("#qaSave").disabled=!(v>0);$("#qaSave").textContent=v>0?`Lưu ${st.type==="thu"?"+":""}${money(v)} · ${st.cat}`:"Nhập số tiền";
+    sug();
+  }
+  function sug(){const q=$("#qaNote").value,a=noteSug(q,st.type);
+    $("#qaSug").innerHTML=a.map((o,i)=>`<button type="button" data-qs="${i}"><span>${catIc(o.cat)}</span>${esc(o.note)}</button>`).join("");$("#qaSug")._a=a;
+    const sbox=$("#qaSheetShort");if(st.type==="chi"&&!st.amt&&!q){qaShortInto(sbox)}else sbox.innerHTML="";sbox.classList.toggle("hidden",!sbox.innerHTML)}
+  function qaShortInto(box){const t=qaTemplates();box._t=t;box._last=null;box.innerHTML=t.map((o,i)=>`<button type="button" class="qsc" data-qt="${i}"><span>${catIc(o.cat)}</span><b>${money(o.amount)}</b><em>${esc(o.note||o.cat)}</em></button>`).join("")}
+  window.qaOpen=(type)=>{st.type=type||"chi";st.amt="";st.cat="";st.catHand=false;st.date=today();$("#qaNote").value="";
+    try{const c=localStorage.getItem("lastCat");if(c&&DB.cats.includes(c)&&st.type==="chi")st.cat=c}catch(e){}
+    if(document.activeElement&&document.activeElement.blur)document.activeElement.blur();
+    sh.classList.remove("hidden");sh.setAttribute("aria-hidden","false");requestAnimationFrame(()=>sh.classList.add("on"));document.documentElement.classList.add("qa-lock");paint()};
+  window.qaClose=()=>{sh.classList.remove("on");sh.setAttribute("aria-hidden","true");document.documentElement.classList.remove("qa-lock");$("#qaNote").blur();setTimeout(()=>sh.classList.add("hidden"),220)};
+  sh.addEventListener("click",e=>{
+    if(e.target.closest("[data-qax]")){qaClose();return}
+    const ty=e.target.closest("[data-qty]");if(ty){st.type=ty.dataset.qty;st.cat="";st.catHand=false;paint();return}
+    const k=e.target.closest("[data-qk]");if(k){const v=k.dataset.qk;let a=st.amt;
+      if(v==="⌫")a=a.slice(0,-1);else if(v==="."){if(!a.includes("."))a=(a||"0")+"."}
+      else{const [i,d]=a.split(".");if(d!==undefined){if(d.length<2)a+=v}else if(i.length<7)a=(a==="0"?"":a)+v}
+      st.amt=a;navigator.vibrate&&navigator.vibrate(6);paint();return}
+    const c=e.target.closest("[data-qc]");if(c){st.cat=c.dataset.qc;st.catHand=true;try{if(st.type==="chi")localStorage.setItem("lastCat",st.cat)}catch(x){}paint();return}
+    const d=e.target.closest("[data-qd]");if(d){st.date=addDays(today(),+d.dataset.qd);paint();return}
+    const s=e.target.closest("[data-qs]");if(s){const o=$("#qaSug")._a[+s.dataset.qs];if(o){$("#qaNote").value=o.note;if(DB.cats.includes(o.cat)){st.cat=o.cat;st.catHand=true}$("#qaNote").blur();paint()}return}
+  });
+  $("#qaNote").addEventListener("input",()=>{if(!st.catHand){const c=qCat($("#qaNote").value);if(c)st.cat=c}paint()});
+  $("#qaNote").addEventListener("keydown",e=>{if(e.key==="Enter"){e.preventDefault();$("#qaNote").blur()}});
+  $("#qaDate").addEventListener("change",()=>{if($("#qaDate").value){st.date=$("#qaDate").value;paint()}});
+  $("#qaSave").onclick=()=>{const v=amtV();if(!(v>0))return;addExpense({type:st.type,amount:v,cat:st.cat,note:$("#qaNote").value,date:st.date});qaClose()};
+  // bàn phím máy tính
+  addEventListener("keydown",e=>{if(sh.classList.contains("hidden")||e.target===$("#qaNote"))return;
+    if(e.key==="Escape"){qaClose();return}if(e.key==="Enter"){$("#qaSave").click();return}
+    const m={Backspace:"⌫",",":".",".":"."};const k=/^\d$/.test(e.key)?e.key:m[e.key];if(k){e.preventDefault();const b=$(`#qaKp [data-qk="${k}"]`);b&&b.click()}});
+  // vuốt xuống để đóng
+  {let y0=null;const p=$(".qas-p");p.addEventListener("touchstart",e=>{if(e.target.closest("#qaNote,.qas-cats,.qas-sug,.qashort"))return;y0=e.touches[0].clientY},{passive:true});
+   p.addEventListener("touchmove",e=>{if(y0==null)return;const d=e.touches[0].clientY-y0;if(d>0)p.style.transform=`translateY(${d}px)`},{passive:true});
+   p.addEventListener("touchend",e=>{if(y0==null)return;const d=(e.changedTouches[0].clientY-y0);y0=null;p.style.transform="";if(d>90)qaClose()},{passive:true})}
+
+  // các lối vào: nút + ở Thu & Chi, menu + ở Tổng quan, nút "+ Ghi khoản", trạng thái trống
+  $("#qaOpen").onclick=()=>qaOpen();
+  const fab=$("#fab"),ofc=fab.onclick;fab.onclick=e=>{if(fab.dataset.m==="spend"){qaOpen();return}return ofc.call(fab,e)};
+  document.addEventListener("click",e=>{const b=e.target.closest('[data-fm="spend"],[data-emp="spend"]');if(!b)return;e.stopImmediatePropagation();
+    const fm=$("#fabMenu");if(fm){fm.classList.add("hidden");fab.classList.remove("open")}qaOpen()},true);
+  // form cũ: thêm xong cũng có Hoàn tác
+  $("#spForm").addEventListener("submit",()=>{setTimeout(()=>{const e=DB.expenses[DB.expenses.length-1];if(!e)return;
+    toast(`Đã thêm ${e.type==="thu"?"+":""}${money(n(e.amount))} · ${e.cat}${e.note?" · "+e.note:""}`,()=>{const i=DB.expenses.findIndex(y=>y.id===e.id);if(i>=0){DB.expenses.splice(i,1);save();renderSpend()}})},0)});
+  const rs=renderSpend;renderSpend=function(){const r=rs.apply(this,arguments);qaShort();return r};
+}

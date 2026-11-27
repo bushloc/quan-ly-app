@@ -93,12 +93,9 @@
     <div class="sum" id="spSum"></div>
     <details class="spcat" id="spCat"><summary>Xem chi tiết theo danh mục</summary><div id="spCatBody"></div></details>
   </div>
-  <div class="grid2 sp-top">
-    <div class="card" id="fxCard"></div>
-    <div class="card" id="ccCard"></div>
-  </div>
-  <div class="card">
-    <h3>Ghi khoản mới</h3>
+  <div class="card qacard">
+    <div class="qah"><h3>Ghi khoản mới</h3><button type="button" class="btn primary" id="qaOpen">+ Ghi khoản</button></div>
+    <div class="qashort" id="qaShort"></div>
     <form id="spForm" class="spf" autocomplete="off">
       <label class="fa">Số tiền ($)<input name="amount" type="number" step="0.01" min="0" inputmode="decimal" required></label>
       <label class="fc">Danh mục<select name="cat"></select></label>
@@ -106,6 +103,10 @@
       <button class="btn primary fb">+ Thêm</button>
       <details class="fd"><summary>Ngày &amp; ghi chú</summary><div class="fdb"><label>Ngày<input name="date" type="date"></label><label>Ghi chú<input name="note" placeholder="vd. Walmart, xăng…"></label></div></details>
     </form>
+  </div>
+  <div class="grid2 sp-top">
+    <div class="card" id="fxCard"></div>
+    <div class="card" id="ccCard"></div>
   </div>
   <div class="card">
     <div class="row" style="justify-content:space-between;margin-bottom:8px"><h3 style="margin:0">Ngân sách theo danh mục</h3><button class="btn" id="spBudgetEdit">Chỉnh ngân sách</button></div>
